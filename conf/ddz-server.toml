@@ -1,0 +1,91 @@
+[CfgLeafSvr]
+    LogLevel="debug"
+	LogPath= ""
+	TCPAddr= ""
+	WSAddr= ":5658"
+	HTTPAddr= ":9084"
+	MaxConnNum= 20000
+	DBUrl= "mongodb://localhost"
+	DBMaxConnNum= 100
+	DBName="ddz"
+    SubsidyTotal = 2
+    FirstRecharge=3
+
+
+[CfgDDZ]
+     DefaultAndroidDownloadUrl = "https://www.shenzhouxing.com/czddz/dl/"
+     DefaultIOSDownloadUrl     = "https://www.shenzhouxing.com/czddz/dl/"
+     DefaultSougouDownloadUrl  = "https://www.shenzhouxing.com/sougouddz/dl/"
+     Gamename ="斗地主"
+     AndroidVersion=1
+     IOSVersion=1
+     SougouVersion=1
+     AndroidGuestLogin =false
+     IOSGuestLogin =false
+     SougouGuestLogin =false
+     Notice="斗地主"
+     Radio="维护和谐游戏环境，严禁作弊通牌行为，违者封号处理 "
+     WeChatNumber="yintan19"
+     DefaultAvatar="https://www.shenzhouxing.com/gd/dl/img/avatar.jpg"
+     EnterAddress=false
+     CardCodeDesc="每天登录游戏获取取牌码,进入圈圈进行麻将全家福活动,赢取大奖"
+
+[CfgTimeout]
+ ConnectTimeout=3 #连接授权验证连接时间 秒
+ HeartTimeout=120  #心跳维持时间 秒
+ LandlordBid= 3    #叫分的准备时间 秒
+ LandlordDouble= 3 #加倍的准备时间   秒
+ LandlordSystemHost =3  #托管出牌时间 秒
+ LandlordDiscard        = 14 #出牌的准备时间 秒
+ LandlordDiscardNothing = 3  #要不起准备时间 秒
+ LandloadMatchPrepare         = 2500 # 满三人开赛准备时间 毫秒
+ LandlordEndPrepare           = 1500 # 结算的准备时间    毫秒
+ LandlordNextStart            = 6000  # 下一轮开始时间    毫秒
+[[CfgDailySign]]
+    Chips=1
+[[CfgDailySign]]
+    Chips=2
+[[CfgDailySign]]
+    Chips=5
+[[CfgDailySign]]
+    Chips=8
+[[CfgDailySign]]
+    Chips=12
+[[CfgDailySign]]
+    Chips=18
+[[CfgDailySign]]
+    Chips=25
+
+
+# ----------------------------redis地址端口-------------------------------
+[CfgRedis]
+Address  = "127.0.0.1:6379"				# redis地址端口。
+Password = ""				# redis密码。
+DB = 2
+
+# ----------------------------短信接口配置-------------------------------
+[CfgJuHeSms]
+AppKey="e538800bd0c8d7f6ad0aba9c04cfa44b" 
+FindTemplate="150994"
+RegisterTemplate="150988"
+
+# ----------------------------首充-------------------------------
+[[CfgFirstRecharge]]
+    Type=1
+    Num=30
+
+[[CfgNotice]]
+    Title=""
+    Content=""
+[CfgHall]
+	SignIcon          = true		#签到标签是否显示
+	NewWelfareIcon    = false		#新人福利标签是否显示
+	FirstRechargeIcon = false 		#首充标签是否显示
+	ShareIcon         = false 		#分享推广标签是否显示
+	UserMailLimit     = 60          #玩家邮件列表限制数量
+	MailDefaultExpire = 30          #默认过期时间多少天
+	RankingTitle      = ["参赛", "胜局", "奖励", "衰神"] #排行榜标题序列
+	RankTypeJoinNum   = "参赛"
+    RankTypeWinNum	  = "胜局"
+    RankTypeFailNum	  = "衰神"
+    RankTypeAward	  = "奖励"
