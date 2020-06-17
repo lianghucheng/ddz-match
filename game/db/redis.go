@@ -4,7 +4,7 @@ import (
 	"ddz/conf"
 	"time"
 
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 
 	"github.com/garyburd/redigo/redis"
 )

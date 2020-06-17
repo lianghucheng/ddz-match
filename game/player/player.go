@@ -8,9 +8,9 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/name5566/leaf/gate"
-	"github.com/name5566/leaf/log"
 	"github.com/name5566/leaf/timer"
 	"github.com/name5566/leaf/util"
+	"github.com/szxby/tools/log"
 )
 
 const (

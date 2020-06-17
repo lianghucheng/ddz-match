@@ -15,8 +15,8 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/name5566/leaf/log"
 	"github.com/name5566/leaf/timer"
+	"github.com/szxby/tools/log"
 )
 
 var skeleton = game.GetSkeleton()

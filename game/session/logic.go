@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

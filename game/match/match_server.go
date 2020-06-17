@@ -25,6 +25,7 @@ func initMatchConfig() error {
 	s := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(s)
 	one := map[string]interface{}{}
+	log.Debug("init MatchConfig........")
 	iter := s.DB(db.DB).C("match").Find(bson.M{"state": bson.M{"$eq": Signing}}).Iter()
 	for iter.Next(&one) {
 		if one["matchtype"] == nil || one["matchid"] == nil {

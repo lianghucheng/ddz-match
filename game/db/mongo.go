@@ -4,7 +4,7 @@ import (
 	"ddz/conf"
 
 	"github.com/name5566/leaf/db/mongodb"
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 )
 
 var MongoDB *mongodb.DialContext
@@ -47,7 +47,7 @@ func initCollection() {
 	if err != nil {
 		log.Fatal("ensure counter error: %v", err)
 	}
-	err = db.EnsureCounter(DB, " counters", "usermail")
+	err = db.EnsureCounter(DB, "counters", "usermail")
 	err = db.EnsureUniqueIndex(DB, "users", []string{"accountid"})
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)

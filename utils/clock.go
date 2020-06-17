@@ -3,7 +3,7 @@ package utils
 import (
 	"time"
 
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 )
 
 func HourClock(d time.Duration, fs ...func()) {
