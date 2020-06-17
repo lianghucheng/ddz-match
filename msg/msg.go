@@ -67,6 +67,7 @@ func init() {
 	Processor.Register(&S2C_AwardInfo{})
 	Processor.Register(&C2S_WithDraw{})
 	Processor.Register(&S2C_WithDraw{})
+	Processor.Register(&S2C_BankCard{})
 }
 
 type C2S_Heartbeat struct{}
@@ -186,12 +187,13 @@ type C2S_RealNameAuth struct {
 }
 
 const (
-	ErrRealNameAuthSuccess = 0
-	ErrRealNameAuthFail    = 1
+	ErrRealNameAuthSuccess = 0 //成功
+	ErrRealNameAuthFail    = 1 //失败
+	ErrRealNameAuthAlready = 2 //已经实名认证
 )
 
-//todo:待与客户端探讨，数据以何种形式给
 type S2C_RealNameAuth struct {
+	RealName   string
 	Error int
 }
 
@@ -199,16 +201,23 @@ type C2S_AddBankCard struct {
 	BankName    string
 	BankCardNo  string
 	Province    string
+	City		string
 	OpeningBank string
 }
 
 const (
 	ErrAddBankCardSuccess = 0
 	ErrAddBankCardFail    = 1
+	ErrAddBankCardAlready = 2
 )
 
 type S2C_AddBankCard struct {
+	BankCardNo    string
 	Error int
+}
+
+type S2C_BankCard struct {
+	BankCardNo    string
 }
 
 type C2S_AwardInfo struct {

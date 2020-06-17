@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
@@ -13,6 +14,7 @@ type BankCard struct {
 	BankName    string
 	BankCardNo  string
 	Province    string
+	City        string
 	OpeningBank string
 }
 
@@ -35,27 +37,44 @@ func (ctx *BankCard) read() {
 }
 
 func AddBankCard(user *player.User, m *msg.C2S_AddBankCard) {
-	addBankCard(user, m, nil)
-}
-
-func addBankCard(user *player.User, m *msg.C2S_AddBankCard, cb func()) {
 	bankCard := new(BankCard)
 	bankCard.Userid = user.BaseData.UserData.UserID
 	bankCard.BankName = m.BankName
 	bankCard.BankCardNo = m.BankCardNo
 	bankCard.Province = m.Province
+	bankCard.City = m.City
 	bankCard.OpeningBank = m.OpeningBank
+	bankCard.addBankCard(user, m, BandBankCardAPI)
+}
 
-	if err := bankCard.save(); err != nil {
-		user.WriteMsg(&msg.S2C_AddBankCard{
-			Error: msg.ErrAddBankCardFail,
-		})
+func (ctx *BankCard)addBankCard(user *player.User, m *msg.C2S_AddBankCard, cb func(b *BankCard) error) {
+	if cb == nil {
+		SendAddBankCard(user, msg.ErrAddBankCardFail)
 		return
 	}
-	user.WriteMsg(&msg.S2C_AddBankCard{
-		Error: msg.ErrAddBankCardSuccess,
-	})
-	if cb != nil {
-		cb()
+	if user.BankCardNo() != "" {
+		SendAddBankCard(user, msg.ErrAddBankCardAlready)
+		return
 	}
+	var err error
+	game.GetSkeleton().Go(func() {
+		err = cb(ctx)
+	}, func() {
+		if err != nil {
+			SendAddBankCard(user, msg.ErrAddBankCardFail)
+			return
+		}
+		user.BaseData.UserData.BankCardNo = ctx.BankCardNo
+		player.SaveUserData(user.GetUserData())
+		err = ctx.save()
+		if err != nil {
+			SendAddBankCard(user, msg.ErrAddBankCardFail)
+			return
+		}
+		SendAddBankCard(user, msg.ErrAddBankCardSuccess)
+	})
+}
+
+func BandBankCardAPI(b *BankCard) error {
+	return nil
 }

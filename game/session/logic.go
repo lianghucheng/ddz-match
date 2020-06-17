@@ -173,6 +173,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	hall.SendRaceInfo(user.BaseData.UserData.UserID)
+	hall.SendBankCard(user)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		for _, p := range s.AllPlayers {
 			if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {
