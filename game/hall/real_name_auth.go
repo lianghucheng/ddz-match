@@ -4,8 +4,7 @@ import (
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
-
-	"github.com/szxby/tools/log"
+	"github.com/name5566/leaf/log"
 )
 
 func RealNameAuth(user *player.User, msg *msg.C2S_RealNameAuth) {

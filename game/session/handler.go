@@ -72,13 +72,7 @@ func handleCoupon(args []interface{}) {
 		return
 	}
 	user := agentInfo.User
-	user.BaseData.UserData.Coupon += m.Count
-	user.WriteMsg(&msg.S2C_GetCoupon{
-		Error: msg.S2C_GetCouponSuccess,
-	})
-	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-		Coupon: user.BaseData.UserData.Coupon,
-	})
+	hall.AddCoupon(user, m.Count)
 }
 
 func handleGetGameRecord(args []interface{}) {
@@ -134,17 +128,7 @@ func handleNickName(args []interface{}) {
 	if user == nil {
 		return
 	}
-	if len(m.NickName) < 3 || len(m.NickName) > 18 {
-		user.WriteMsg(&msg.S2C_UpdateNickName{
-			Error: msg.S2C_SetNickName_Length,
-		})
-		return
-	}
-	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"nickname": m.NickName}})
-	user.WriteMsg(&msg.S2C_UpdateNickName{
-		Error:    0,
-		NickName: m.NickName,
-	})
+	hall.SetNickname(user, m.NickName)
 }
 
 func handleGetAllPlayers(args []interface{}) {

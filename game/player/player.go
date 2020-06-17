@@ -114,3 +114,19 @@ func ReadUserDataByID(id int) *UserData {
 
 	return userData
 }
+
+func (user *User)RealName() string {
+	return user.BaseData.UserData.RealName
+}
+
+func (user *User)PhoneNum() string {
+	return user.BaseData.UserData.Username
+}
+
+func (user *User)Fee() float64 {
+	return user.BaseData.UserData.Fee
+}
+
+func (user *User)Coupon() int64 {
+	return user.BaseData.UserData.Coupon
+}

@@ -124,9 +124,7 @@ func (sc *scoreMatch) SignIn(uid int) error {
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
 	user.BaseData.UserData.Coupon -= base.EnterFee
-	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-		Coupon: user.BaseData.UserData.Coupon,
-	})
+	hall.UpdateUserCoupon(user)
 	return nil
 }
 
@@ -138,9 +136,7 @@ func (sc *scoreMatch) SignOut(uid int) error {
 		return errors.New("unknown user")
 	}
 	user.BaseData.UserData.Coupon += base.EnterFee
-	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-		Coupon: user.BaseData.UserData.Coupon,
-	})
+	hall.UpdateUserCoupon(user)
 	return nil
 }
 

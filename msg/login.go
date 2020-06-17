@@ -55,6 +55,9 @@ type S2C_Login struct {
 	NewWelfareIcon    bool    //新人福利标签是否显示
 	FirstRechargeIcon bool    //首充标签是否显示
 	ShareIcon         bool    //分享推广标签是否显示
+	Customer          string  //客服
+	RealName          string
+	PhoneNum          string
 }
 
 type S2C_FirstRechage struct {

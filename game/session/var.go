@@ -3,7 +3,6 @@ package session
 import (
 	"ddz/conf"
 	. "ddz/game/player"
-	. "ddz/game/room"
 	"ddz/msg"
 	"time"
 
@@ -16,18 +15,6 @@ const (
 	UserLogin  = iota
 	UserLogout // 1
 )
-
-type Game interface {
-	OnInit(room *Room)
-	Enter(user *User) bool
-	Exit(userId int)
-	SitDown(user *User, pos int)
-	StandUp(user *User, pos int)
-	GetAllPlayers(user *User)
-	Play(command interface{}, userId int)
-	StartGame()
-	EndGame()
-}
 
 var (
 // UserIDUsers = make(map[int]*User)

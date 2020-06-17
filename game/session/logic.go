@@ -160,14 +160,16 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		NewWelfareIcon:    conf.GetCfgHall().NewWelfareIcon,
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
+		Customer:          "yintan12345",
+		RealName: 		   	user.RealName(),
+		PhoneNum: 			user.PhoneNum(),
 	})
 
-	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-		Coupon: user.BaseData.UserData.Coupon,
-	})
-	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-		AfterTaxAward: user.BaseData.UserData.Fee,
-	})
+	hall.UpdateUserCoupon(user)
+	hall.UpdateUserAfterTaxAward(user,user.Fee())
+	hall.UpdateUserCoupon(user)
+	hall.UpdateUserAfterTaxAward(user, user.Fee())
+	hall.SendMail(user)
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	hall.SendRaceInfo(user.BaseData.UserData.UserID)

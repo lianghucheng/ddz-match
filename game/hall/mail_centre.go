@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/labstack/gommon/log"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -23,7 +22,7 @@ const (
 
 type MailBox struct {
 	ID          int64   `bson:"_id"`          //唯一id
-	TagetID     int64   `json:"taget_id"`     //目标用户， -1表示所有用户
+	TargetID     int64   `json:"target_id"`     //目标用户， -1表示所有用户
 	MailType    int     `json:"mail_type"`    //邮箱邮件类型
 	CreatedAt   int64   `json:"created_at"`   //收件时间
 	Title       string  `json:"title"`        //主题
@@ -82,16 +81,17 @@ func (ctx *UserMail) save() {
 		se := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(se)
 
-		se.DB(db.DB).C("usermail").Upsert(bson.M{"_id": ctx.ID}, ctx)
+		if _, err := se.DB(db.DB).C("usermail").Upsert(bson.M{"_id": ctx.ID}, ctx);err != nil {
+			log.Error(err.Error())
+		}
 	}, nil)
 }
 
 //玩家登录调用一次，系统发邮件时调用一次
 func SendMail(user *player.User) {
-	//todo:只发最新的邮件还是每次都全发
-	mails := readMailBox(user.GetUserData().LastTakenMail)
+	mails := readMailBox(user.BaseData.UserData.UserID,user.GetUserData().LastTakenMail)
 	if len(*mails) > 0 {
-		user.GetUserData().LastTakenMail = (*mails)[0].ID
+		user.GetUserData().LastTakenMail = (*mails)[len(*mails)-1].ID
 	}
 	pullMailBox(user, mails)
 	usermails := readUserMail()
@@ -100,13 +100,13 @@ func SendMail(user *player.User) {
 	})
 }
 
-func readMailBox(lastId int64) *[]MailBox {
+func readMailBox(userid int,lastId int64) *[]MailBox {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 
 	rt := new([]MailBox)
 
-	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}}).All(rt)
+	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}, "$or": []bson.M{{"targetid": userid},{"targetid": -1}}}).All(rt)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -127,7 +127,10 @@ func (ctx *MailBox) save() {
 func pullMailBox(user *player.User, mails *[]MailBox) {
 	for _, v := range *mails {
 		userMail := new(UserMail)
-		id, _ := db.MongoDBNextSeq("usermail")
+		id, err := db.MongoDBNextSeq("usermail")
+		if err != nil {
+			log.Error(err.Error())
+		}
 		userMail.ID = int64(id)
 		userMail.UserID = int64(user.GetUserData().UserID)
 		userMail.CreatedAt = v.CreatedAt
@@ -135,14 +138,13 @@ func pullMailBox(user *player.User, mails *[]MailBox) {
 		userMail.Content = v.Content
 		userMail.Annexes = v.Annexes
 		userMail.ExpireValue = v.ExpireValue
-
 		userMail.save()
 	}
 }
 
 func GamePushMail(userid int, title, content string) {
 	mailBox := new(MailBox)
-	mailBox.TagetID = int64(userid)
+	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = title
@@ -153,7 +155,7 @@ func GamePushMail(userid int, title, content string) {
 
 func MatchEndPushMail(userid int, matchName string, order int, award float64) {
 	mailBox := new(MailBox)
-	mailBox.TagetID = int64(userid)
+	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "比赛通知"
@@ -167,7 +169,7 @@ func MatchEndPushMail(userid int, matchName string, order int, award float64) {
 
 func MatchInterruptPushMail(userid int, matchName string, coupon int) {
 	mailBox := new(MailBox)
-	mailBox.TagetID = int64(userid)
+	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "退赛通知"
@@ -188,14 +190,13 @@ func (ctx *MailBox) pushMailBox() {
 	ctx.CreatedAt = time.Now().Unix()
 	ctx.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	ctx.save()
-	game.GetSkeleton().ChanRPCServer.Go("SendMail", &msg.RPC_SendMail{ID: int(ctx.TagetID)})
+	game.GetSkeleton().ChanRPCServer.Go("SendMail", &msg.RPC_SendMail{ID: int(ctx.TargetID)})
 }
 
 func readUserMail() *[]UserMail {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	limit := conf.GetCfgHall().UserMailLimit
-
 	rt := new([]UserMail)
 
 	notRead := new([]UserMail)
@@ -231,6 +232,8 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.CreatedAt = v.CreatedAt
 		temp.ID = v.ID
 		temp.Status = v.Status
+
+		*rt = append(*rt, *temp)
 	}
 
 	return rt
@@ -255,7 +258,7 @@ func DeleteMail(mid int64) {
 }
 
 type MailBoxParam struct {
-	TagetID     int64   `json:"taget_id"`     //目标用户， -1表示所有用户
+	TargetID     int64   `json:"target_id"`     //目标用户， -1表示所有用户
 	MailType    int     `json:"mail_type"`    //邮箱邮件类型
 	Title       string  `json:"title"`        //主题
 	Content     string  `json:"content"`      //内容
@@ -263,16 +266,11 @@ type MailBoxParam struct {
 	ExpireValue int64   `json:"expire_value"` //有效时长
 }
 
-func handlePushMail(w http.ResponseWriter, r *http.Request) {
-	b, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-
+func HandlePushMail(w http.ResponseWriter, r *http.Request) {
+	data := r.FormValue("data")
+	fmt.Println(data)
 	param := new(MailBoxParam)
-	if err := json.Unmarshal(b, param); err != nil {
+	if err := json.Unmarshal([]byte(data), param); err != nil {
 		log.Error(err.Error())
 		return
 	}
@@ -282,7 +280,7 @@ func handlePushMail(w http.ResponseWriter, r *http.Request) {
 
 func (ctx *MailBoxParam) pushMailBox() {
 	mailBox := new(MailBox)
-	mailBox.TagetID = ctx.TagetID
+	mailBox.TargetID = ctx.TargetID
 	mailBox.ExpireValue = ctx.ExpireValue
 	mailBox.MailType = ctx.MailType
 	mailBox.Title = ctx.Title
@@ -290,4 +288,10 @@ func (ctx *MailBoxParam) pushMailBox() {
 	mailBox.Annexes = ctx.Annexes
 
 	mailBox.pushMailBox()
+}
+
+func TakenMailAnnex(mid int64) {
+	mail := readUserMailByID(mid)
+	mail.Status = TakenUserMail
+	mail.save()
 }
