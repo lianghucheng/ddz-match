@@ -7,7 +7,7 @@
 	MaxConnNum= 20000
 	DBUrl= "mongodb://localhost"
 	DBMaxConnNum= 100
-	DBName="ddz"
+	DBName="ddz-match"
     SubsidyTotal = 2
     FirstRecharge=3
 

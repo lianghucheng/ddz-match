@@ -311,3 +311,18 @@ func (game *LandlordMatchRoom) EndGame() {
 
 	})
 }
+
+// GetRankData 临时处理，获取排行信息
+func (game *LandlordMatchRoom) GetRankData(uid int) poker.LandlordRankData {
+	playerData := game.userIDPlayerDatas[uid]
+	data := poker.LandlordRankData{
+		Nickname: playerData.user.BaseData.UserData.Nickname,
+		Total:    playerData.roundResult.Total,
+		Last:     playerData.roundResult.Last,
+		Wins:     playerData.wins,
+		Time:     playerData.costTimeBydiscard,
+		Sort:     playerData.Sort,
+		Position: playerData.position,
+	}
+	return data
+}

@@ -253,8 +253,20 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 				// 先发送单局结束面板
 				for _, userID := range game.PositionUserIDs {
 					game.SendRoundResult(userID)
+					data := game.GetRankData(userID)
+					for _, p := range sc.matchPlayers {
+						if p.uid == userID {
+							p.lastScore = data.Last
+							p.totalScore = data.Total
+							p.opTime = data.Time
+							p.wins = data.Wins
+							break
+						}
+					}
 				}
 			}
+			// 排序
+			sc.sortMatchPlayers()
 		}
 		// 进入下一局
 		sc.NextRound()
