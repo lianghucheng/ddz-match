@@ -139,7 +139,7 @@ func rpcSendRaceInfo(args []interface{}) {
 			ID:       v.MatchID,
 			Desc:     v.MatchName,
 			Award:    award,
-			EnterFee: float64(v.EnterFee) / 100,
+			EnterFee: float64(v.EnterFee) / 10,
 			ConDes:   v.MatchDesc,
 			JoinNum:  len(MatchList[v.MatchID].SignInPlayers),
 		})
