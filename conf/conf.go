@@ -110,7 +110,6 @@ var ServerConfig Config
 
 func init() {
 	ReadConfigure()
-	ReadRaces()
 }
 func ReadConfigure() {
 	_, err := toml.DecodeFile("conf/ddz-server.toml", &ServerConfig)

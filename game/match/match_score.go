@@ -78,6 +78,7 @@ func NewScoreMatch(c *scoreConfig) Match {
 	// 	return nil
 	// }
 	score := &scoreMatch{}
+	score.myConfig = &sConfig{}
 	// score.BaseScore = c.BaseScore
 	// // score.StartTime = sConfig.StartTime
 	// score.LimitPlayer = c.LimitPlayer
