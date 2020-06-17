@@ -48,6 +48,7 @@ func init() {
 	handler(&msg.C2S_AddBankCard{}, handleAddBankCard)
 	handler(&msg.C2S_AwardInfo{}, handleAwardInfo)
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
+	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -474,4 +475,39 @@ func handleWithDraw(args []interface{}) {
 		return
 	}
 	hall.WithDraw(user, m.Amount)
+}
+
+func handleGetMatchList(args []interface{}) {
+	// m := args[0].(*msg.C2S_GetMatchList)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	list := []msg.OneMatch{}
+	myMatchID := ""
+	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
+		myMatchID = ma.MatchID
+	}
+	for _, m := range MatchList {
+		isSign := false
+		if m.MatchID == myMatchID {
+			isSign = true
+		}
+		list = append(list, msg.OneMatch{
+			MatchID:   m.MatchID,
+			MatchName: m.MatchName,
+			SignInNum: len(m.SignInPlayers),
+			Recommend: m.Recommend,
+			MaxPlayer: m.MaxPlayer,
+			EnterFee:  m.EnterFee,
+			IsSign:    isSign,
+		})
+	}
+	user.WriteMsg(&msg.S2C_GetMatchList{
+		List: list,
+	})
 }

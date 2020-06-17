@@ -52,4 +52,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_WriteAwardFlowData{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_SendMatchEndMail{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_SendInterruptMail{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_GetMatchList{}, game.ChanRPC)
 }

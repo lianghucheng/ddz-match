@@ -8,7 +8,6 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
-	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"strconv"
@@ -161,12 +160,12 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
 		Customer:          "yintan12345",
-		RealName: 		   	user.RealName(),
-		PhoneNum: 			user.PhoneNum(),
+		RealName:          user.RealName(),
+		PhoneNum:          user.PhoneNum(),
 	})
 
 	hall.UpdateUserCoupon(user)
-	hall.UpdateUserAfterTaxAward(user,user.Fee())
+	hall.UpdateUserAfterTaxAward(user, user.Fee())
 	hall.UpdateUserCoupon(user)
 	hall.UpdateUserAfterTaxAward(user, user.Fee())
 	hall.SendMail(user)

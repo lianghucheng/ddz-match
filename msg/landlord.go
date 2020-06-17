@@ -114,10 +114,28 @@ type Result struct {
 }
 
 //获取对局排名
-
 type C2S_LandlordMatchRound struct {
 }
 
 type S2C_LandlordMatchRound struct {
 	RoundResults []poker.LandlordRankData
+}
+
+// C2S_GetMatchList 获取赛事列表
+type C2S_GetMatchList struct {
+}
+
+// S2C_GetMatchList 返回赛事列表
+type S2C_GetMatchList struct {
+	List []OneMatch
+}
+
+type OneMatch struct {
+	MatchID   string
+	MatchName string
+	SignInNum int
+	Recommend string
+	MaxPlayer int
+	EnterFee  int64
+	IsSign    bool
 }

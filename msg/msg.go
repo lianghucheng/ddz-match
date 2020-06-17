@@ -67,6 +67,8 @@ func init() {
 	Processor.Register(&S2C_AwardInfo{})
 	Processor.Register(&C2S_WithDraw{})
 	Processor.Register(&S2C_WithDraw{})
+	Processor.Register(&C2S_GetMatchList{})
+	Processor.Register(&S2C_GetMatchList{})
 }
 
 type C2S_Heartbeat struct{}

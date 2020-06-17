@@ -6,7 +6,6 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
-	. "ddz/game/values"
 	"ddz/msg"
 	"strings"
 	"time"

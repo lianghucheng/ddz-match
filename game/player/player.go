@@ -23,6 +23,11 @@ const (
 	RoleRoot      = 4  // 最高管理员
 )
 
+// 保存所有玩家信息
+var (
+	UserIDUsers = make(map[int]*User)
+)
+
 type UserData struct {
 	UserID            int `bson:"_id"`
 	AccountID         int
@@ -115,18 +120,18 @@ func ReadUserDataByID(id int) *UserData {
 	return userData
 }
 
-func (user *User)RealName() string {
+func (user *User) RealName() string {
 	return user.BaseData.UserData.RealName
 }
 
-func (user *User)PhoneNum() string {
+func (user *User) PhoneNum() string {
 	return user.BaseData.UserData.Username
 }
 
-func (user *User)Fee() float64 {
+func (user *User) Fee() float64 {
 	return user.BaseData.UserData.Fee
 }
 
-func (user *User)Coupon() int64 {
+func (user *User) Coupon() int64 {
 	return user.BaseData.UserData.Coupon
 }
