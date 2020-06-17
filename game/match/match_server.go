@@ -50,5 +50,6 @@ func initMatchConfig() error {
 			log.Error("unknown match:%v", one)
 		}
 	}
+	log.Debug("init match finish:matchList:%+v", MatchList)
 	return nil
 }
