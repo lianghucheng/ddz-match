@@ -3,6 +3,7 @@ package match
 import (
 	"ddz/conf"
 	"ddz/game"
+	"ddz/game/db"
 	"ddz/game/ddz"
 	"ddz/game/hall"
 	. "ddz/game/player"
@@ -101,6 +102,7 @@ func NewScoreMatch(c *scoreConfig) Match {
 	base.AwardContent = c.AwardContent
 	base.EnterFee = c.EnterFee
 	base.Recommend = c.Recommend
+	base.AllPlayers = make(map[int]*User)
 
 	score.base = base
 	base.myMatch = score
@@ -128,7 +130,7 @@ func (sc *scoreMatch) SignIn(uid int) error {
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
 	user.BaseData.UserData.Coupon -= base.EnterFee
-	hall.UpdateUserCoupon(user)
+	hall.UpdateUserCoupon(user, -base.EnterFee, db.MatchSignIn)
 	return nil
 }
 
@@ -140,7 +142,7 @@ func (sc *scoreMatch) SignOut(uid int) error {
 		return errors.New("unknown user")
 	}
 	user.BaseData.UserData.Coupon += base.EnterFee
-	hall.UpdateUserCoupon(user)
+	hall.UpdateUserCoupon(user, base.EnterFee, db.MatchSignOut)
 	return nil
 }
 

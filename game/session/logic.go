@@ -164,9 +164,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		PhoneNum:          user.PhoneNum(),
 	})
 
-	hall.UpdateUserCoupon(user)
-	hall.UpdateUserAfterTaxAward(user, user.Fee())
-	hall.UpdateUserCoupon(user)
+	hall.UpdateUserCoupon(user, 0, "")
 	hall.UpdateUserAfterTaxAward(user, user.Fee())
 	hall.SendMail(user)
 	hall.SendDailySignItems(user)
