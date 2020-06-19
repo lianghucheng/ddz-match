@@ -1,46 +1,39 @@
 package hall
 
 import (
+	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
+	"errors"
 	"github.com/name5566/leaf/log"
 )
 
-type RealName struct {
-	IDCardNo   string
-	RealName   string
-}
-
 func RealNameAuth(user *player.User, msg *msg.C2S_RealNameAuth) {
-	realName := new(RealName)
-	realName.RealName = msg.RealName
-	realName.IDCardNo = msg.IDCardNo
-	realName.realNameAuth(user, RealNameAPI)
+	idBind := edy_api.NewIDBindReq(user.AcountID(),msg.IDCardNo, msg.RealName, "")
+	if err := realNameAuth(user, idBind); err == nil {
+		user.BaseData.UserData.RealName = msg.RealName
+		user.BaseData.UserData.IDCardNo = msg.IDCardNo
+	}
 }
 
-func (ctx *RealName)realNameAuth(user *player.User, callRealNameAPI func(idCardNo, realName string) error) {
-	if callRealNameAPI == nil {
+func realNameAuth(user *player.User, idBindApi edy_api.IDBindApi) error {
+	if idBindApi == nil {
 		UpdateRealName(user, msg.ErrRealNameAuthFail)
-		return
+		return errors.New("msg.ErrRealNameAuthFail")
 	}
 	if user.RealName() != "" {
 		UpdateRealName(user, msg.ErrRealNameAuthAlready)
-		return
+		return errors.New("msg.ErrRealNameAuthAlready")
 	}
-	if err := callRealNameAPI(ctx.IDCardNo, ctx.RealName); err != nil {
+	if err := idBindApi.IDCardBind(); err != nil {
 		log.Error(err.Error())
 		UpdateRealName(user, msg.ErrRealNameAuthFail)
-		return
+		return errors.New("msg.ErrRealNameAuthFail")
 	}
-	user.BaseData.UserData.RealName = ctx.RealName
-	user.BaseData.UserData.IDCardNo = ctx.IDCardNo
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(user.BaseData.UserData)
 	}, nil)
 	UpdateRealName(user, msg.ErrRealNameAuthSuccess)
-}
-
-func RealNameAPI(idCardNo, realName string) error {
 	return nil
 }

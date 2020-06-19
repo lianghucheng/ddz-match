@@ -143,3 +143,7 @@ func (user *User)IDCardNo() string {
 func (user *User)BankCardNo()string {
 	return user.BaseData.UserData.BankCardNo
 }
+
+func (user *User)AcountID() int {
+	return user.BaseData.UserData.AccountID
+}
