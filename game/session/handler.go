@@ -357,6 +357,11 @@ func handleTakenMailAnnex(args []interface{}) {
 	if user == nil {
 		return
 	}
+	hall.TakenMailAnnex(m.ID)
+	user.WriteMsg(&msg.S2C_DeleteMail{
+		Error: msg.S2C_TakenMailAnnex_OK,
+	})
+	hall.SendMail(user)
 }
 
 func handleApply(args []interface{}) {
