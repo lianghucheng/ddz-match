@@ -8,11 +8,6 @@ const (
 	MatchSignOut = "matchSignOut" // 赛事签出
 )
 
-// 定义物品名称
-const (
-	Coupon = "点券"
-)
-
 // ItemLog 物品日志
 type ItemLog struct {
 	UID        int    `bson:"uid"`

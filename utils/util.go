@@ -160,7 +160,7 @@ func StructCopy(dst, src interface{}) {
 			dstField.SetUint(srcField.Uint())
 		case Float64:
 			dstField.SetFloat(srcField.Float())
-		case Bool, String:
+		case Bool, String, Slice:
 			dstField.Set(srcField)
 		case Ptr:
 			StructCopy(dstField.Interface(), srcField.Interface())

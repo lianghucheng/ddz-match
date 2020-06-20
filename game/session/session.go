@@ -128,21 +128,7 @@ func rpcSendRaceInfo(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_SendRaceInfo)
-	RaceInfo := []msg.RaceInfo{}
-	for _, v := range MatchList {
-		var award float64
-		if len(v.Award) > 0 {
-			award = v.Award[0]
-		}
-		RaceInfo = append(RaceInfo, msg.RaceInfo{
-			ID:       v.MatchID,
-			Desc:     v.MatchName,
-			Award:    award,
-			EnterFee: float64(v.EnterFee) / 10,
-			ConDes:   v.MatchDesc,
-			JoinNum:  len(MatchList[v.MatchID].SignInPlayers),
-		})
-	}
+	RaceInfo := GetMatchManagerInfo()
 	if user, ok := UserIDUsers[m.ID]; ok {
 		user.WriteMsg(&msg.S2C_RaceInfo{
 			Races: RaceInfo,
@@ -156,7 +142,7 @@ func rpcWriteAwardFlowData(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_WriteAwardFlowData)
 
-	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].MatchType)
+	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].Manager.GetNormalConfig().MatchType)
 }
 
 func rpcSendMatchEndMail(args []interface{}) {
@@ -165,7 +151,7 @@ func rpcSendMatchEndMail(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_SendMatchEndMail)
 
-	hall.MatchEndPushMail(m.Userid, MatchList[m.Matchid].MatchName, m.Order, m.Award)
+	hall.MatchEndPushMail(m.Userid, MatchList[m.Matchid].Manager.GetNormalConfig().MatchName, m.Order, m.Award)
 }
 
 func rpcSendInterruptMail(args []interface{}) {
@@ -174,5 +160,5 @@ func rpcSendInterruptMail(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_SendInterruptMail)
 
-	hall.MatchInterruptPushMail(m.Userid, MatchList[m.Matchid].MatchName, int(MatchList[m.Matchid].EnterFee))
+	hall.MatchInterruptPushMail(m.Userid, MatchList[m.Matchid].Manager.GetNormalConfig().MatchName, int(MatchList[m.Matchid].Manager.GetNormalConfig().EnterFee))
 }

@@ -271,8 +271,8 @@ func handleRaceDetail(args []interface{}) {
 		return
 	}
 
-	if s, ok := MatchList[m.ID]; ok {
-		s.SendMatchDetail(user.BaseData.UserData.UserID)
+	if m, ok := MatchManagerList[m.ID]; ok {
+		m.SendMatchDetail(user.BaseData.UserData.UserID)
 		// if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// 	if m.ID == s.MatchID {
 		// 		data.IsSign = true
@@ -372,49 +372,15 @@ func handleApply(args []interface{}) {
 		return
 	}
 	//验证赛事ID的合法性
-	v, ok := MatchList[m.MatchId]
+	v, ok := MatchManagerList[m.MatchId]
 	if !ok {
 		return
 	}
-	//判断玩家是否已经在某个赛事中,不能重复报名其它赛事
 	if m.Action == 1 {
-		// if _, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		// 	user.WriteMsg(&msg.S2C_Apply{
-		// 		Error: msg.S2C_Error_Match,
-		// 	})
-		// 	return
-		// }
 		v.SignIn(user.BaseData.UserData.UserID)
 	} else if m.Action == 2 {
 		v.SignOut(user.BaseData.UserData.UserID)
 	}
-	// //验证玩家是否有充足的点券
-	// if user.BaseData.UserData.Coupon < int64(v.Coupon) {
-	// 	user.WriteMsg(&msg.S2C_Apply{
-	// 		Error: msg.S2C_Error_Coupon,
-	// 	})
-	// 	return
-	// }
-	// //验证玩家是否有足够的点券报名入口
-	// if m.Action == 1 {
-	// 	if v.Enter(user) {
-	// 		log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
-	// 		UserIDMatch[user.BaseData.UserData.UserID] = v
-	// 		user.BaseData.UserData.Coupon -= int64(v.Coupon)
-	// 		user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-	// 			Coupon: user.BaseData.UserData.Coupon,
-	// 		})
-	// 	}
-	// 	return
-	// }
-	// if v.Leave(user) {
-	// 	delete(UserIDMatch, user.BaseData.UserData.UserID)
-	// 	user.BaseData.UserData.Coupon += int64(v.Coupon)
-	// 	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
-	// 		Coupon: user.BaseData.UserData.Coupon,
-	// 	})
-	// }
-
 }
 
 func handleRankingList(args []interface{}) {
@@ -503,20 +469,22 @@ func handleGetMatchList(args []interface{}) {
 	list := []msg.OneMatch{}
 	myMatchID := ""
 	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		myMatchID = ma.MatchID
+		// myMatchID = ma.MatchID
+		myMatchID = ma.Manager.GetNormalConfig().MatchID
 	}
-	for _, m := range MatchList {
+	for _, m := range MatchManagerList {
 		isSign := false
-		if m.MatchID == myMatchID {
+		c := m.GetNormalConfig()
+		if c.MatchID == myMatchID {
 			isSign = true
 		}
 		list = append(list, msg.OneMatch{
-			MatchID:   m.MatchID,
-			MatchName: m.MatchName,
-			SignInNum: len(m.SignInPlayers),
-			Recommend: m.Recommend,
-			MaxPlayer: m.MaxPlayer,
-			EnterFee:  m.EnterFee,
+			MatchID:   c.MatchID,
+			MatchName: c.MatchName,
+			SignInNum: len(c.AllSignInPlayers),
+			Recommend: c.Recommend,
+			MaxPlayer: c.MaxPlayer,
+			EnterFee:  c.EnterFee,
 			IsSign:    isSign,
 		})
 	}

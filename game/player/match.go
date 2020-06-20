@@ -29,7 +29,7 @@ func (user *User) SendMatchRecord(page, num int) {
 				return
 			}
 			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
-				Sort("-createdat").Skip((page - 1) * num).Limit(page).All(&items)
+				Sort("-createdat").Skip((page - 1) * num).Limit(num).All(&items)
 
 		}, func() {
 			for _, r := range items {
@@ -55,7 +55,7 @@ func (user *User) SendMatchRecord(page, num int) {
 			allRecord.Record = items
 			allRecord.Total = count
 			allRecord.PageNumber = page
-			allRecord.PageNumber = num
+			allRecord.PageSize = num
 			db.RedisMatchRecord(uid, page, allRecord)
 		})
 	} else {
@@ -104,7 +104,7 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			count, _ = s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).Count()
 
 			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
-				Sort("-createdat").Skip((num - 1) * page).Limit(page).All(&items)
+				Sort("-createdat").Skip((num - 1) * page).Limit(num).All(&items)
 
 		}, func() {
 			allRecord.Record = items
@@ -114,10 +114,12 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			for _, r := range allRecord.Record {
 				if r.MatchId == matchID {
 					rank = r.Rank
+					break
 				}
 			}
 			sendData := msg.S2C_GetGameRankRecord{
 				Total:      len(rank),
+				MatchID:    matchID,
 				PageNumber: page,
 				PageSize:   num,
 			}
@@ -129,7 +131,7 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			if end > len(rank) {
 				end = len(rank)
 			}
-			sendData.Rank = rank[(rPage-1)*rNum : rPage*rNum]
+			sendData.Rank = rank[(rPage-1)*rNum : end]
 
 			user.WriteMsg(sendData)
 			data, err := json.Marshal(allRecord)
@@ -148,12 +150,14 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 		for _, r := range allRecord.Record {
 			if r.MatchId == matchID {
 				rank = r.Rank
+				break
 			}
 		}
-		data := msg.S2C_GetGameRankRecord{}
+		data := &msg.S2C_GetGameRankRecord{}
 		data.Total = len(rank)
 		data.PageNumber = rPage
 		data.PageSize = rNum
+		data.MatchID = matchID
 		if (rPage-1)*rNum >= len(rank) {
 			log.Error("invalid params:total:%v,rpage:%v,rnum:%v", len(rank), rPage, rNum)
 			return
@@ -162,7 +166,7 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 		if end > len(rank) {
 			end = len(rank)
 		}
-		data.Rank = rank[(rPage-1)*rNum : rPage*rNum]
+		data.Rank = rank[(rPage-1)*rNum : end]
 
 		user.WriteMsg(data)
 	}
@@ -185,7 +189,7 @@ func (user *User) SendMatchResultRecord(matchID string, page, num, rPage, rNum i
 			count, _ = s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).Count()
 
 			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
-				Sort("-createdat").Skip((num - 1) * page).Limit(page).All(&items)
+				Sort("-createdat").Skip((num - 1) * page).Limit(num).All(&items)
 
 		}, func() {
 			allRecord.Record = items
@@ -199,6 +203,7 @@ func (user *User) SendMatchResultRecord(matchID string, page, num, rPage, rNum i
 			}
 			sendData := msg.S2C_GetGameResultRecord{
 				Total:      len(result),
+				MatchID:    matchID,
 				PageNumber: page,
 				PageSize:   num,
 			}
@@ -210,7 +215,7 @@ func (user *User) SendMatchResultRecord(matchID string, page, num, rPage, rNum i
 			if end > len(result) {
 				end = len(result)
 			}
-			sendData.Result = result[(rPage-1)*rNum : rPage*rNum]
+			sendData.Result = result[(rPage-1)*rNum : end]
 
 			user.WriteMsg(sendData)
 			data, err := json.Marshal(allRecord)
@@ -231,8 +236,9 @@ func (user *User) SendMatchResultRecord(matchID string, page, num, rPage, rNum i
 				result = r.Result
 			}
 		}
-		data := msg.S2C_GetGameResultRecord{}
+		data := &msg.S2C_GetGameResultRecord{}
 		data.Total = len(result)
+		data.MatchID = matchID
 		data.PageNumber = rPage
 		data.PageSize = rNum
 		if (rPage-1)*rNum >= len(result) {
@@ -243,7 +249,7 @@ func (user *User) SendMatchResultRecord(matchID string, page, num, rPage, rNum i
 		if end > len(result) {
 			end = len(result)
 		}
-		data.Result = result[(rPage-1)*rNum : rPage*rNum]
+		data.Result = result[(rPage-1)*rNum : end]
 
 		user.WriteMsg(data)
 	}

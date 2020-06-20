@@ -207,9 +207,10 @@ func (game *LandlordMatchRoom) StartGame() {
 		playerData := game.userIDPlayerDatas[userID]
 		info := msg.S2C_MatchInfo{
 			RoundNum:    game.rule.RoundNum,
-			Process:     fmt.Sprintf("第%v局 第一幅", game.count),
+			Process:     fmt.Sprintf("第%v局 第1副", game.count),
 			Level:       fmt.Sprintf("%v/%v", playerData.Level, game.rule.MaxPlayers),
-			Competition: "前三晋级",
+			Competition: "前3晋级",
+			AwardList:   game.rule.AwardList,
 		}
 		playerData.user.WriteMsg(&info)
 	}
@@ -283,9 +284,9 @@ func (game *LandlordMatchRoom) EndGame() {
 	game.EndTimestamp = time.Now().Unix()
 	game.rank()
 	game.sendUpdateScore()
-	// if game.Match != nil {
-	// 	game.Match.RoundOver(game.Room.Number)
-	// }
+	if game.Match != nil {
+		game.Match.RoundOver(game.Room.Number)
+	}
 	skeleton.AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordEndPrepare)*time.Millisecond, func() {
 
 		if game.count < game.rule.Round {
@@ -306,9 +307,12 @@ func (game *LandlordMatchRoom) EndGame() {
 			for _, userID := range game.PositionUserIDs {
 				log.Debug("玩家离开房间:%v", userID)
 				game.sendMineRoundRank(userID)
-				game.Leave(userID)
+				// game.Leave(userID)
 			}
 			game.GameDDZRecordInsert()
+			if game.Match != nil {
+				game.Match.End()
+			}
 		}
 
 	})

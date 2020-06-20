@@ -19,21 +19,18 @@ import (
 	"github.com/szxby/tools/log"
 )
 
-type scoreConfig struct {
-	MatchID       string    `bson:"matchid"`       // 赛事id号
-	MatchName     string    `bson:"matchname"`     // 赛事名称
-	MatchDesc     string    `bson:"matchdesc"`     // 赛事描述
-	MatchType     string    `bson:"matchtype"`     // 赛事类型
-	State         int       `bson:"state"`         // 赛事状态
-	SignInPlayers []int     `bson:"signinplayers"` // 已报名玩家
-	MaxPlayer     int       `bson:"maxplayer"`     // 最大参赛玩家
-	Award         []float64 `bson:"award"`         // 赛事奖金
-	AwardDesc     string    `bson:"awarddesc"`     // 奖励描述
-	AwardTitle    []string  `bson:"awardtitle"`    // 赛事title
-	AwardContent  []string  `bson:"awardcontent"`  // 赛事正文
-	EnterFee      int64     `bson:"enterfee"`      // 报名费
-	Recommend     string    `bson:"recommend"`     // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
+// ScoreConfig 配置文件
+type ScoreConfig struct {
+	// base配置
+	MatchID       string   `bson:"matchid"`       // 赛事id号（与赛事管理的matchid不是同一个，共用一个字段）
+	State         int      `bson:"state"`         // 赛事状态
+	MaxPlayer     int      `bson:"maxplayer"`     // 最大参赛玩家
+	SignInPlayers []int    `bson:"signinplayers"` // 比赛报名的所有玩家
+	AwardDesc     string   `bson:"awarddesc"`     // 奖励描述
+	AwardList     string   `bson:"awardlist"`     // 奖励列表
+	Award         []string // 具体的赛事奖励
 
+	// score配置
 	BaseScore   int64  `bson:"basescore"`   // 基础分数
 	StartTime   int64  `bson:"entertime"`   // 比赛开始时间
 	LimitPlayer int    `bson:"limitplayer"` // 比赛开始的最少人数
@@ -42,6 +39,20 @@ type scoreConfig struct {
 	RoundNum    string `bson:"roundnum"`    // 赛制制(2局1副)
 	StartType   int    `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示比赛到点满足多少人条件即可开赛抉择出前几名获取奖励)
 	Eliminate   []int  `bson:"eliminate"`   // 每轮淘汰人数
+
+	// 赛事管理配置
+	MatchName        string     `bson:"matchname"`        // 赛事名称
+	MatchDesc        string     `bson:"matchdesc"`        // 赛事描述
+	MatchType        string     `bson:"matchtype"`        // 赛事类型
+	MatchRank        []int      `bson:"matchrank"`        // 比賽排序
+	EnterFee         int64      `bson:"enterfee"`         // 报名费
+	Recommend        string     `bson:"recommend"`        // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
+	TotalMatch       int        `bson:"totalmatch"`       // 后台配置的该种比赛可创建的比赛次数
+	OfficalIDs       []string   `bson:"officalIDs"`       // 后台配置的可用比赛id号
+	AllSignInPlayers []int      `bson:"allsigninplayers"` // 已报名玩家该种赛事的所有玩家
+	Sort             int        `bso:"sort"`              // 赛事排序
+	CurrentIDIndex   int        `bson:"-"`                // 当前赛事取id的序号
+	LastMatch        *BaseMatch `bson:"-"`                // 最新分配的一个赛事
 }
 
 type sConfig struct {
@@ -74,7 +85,7 @@ type matchPlayer struct {
 }
 
 // NewScoreMatch 创建一个新的赛事
-func NewScoreMatch(c *scoreConfig) Match {
+func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	// sConfig := scoreConfig{}
 	// if err := json.Unmarshal(c, &sConfig); err != nil {
 	// 	log.Error("get config error:%v", err)
@@ -87,22 +98,23 @@ func NewScoreMatch(c *scoreConfig) Match {
 	// score.LimitPlayer = c.LimitPlayer
 	// score.TablePlayer = c.TablePlayer
 	utils.StructCopy(score.myConfig, c)
+	score.checkConfig()
 
 	base := &BaseMatch{}
 	base.MatchID = c.MatchID
-	base.MatchName = c.MatchName
-	base.MatchDesc = c.MatchDesc
-	base.MatchType = c.MatchType
+	// base.MatchName = c.MatchName
+	// base.MatchDesc = c.MatchDesc
+	// base.MatchType = c.MatchType
 	base.MaxPlayer = c.MaxPlayer
 	base.State = c.State
-	base.SignInPlayers = c.SignInPlayers
+	// base.SignInPlayers = c.SignInPlayers
+	base.AwardList = c.AwardList
 	base.Award = c.Award
-	base.AwardDesc = c.AwardDesc
-	base.AwardTitle = c.AwardTitle
-	base.AwardContent = c.AwardContent
-	base.EnterFee = c.EnterFee
-	base.Recommend = c.Recommend
+	// base.AwardDesc = c.AwardDesc
+	// base.EnterFee = c.EnterFee
+	// base.Recommend = c.Recommend
 	base.AllPlayers = make(map[int]*User)
+	// base.GetAwardItem()
 
 	score.base = base
 	base.myMatch = score
@@ -117,32 +129,34 @@ func NewScoreMatch(c *scoreConfig) Match {
 
 func (sc *scoreMatch) SignIn(uid int) error {
 	base := sc.base.(*BaseMatch)
+	c := base.Manager.GetNormalConfig()
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
 		return errors.New("unknown user")
 	}
-	if user.BaseData.UserData.Coupon < base.EnterFee {
+	if user.BaseData.UserData.Coupon < c.EnterFee {
 		user.WriteMsg(&msg.S2C_Apply{
 			Error: msg.S2C_Error_Coupon,
 		})
 		return errors.New("not enough coupon")
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
-	user.BaseData.UserData.Coupon -= base.EnterFee
-	hall.UpdateUserCoupon(user, -base.EnterFee, db.MatchSignIn)
+	user.BaseData.UserData.Coupon -= c.EnterFee
+	hall.UpdateUserCoupon(user, -c.EnterFee, db.MatchSignIn)
 	return nil
 }
 
 func (sc *scoreMatch) SignOut(uid int) error {
 	base := sc.base.(*BaseMatch)
+	c := base.Manager.GetNormalConfig()
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
 		return errors.New("unknown user")
 	}
-	user.BaseData.UserData.Coupon += base.EnterFee
-	hall.UpdateUserCoupon(user, base.EnterFee, db.MatchSignOut)
+	user.BaseData.UserData.Coupon += c.EnterFee
+	hall.UpdateUserCoupon(user, c.EnterFee, db.MatchSignOut)
 	return nil
 }
 
@@ -182,13 +196,13 @@ func (sc *scoreMatch) Start() {
 		}
 		sc.matchPlayers = append(sc.matchPlayers, &matchPlayer{
 			uid:        uid,
-			rank:       index,
+			rank:       index + 1,
 			nickname:   p.BaseData.UserData.Nickname,
 			totalScore: 0,
 			lastScore:  0,
 			wins:       0,
 			opTime:     0,
-			signSort:   index,
+			signSort:   index + 1,
 		})
 	}
 
@@ -203,10 +217,22 @@ func (sc *scoreMatch) End() {
 			game.SendRoundResult(userID)
 		}
 	}
+
+	// 保存赛事记录
+	record := &ScoreConfig{}
+	utils.StructCopy(record, base.Manager.GetNormalConfig())
+	utils.StructCopy(record, base)
+	utils.StructCopy(record, sc.myConfig)
+	game.GetSkeleton().Go(func() {
+		s := db.MongoDB.Ref()
+		defer db.MongoDB.UnRef(s)
+		s.DB(db.DB).C("match").Insert(record)
+	}, nil)
 }
 
 func (sc *scoreMatch) SplitTable() {
 	base := sc.base.(*BaseMatch)
+	c := base.Manager.GetNormalConfig()
 	num := len(base.AllPlayers) / sc.myConfig.TablePlayer
 	index := 0
 	indexs := rand.Perm(len(base.AllPlayers))
@@ -216,12 +242,13 @@ func (sc *scoreMatch) SplitTable() {
 			BaseScore:  sc.myConfig.BaseScore,
 			Round:      sc.myConfig.Round,
 			MatchId:    base.MatchID,
-			Tickets:    base.EnterFee,
+			Tickets:    c.EnterFee,
 			RoundNum:   sc.myConfig.RoundNum,
-			Desc:       base.MatchName,
-			MatchType:  base.MatchType,
+			Desc:       c.MatchName,
+			MatchType:  c.MatchType,
 			GameType:   hall.RankGameTypeAward,
 			Awards:     base.Award,
+			AwardList:  base.AwardList,
 		}
 
 		room := InitRoom()
@@ -254,7 +281,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 				game := r.Game.(*ddz.LandlordMatchRoom)
 				// 先发送单局结束面板
 				for _, userID := range game.PositionUserIDs {
-					game.SendRoundResult(userID)
+					// game.SendRoundResult(userID)
 					data := game.GetRankData(userID)
 					for _, p := range sc.matchPlayers {
 						if p.uid == userID {
@@ -271,10 +298,10 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 			sc.sortMatchPlayers()
 		}
 		// 进入下一局
-		sc.NextRound()
+		// sc.NextRound()
 	} else {
 		// 比赛结束
-		base.End()
+		// base.End()
 	}
 }
 
@@ -316,39 +343,39 @@ func (sc *scoreMatch) GetRank(uid int) {
 	})
 }
 
-func (sc *scoreMatch) SendMatchDetail(uid int) {
-	base := sc.base.(*BaseMatch)
-	user, ok := UserIDUsers[uid]
-	if !ok {
-		log.Debug("unknow user:%v", uid)
-		return
-	}
-	signNumDetail := sc.myConfig.StartType == 1
-	isSign := false
-	if _, ok := UserIDMatch[uid]; ok {
-		isSign = true
-	}
-	enterTime := ""
-	if sc.myConfig.StartTime > time.Now().Unix() {
-		enterTime = time.Unix(sc.myConfig.StartTime, 0).Format("2006-01-02 15:04:05")
-	}
-	data := &msg.S2C_RaceDetail{
-		ID:            base.MatchID,
-		Desc:          base.MatchName,
-		AwardDesc:     base.AwardDesc,
-		AwardTitle:    base.AwardTitle,
-		AwardContent:  base.AwardContent,
-		MatchType:     base.MatchType,
-		RoundNum:      sc.myConfig.RoundNum,
-		EnterTime:     enterTime,
-		ConDes:        base.MatchDesc,
-		SignNumDetail: signNumDetail,
-		EnterFee:      float64(base.EnterFee) / 10,
-		SignNum:       len(base.SignInPlayers),
-		IsSign:        isSign,
-	}
-	user.WriteMsg(data)
-}
+// func (sc *scoreMatch) SendMatchDetail(uid int) {
+// 	base := sc.base.(*BaseMatch)
+// 	user, ok := UserIDUsers[uid]
+// 	if !ok {
+// 		log.Debug("unknow user:%v", uid)
+// 		return
+// 	}
+// 	signNumDetail := sc.myConfig.StartType == 1
+// 	isSign := false
+// 	if m, ok := UserIDMatch[uid]; ok && m.MatchID == base.MatchID {
+// 		isSign = true
+// 	}
+// 	enterTime := ""
+// 	if sc.myConfig.StartTime > time.Now().Unix() {
+// 		enterTime = time.Unix(sc.myConfig.StartTime, 0).Format("2006-01-02 15:04:05")
+// 	}
+
+// 	data := &msg.S2C_RaceDetail{
+// 		ID:            base.MatchID,
+// 		Desc:          base.MatchName,
+// 		AwardDesc:     base.AwardDesc,
+// 		AwardList:     base.AwardList,
+// 		MatchType:     base.MatchType,
+// 		RoundNum:      sc.myConfig.RoundNum,
+// 		EnterTime:     enterTime,
+// 		ConDes:        base.MatchDesc,
+// 		SignNumDetail: signNumDetail,
+// 		EnterFee:      float64(base.EnterFee) / 10,
+// 		SignNum:       len(base.SignInPlayers),
+// 		IsSign:        isSign,
+// 	}
+// 	user.WriteMsg(data)
+// }
 
 // func (sc *scoreMatch) ReStart() {
 // 	newConfig := scoreConfig{MatchID: time.Now().Unix()}
@@ -375,16 +402,23 @@ func (sc *scoreMatch) SendMatchDetail(uid int) {
 // }
 func (sc *scoreMatch) sortMatchPlayers() {
 	for i := 0; i < len(sc.matchPlayers); i++ {
-		p1 := sc.matchPlayers[i]
 		for j := i + 1; j < len(sc.matchPlayers); j++ {
-			p2 := sc.matchPlayers[j]
 			// 从大到小排序
-			if !rankWay(p1, p2) {
-				sc.matchPlayers[i], sc.matchPlayers[j] = sc.matchPlayers[j], sc.matchPlayers[i]
+			if !rankWay(sc.matchPlayers[i], sc.matchPlayers[j]) {
 				sc.matchPlayers[i].rank = j
 				sc.matchPlayers[j].rank = i
+				sc.matchPlayers[i], sc.matchPlayers[j] = sc.matchPlayers[j], sc.matchPlayers[i]
 			}
 		}
+	}
+}
+
+// 检查一些配置是否有问题
+func (sc *scoreMatch) checkConfig() {
+	// 防止配置错误
+	if sc.myConfig.TablePlayer < 3 {
+		log.Error("error config:%+v", sc.myConfig.TablePlayer)
+		sc.myConfig.TablePlayer = 3
 	}
 }
 

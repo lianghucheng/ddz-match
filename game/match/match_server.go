@@ -2,6 +2,8 @@ package match
 
 import (
 	"ddz/game/db"
+	"ddz/game/values"
+	"ddz/msg"
 	"encoding/json"
 
 	"github.com/szxby/tools/log"
@@ -10,8 +12,9 @@ import (
 
 // 保存所有赛事列表
 var (
-	MatchList   = map[string]*BaseMatch{}
-	UserIDMatch = map[int]*BaseMatch{}
+	MatchList        = map[string]*BaseMatch{}
+	UserIDMatch      = map[int]*BaseMatch{}
+	MatchManagerList = map[string]values.MatchManager{}
 )
 
 func init() {
@@ -26,7 +29,7 @@ func initMatchConfig() error {
 	defer db.MongoDB.UnRef(s)
 	one := map[string]interface{}{}
 	log.Debug("init MatchConfig........")
-	iter := s.DB(db.DB).C("match").Find(bson.M{"state": bson.M{"$eq": Signing}}).Iter()
+	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$eq": Signing}}).Iter()
 	for iter.Next(&one) {
 		if one["matchtype"] == nil || one["matchid"] == nil {
 			log.Error("unknow match:%v", one)
@@ -39,17 +42,53 @@ func initMatchConfig() error {
 		}
 		switch mType {
 		case Score:
-			sConfig := &scoreConfig{}
+			sConfig := &ScoreConfig{}
 			c, _ := json.Marshal(one)
 			if err := json.Unmarshal(c, &sConfig); err != nil {
 				log.Error("get config error:%v", err)
 				return nil
 			}
-			NewScoreMatch(sConfig)
+			NewScoreManager(sConfig)
 		default:
 			log.Error("unknown match:%v", one)
 		}
 	}
-	log.Debug("init match finish:matchList:%+v", MatchList)
+	log.Debug("init match finish:match manager:%+v", MatchManagerList)
 	return nil
+}
+
+// GetMatchManagerInfo 获取整个赛事列表的信息
+func GetMatchManagerInfo() []msg.RaceInfo {
+	matchManager := []values.MatchManager{}
+	raceInfo := []msg.RaceInfo{}
+	for _, v := range MatchManagerList {
+		matchManager = append(matchManager, v)
+	}
+	sortMatch(matchManager)
+	for _, v := range matchManager {
+		var award float64
+		info := v.GetNormalConfig()
+		if len(info.Award) > 0 {
+			award = values.ParseAward(info.Award[0])
+		}
+		raceInfo = append(raceInfo, msg.RaceInfo{
+			ID:       info.MatchID,
+			Desc:     info.MatchName,
+			Award:    award,
+			EnterFee: float64(info.EnterFee) / 10,
+			ConDes:   info.MatchDesc,
+			JoinNum:  len(info.AllSignInPlayers),
+		})
+	}
+	return raceInfo
+}
+
+func sortMatch(list []values.MatchManager) {
+	for i := 0; i < len(list); i++ {
+		for j := 0; j < len(list); j++ {
+			if list[i].GetNormalConfig().Sort > list[j].GetNormalConfig().Sort {
+				list[i], list[j] = list[j], list[i]
+			}
+		}
+	}
 }
