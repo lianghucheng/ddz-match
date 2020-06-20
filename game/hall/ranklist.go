@@ -75,13 +75,13 @@ func (ctx *Rank) read(rankType string) *[]Rank {
 	cfghall := conf.GetCfgHall()
 	switch rankType {
 	case cfghall.RankTypeJoinNum:
-		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-joinnum").Limit(5).All(rt)
+		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-joinnum").Limit(20).All(rt)
 	case cfghall.RankTypeWinNum:
-		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-winnum").Limit(5).All(rt)
+		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-winnum").Limit(20).All(rt)
 	case cfghall.RankTypeAward:
-		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-award").Limit(5).All(rt)
+		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-award").Limit(20).All(rt)
 	case cfghall.RankTypeFailNum:
-		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-failnum").Limit(5).All(rt)
+		err = se.DB(db.DB).C("rank").Find(bson.M{"gametype": ctx.GameType}).Sort("-failnum").Limit(20).All(rt)
 	}
 	if err != nil {
 		log.Error(err.Error())
