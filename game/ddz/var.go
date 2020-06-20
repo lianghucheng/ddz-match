@@ -31,6 +31,7 @@ const (
 //赛事规则
 type LandlordMatchRule struct {
 	MatchId    string   // 赛事ID
+	MatchName  string
 	MaxPlayers int      // 人数: 2、3
 	BaseScore  int      // 底分:
 	Tickets    int64    // 需要消耗的点券
@@ -41,6 +42,7 @@ type LandlordMatchRule struct {
 	Awards     []string // 数组下标对应名次，值对应该名次的奖励
 	AwardList  string   // 发送给客户端的奖励列表
 	GameType   int      //todo:奖金赛还是金币，待开发
+	Coupon     int
 }
 
 // 玩家状态
@@ -469,7 +471,7 @@ func (game *LandlordMatchRoom) FlushRank(gametype int, rankType string) {
 func (game *LandlordMatchRoom) matchEndMail(userid, order int, award float64) {
 	skeleton.ChanRPCServer.Go("SendMatchEndMail", &msg.RPC_SendMatchEndMail{
 		Userid:  userid,
-		Matchid: game.rule.MatchId,
+		MatchName: game.rule.MatchName,
 		Order:   order,
 		Award:   award, //playerData.Award,
 	})
@@ -478,7 +480,8 @@ func (game *LandlordMatchRoom) matchEndMail(userid, order int, award float64) {
 func (game *LandlordMatchRoom) matchInterrupt(userid int, conpon int) {
 	skeleton.ChanRPCServer.Go("SendInterruptMail", &msg.RPC_SendInterruptMail{
 		Userid:  userid,
-		Matchid: game.rule.MatchId,
+		MatchName: game.rule.MatchName,
+		Coupon: game.rule.Coupon,
 	})
 }
 

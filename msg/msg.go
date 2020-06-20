@@ -148,8 +148,8 @@ type C2S_DeleteMail struct {
 }
 
 const (
-	S2C_DeleteMail_OK   = 1
-	S2C_DeleteMail_Fail = 2
+	S2C_DeleteMail_OK   = 0
+	S2C_DeleteMail_Fail = 1
 )
 
 type S2C_DeleteMail struct {
@@ -161,8 +161,8 @@ type C2S_TakenMailAnnex struct {
 }
 
 const (
-	S2C_TakenMailAnnex_OK   = 1
-	S2C_TakenMailAnnex_Fail = 2
+	S2C_TakenMailAnnex_OK   = 0
+	S2C_TakenMailAnnex_Fail = 1
 )
 
 type S2C_TakenMailAnnex struct {

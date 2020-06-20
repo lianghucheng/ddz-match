@@ -110,7 +110,7 @@ func rankByTypes(user *player.User, gametype int) *[]msg.RankByType {
 			Name:  title,
 			Ranks: *rankings(rt, title),
 			Mine: msg.Ranking{
-				Order:    -1,
+				Order:    mineOrder(mine, rt),
 				NickName: user.BaseData.UserData.Nickname,
 				Value:    stringValue(title, mine),
 			},
@@ -124,7 +124,7 @@ func rankings(rt *[]Rank, title string) *[]msg.Ranking {
 	for k, v := range *rt {
 		userData := player.ReadUserDataByID(v.UserID)
 		rankings = append(rankings, msg.Ranking{
-			Order:    k,
+			Order:    k + 1,
 			NickName: userData.Nickname,
 			Value:    stringValue(title, &v),
 		})
@@ -146,4 +146,13 @@ func stringValue(title string, rank *Rank) string {
 		value = fmt.Sprintf("%v", rank.FailNum)
 	}
 	return value
+}
+
+func mineOrder(mine *Rank, allRank *[]Rank) int {
+	for k, v := range *allRank {
+		if mine.UserID == v.UserID {
+			return k + 1
+		}
+	}
+	return -1
 }

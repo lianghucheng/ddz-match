@@ -3,6 +3,7 @@ package main
 import (
 	"ddz/conf"
 	"ddz/game"
+	_ "ddz/game/http"
 	_ "ddz/game/match"
 	_ "ddz/game/session"
 	"ddz/gate"

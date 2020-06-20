@@ -242,6 +242,7 @@ func (sc *scoreMatch) SplitTable() {
 			BaseScore:  sc.myConfig.BaseScore,
 			Round:      sc.myConfig.Round,
 			MatchId:    base.MatchID,
+			MatchName:  base.Manager.GetNormalConfig().MatchName,
 			Tickets:    c.EnterFee,
 			RoundNum:   sc.myConfig.RoundNum,
 			Desc:       c.MatchName,
@@ -249,6 +250,7 @@ func (sc *scoreMatch) SplitTable() {
 			GameType:   hall.RankGameTypeAward,
 			Awards:     base.Award,
 			AwardList:  base.AwardList,
+			Coupon:     int(base.Manager.GetNormalConfig().EnterFee),
 		}
 
 		room := InitRoom()

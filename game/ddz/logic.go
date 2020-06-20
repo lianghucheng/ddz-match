@@ -340,10 +340,14 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardAlternative && !poker.CompareLandlordDiscard(cards, prevDiscards) {
 		if playerData, ok := game.userIDPlayerDatas[userID]; ok {
 			after := int(time.Now().Unix() - playerData.actionTimestamp)
-
+			isErr := 0
+			if !contain || cardsLen > 0 && cardsType == poker.Error {
+				isErr = 1
+			}
 			countdown := conf.GetCfgTimeout().LandlordDiscard - after
 			if countdown > 1 {
 				playerData.user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
+					IsErr:isErr,
 					ActionDiscardType: playerData.actionDiscardType,
 					Position:          playerData.position,
 					Countdown:         countdown - 1,

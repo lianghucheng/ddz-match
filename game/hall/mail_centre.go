@@ -8,7 +8,7 @@ import (
 	"ddz/msg"
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/gommon/log"
+	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"time"
@@ -77,14 +77,12 @@ func readUserMailByID(id int64) *UserMail {
 }
 
 func (ctx *UserMail) save() {
-	game.GetSkeleton().Go(func() {
 		se := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(se)
 
 		if _, err := se.DB(db.DB).C("usermail").Upsert(bson.M{"_id": ctx.ID}, ctx);err != nil {
 			log.Error(err.Error())
 		}
-	}, nil)
 }
 
 //玩家登录调用一次，系统发邮件时调用一次
@@ -93,10 +91,14 @@ func SendMail(user *player.User) {
 	if len(*mails) > 0 {
 		user.GetUserData().LastTakenMail = (*mails)[len(*mails)-1].ID
 	}
-	pullMailBox(user, mails)
-	usermails := readUserMail()
-	user.WriteMsg(&msg.S2C_SendMail{
-		Datas: *transferMsgUserMail(usermails),
+
+	game.GetSkeleton().Go(func() {
+		pullMailBox(user, mails)
+	}, func() {
+		usermails := readUserMail(user.UID())
+		user.WriteMsg(&msg.S2C_SendMail{
+			Datas: *transferMsgUserMail(usermails),
+		})
 	})
 }
 
@@ -114,14 +116,12 @@ func readMailBox(userid int,lastId int64) *[]MailBox {
 }
 
 func (ctx *MailBox) save() {
-	game.GetSkeleton().Go(func() {
 		se := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(se)
 		_, err := se.DB(db.DB).C("mailbox").Upsert(bson.M{"_id": ctx.ID}, ctx)
 		if err != nil {
 			log.Error(err.Error())
 		}
-	}, nil)
 }
 
 func pullMailBox(user *player.User, mails *[]MailBox) {
@@ -189,11 +189,14 @@ func (ctx *MailBox) pushMailBox() {
 	ctx.ID = int64(id)
 	ctx.CreatedAt = time.Now().Unix()
 	ctx.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
-	ctx.save()
-	game.GetSkeleton().ChanRPCServer.Go("SendMail", &msg.RPC_SendMail{ID: int(ctx.TargetID)})
+	game.GetSkeleton().Go(func() {
+		ctx.save()
+	}, func() {
+		game.GetSkeleton().ChanRPCServer.Go("SendMail", &msg.RPC_SendMail{ID: int(ctx.TargetID)})
+	})
 }
 
-func readUserMail() *[]UserMail {
+func readUserMail(uid int) *[]UserMail {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	limit := conf.GetCfgHall().UserMailLimit
@@ -201,7 +204,7 @@ func readUserMail() *[]UserMail {
 
 	notRead := new([]UserMail)
 	err := se.DB(db.DB).C("usermail").
-		Find(bson.M{"status": NotReadUserMail}).
+		Find(bson.M{"status": NotReadUserMail, "userid": uid}).
 		Sort("-createdat").Limit(limit).All(notRead)
 	if err != nil {
 		log.Error(err.Error())
@@ -211,7 +214,7 @@ func readUserMail() *[]UserMail {
 		limit -= len(*notRead)
 		readed := new([]UserMail)
 		err = se.DB(db.DB).C("usermail").
-			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix()}}).
+			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix(), "userid": uid}}).
 			Sort("-createdat").Limit(limit).All(readed)
 		if err != nil {
 			log.Error(err.Error())

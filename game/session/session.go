@@ -150,8 +150,7 @@ func rpcSendMatchEndMail(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_SendMatchEndMail)
-
-	hall.MatchEndPushMail(m.Userid, MatchList[m.Matchid].Manager.GetNormalConfig().MatchName, m.Order, m.Award)
+	hall.MatchEndPushMail(m.Userid, m.MatchName, m.Order, m.Award)
 }
 
 func rpcSendInterruptMail(args []interface{}) {
@@ -160,5 +159,5 @@ func rpcSendInterruptMail(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_SendInterruptMail)
 
-	hall.MatchInterruptPushMail(m.Userid, MatchList[m.Matchid].Manager.GetNormalConfig().MatchName, int(MatchList[m.Matchid].Manager.GetNormalConfig().EnterFee))
+	hall.MatchInterruptPushMail(m.Userid, m.MatchName, m.Coupon)
 }

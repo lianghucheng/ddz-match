@@ -3,6 +3,7 @@ package http
 import (
 	"ddz/conf"
 	. "ddz/game/db"
+	"ddz/game/hall"
 	"ddz/utils"
 	"fmt"
 	"net/http"
@@ -22,6 +23,7 @@ func startHTTPServer() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/code", handleCode)
+	mux.HandleFunc("/pushmail", hall.HandlePushMail)
 
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
