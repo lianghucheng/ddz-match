@@ -24,13 +24,12 @@ type C2S_RaceDetail struct {
 }
 
 type S2C_RaceDetail struct {
-	ID            string   //赛事ID
-	Desc          string   //
-	AwardDesc     string   //奖励描述
-	AwardTitle    []string //名次描述
-	AwardContent  []string //名次奖金
-	MatchType     string   //赛事类型
-	RoundNum      string   //对局副数
+	ID            string //赛事ID
+	Desc          string //
+	AwardDesc     string //奖励描述
+	AwardList     string // 奖励别表
+	MatchType     string //赛事类型
+	RoundNum      string //对局副数
 	EnterTime     string
 	ConDes        string  //赛事开赛条件
 	SignNum       int     //报名人数

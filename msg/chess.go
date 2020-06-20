@@ -35,7 +35,8 @@ type S2C_MatchInfo struct {
 	RoundNum    string //赛制 两局一副
 	Process     string //进程 第2局 第1幅
 	Level       string //排名 1/3
-	Competition string //晋级 前三晋级
+	Competition string //晋级 前3晋级
+	AwardList   string // 奖励列表
 }
 
 type S2C_MatchNum struct {

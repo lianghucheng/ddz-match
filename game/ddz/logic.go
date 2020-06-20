@@ -502,9 +502,9 @@ func (game *LandlordMatchRoom) reconnect(userID int) {
 	thePlayerData.user.WriteMsg(&msg.S2C_GameStart{})
 	thePlayerData.user.WriteMsg(&msg.S2C_MatchInfo{
 		RoundNum:    game.rule.RoundNum,
-		Process:     fmt.Sprintf("第%v局 第一幅", game.count),
+		Process:     fmt.Sprintf("第%v局 第1幅", game.count),
 		Level:       fmt.Sprintf("%v/%v", thePlayerData.Level, game.rule.MaxPlayers),
-		Competition: "前三晋级",
+		Competition: "前3晋级",
 	})
 	if game.landlordUserID > 0 {
 		landlordPlayerData := game.userIDPlayerDatas[game.landlordUserID]

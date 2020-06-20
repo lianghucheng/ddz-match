@@ -4,6 +4,7 @@ import (
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/game/values"
 	"ddz/msg"
 )
 
@@ -15,7 +16,7 @@ func UpdateUserCoupon(user *player.User, amount int64, way string) {
 	if amount != 0 {
 		game.GetSkeleton().Go(
 			func() {
-				db.InsertItemLog(user.BaseData.UserData.UserID, amount, db.Coupon, way)
+				db.InsertItemLog(user.BaseData.UserData.UserID, amount, values.Coupon, way)
 			}, nil)
 	}
 }

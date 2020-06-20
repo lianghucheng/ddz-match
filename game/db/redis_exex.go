@@ -22,8 +22,8 @@ func RedisMatchRecord(uid, page int, data interface{}) {
 		log.Error("marshal match record fail:%v", err)
 		return
 	}
-	key := MatchRecord + strconv.Itoa(uid) + strconv.Itoa(page)
-	_, err = Do("Set", key, msg)
+	key := strconv.Itoa(uid) + MatchRecord + strconv.Itoa(page)
+	_, err = Do("Set", key, msg, "EX", expireTime)
 	if err != nil {
 		log.Error("set match record fail:%v", err)
 	}
@@ -31,7 +31,7 @@ func RedisMatchRecord(uid, page int, data interface{}) {
 
 // RedisGetMatchRecord 获取玩家赛事记录
 func RedisGetMatchRecord(uid, page int) []byte {
-	key := MatchRecord + strconv.Itoa(uid) + strconv.Itoa(page)
+	key := strconv.Itoa(uid) + MatchRecord + strconv.Itoa(page)
 	data, err := Do("Get", key)
 	if err != nil {
 		log.Error("set match record fail:%v", err)

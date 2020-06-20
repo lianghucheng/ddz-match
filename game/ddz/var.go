@@ -30,17 +30,17 @@ const (
 
 //赛事规则
 type LandlordMatchRule struct {
-	MatchId    string    // 赛事ID
-	MaxPlayers int       // 人数: 2、3
-	BaseScore  int       // 底分:
-	Tickets    int64     // 需要消耗的点券
-	Award      float64   // 奖励金额
-	RoundNum   string    // 赛制
-	Round      int       // 对打几轮
-	MatchType  string    // 赛事类型
-	Desc       string    // 赛事名称
-	Awards     []float64 // 数组下标对应名次，值对应该名词的奖励，待开发
-	GameType   int       //todo:奖金赛还是金币，待开发
+	MatchId    string   // 赛事ID
+	MaxPlayers int      // 人数: 2、3
+	BaseScore  int      // 底分:
+	Tickets    int64    // 需要消耗的点券
+	RoundNum   string   // 赛制
+	Round      int      // 对打几轮
+	MatchType  string   // 赛事类型
+	Desc       string   // 赛事名称
+	Awards     []string // 数组下标对应名次，值对应该名次的奖励
+	AwardList  string   // 发送给客户端的奖励列表
+	GameType   int      //todo:奖金赛还是金币，待开发
 }
 
 // 玩家状态
@@ -384,13 +384,18 @@ func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
 	}
 
 	award := float64(0)
-	if playerData.Level < len(game.rule.Awards)+1 {
-		award = game.rule.Awards[playerData.Level]
-		playerData.user.BaseData.UserData.Fee += utils.Decimal(award * 0.8)
-		UpdateUserData(playerData.user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": playerData.user.BaseData.UserData.Fee}})
-		playerData.user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-			AfterTaxAward: playerData.user.BaseData.UserData.Fee,
-		})
+	if playerData.Level-1 < len(game.rule.Awards) {
+		// 现金奖励
+		if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Money {
+			award = values.ParseAward(game.rule.Awards[playerData.Level-1])
+			playerData.user.BaseData.UserData.Fee += utils.Decimal(award * 0.8)
+			UpdateUserData(playerData.user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": playerData.user.BaseData.UserData.Fee}})
+			playerData.user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
+				AfterTaxAward: playerData.user.BaseData.UserData.Fee,
+			})
+		} else if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Coupon { // 点券奖励 todo
+
+		}
 	}
 	playerData.user.WriteMsg(&msg.S2C_MineRoundRank{
 		Result:    result,
@@ -418,6 +423,7 @@ func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
 			Sort:     playerData.roundResult.Sort,
 		}
 		game.gameRecords[userID].Rank = append(game.gameRecords[userID].Rank, r)
+		sortRank(game.gameRecords[userID].Rank)
 	}
 
 }
@@ -444,13 +450,17 @@ func (game *LandlordMatchRoom) FlushRank(gametype int, rankType string) {
 		}
 	case cfghall.RankTypeAward:
 		for k, v := range game.userIDPlayerDatas {
-			if v.Level < len(game.rule.Awards) {
-				skeleton.ChanRPCServer.Go("WriteAwardFlowData", &msg.RPC_WriteAwardFlowData{
-					Userid:  k,
-					Amount:  game.rule.Awards[v.Level],
-					Matchid: game.rule.MatchId,
-				})
-				hall.FlushRank(gametype, rankType, v.user.BaseData.UserData.UserID, game.rule.Awards[v.Level])
+			if v.Level-1 < len(game.rule.Awards) {
+				if values.GetAwardType(game.rule.Awards[v.Level-1]) != values.Money {
+					continue
+				}
+				// skeleton.ChanRPCServer.Go("WriteAwardFlowData", &msg.RPC_WriteAwardFlowData{
+				// 	Userid:  k,
+				// 	Amount:  values.ParseAward(game.rule.Awards[v.Level-1]),
+				// 	Matchid: game.rule.MatchId,
+				// })
+				hall.WriteFlowData(k, values.ParseAward(game.rule.Awards[v.Level-1]), hall.FlowTypeAward, game.rule.MatchType)
+				hall.FlushRank(gametype, rankType, k, values.ParseAward(game.rule.Awards[v.Level-1]))
 			}
 		}
 	}
@@ -470,4 +480,14 @@ func (game *LandlordMatchRoom) matchInterrupt(userid int, conpon int) {
 		Userid:  userid,
 		Matchid: game.rule.MatchId,
 	})
+}
+
+func sortRank(rank []values.Rank) {
+	for i := 0; i < len(rank); i++ {
+		for j := i + 1; j < len(rank); j++ {
+			if rank[i].Level > rank[j].Level {
+				rank[i], rank[j] = rank[j], rank[i]
+			}
+		}
+	}
 }

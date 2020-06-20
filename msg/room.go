@@ -111,6 +111,7 @@ type C2S_GetGameRankRecord struct {
 
 type S2C_GetGameRankRecord struct {
 	Rank       []Rank //记录数据
+	MatchID    string // 赛事id
 	Total      int    //记录数量
 	PageNumber int    //当前页
 	PageSize   int    //一页显示的条数
@@ -126,6 +127,7 @@ type C2S_GetGameResultRecord struct {
 
 type S2C_GetGameResultRecord struct {
 	Result     []GameResult //记录数据
+	MatchID    string       // 赛事id
 	Total      int          //记录数量
 	PageNumber int          //当前页
 	PageSize   int          //一页显示的条数
@@ -146,6 +148,7 @@ type Rank struct {
 
 type GameResult struct {
 	Count      int   //第一局
+	CardCount  int   // 第几副
 	Event      int   //0:失败 1:胜利
 	Identity   int   //0 防守方 1 进攻方
 	Bottom     int   //底分
@@ -153,5 +156,4 @@ type GameResult struct {
 	Score      int64 //得分
 	HandCards  []int //手牌
 	ThreeCards []int //底牌
-
 }
