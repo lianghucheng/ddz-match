@@ -85,7 +85,7 @@ func GetMatchManagerInfo() []msg.RaceInfo {
 
 func sortMatch(list []values.MatchManager) {
 	for i := 0; i < len(list); i++ {
-		for j := 0; j < len(list); j++ {
+		for j := i + 1; j < len(list); j++ {
 			if list[i].GetNormalConfig().Sort > list[j].GetNormalConfig().Sort {
 				list[i], list[j] = list[j], list[i]
 			}
