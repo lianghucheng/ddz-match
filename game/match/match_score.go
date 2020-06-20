@@ -3,8 +3,10 @@ package match
 import (
 	"ddz/conf"
 	"ddz/game"
+	"ddz/game/db"
 	"ddz/game/ddz"
 	"ddz/game/hall"
+	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
 	. "ddz/game/values"
@@ -30,6 +32,7 @@ type scoreConfig struct {
 	AwardTitle    []string  `bson:"awardtitle"`    // 赛事title
 	AwardContent  []string  `bson:"awardcontent"`  // 赛事正文
 	EnterFee      int64     `bson:"enterfee"`      // 报名费
+	Recommend     string    `bson:"recommend"`     // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
 
 	BaseScore   int64  `bson:"basescore"`   // 基础分数
 	StartTime   int64  `bson:"entertime"`   // 比赛开始时间
@@ -98,6 +101,8 @@ func NewScoreMatch(c *scoreConfig) Match {
 	base.AwardTitle = c.AwardTitle
 	base.AwardContent = c.AwardContent
 	base.EnterFee = c.EnterFee
+	base.Recommend = c.Recommend
+	base.AllPlayers = make(map[int]*User)
 
 	score.base = base
 	base.myMatch = score
@@ -125,7 +130,7 @@ func (sc *scoreMatch) SignIn(uid int) error {
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
 	user.BaseData.UserData.Coupon -= base.EnterFee
-	hall.UpdateUserCoupon(user)
+	hall.UpdateUserCoupon(user, -base.EnterFee, db.MatchSignIn)
 	return nil
 }
 
@@ -137,7 +142,7 @@ func (sc *scoreMatch) SignOut(uid int) error {
 		return errors.New("unknown user")
 	}
 	user.BaseData.UserData.Coupon += base.EnterFee
-	hall.UpdateUserCoupon(user)
+	hall.UpdateUserCoupon(user, base.EnterFee, db.MatchSignOut)
 	return nil
 }
 
@@ -323,6 +328,10 @@ func (sc *scoreMatch) SendMatchDetail(uid int) {
 	if _, ok := UserIDMatch[uid]; ok {
 		isSign = true
 	}
+	enterTime := ""
+	if sc.myConfig.StartTime > time.Now().Unix() {
+		enterTime = time.Unix(sc.myConfig.StartTime, 0).Format("2006-01-02 15:04:05")
+	}
 	data := &msg.S2C_RaceDetail{
 		ID:            base.MatchID,
 		Desc:          base.MatchName,
@@ -331,7 +340,7 @@ func (sc *scoreMatch) SendMatchDetail(uid int) {
 		AwardContent:  base.AwardContent,
 		MatchType:     base.MatchType,
 		RoundNum:      sc.myConfig.RoundNum,
-		EnterTime:     time.Unix(sc.myConfig.StartTime, 0).Format("2006-01-02 15:04:05"),
+		EnterTime:     enterTime,
 		ConDes:        base.MatchDesc,
 		SignNumDetail: signNumDetail,
 		EnterFee:      float64(base.EnterFee) / 10,

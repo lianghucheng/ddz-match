@@ -3,8 +3,6 @@ package msg
 func init() {
 	Processor.Register(&S2C_RoomPanel{})
 	Processor.Register(&S2C_MineRoundRank{})
-	Processor.Register(&C2S_GetGameRecord{})
-	Processor.Register(&S2C_GetGameRecord{})
 }
 
 const (
@@ -54,18 +52,39 @@ type S2C_MineRoundRank struct {
 type C2S_GetGameRecord struct {
 	PageNumber int // 页码数
 	PageSize   int // 一页显示的条数
-	MatchType  int //1 海选赛 2 复式赛等等
 }
 
 // 战绩记录
-
 type S2C_GetGameRecord struct {
-	Items      []GameRecord //记录数据
+	Record     []GameRecord //记录数据
 	Total      int          //记录数量
 	PageNumber int          //当前页
 	PageSize   int          //一页显示的条数
 }
+
 type GameRecord struct {
+	UserId    int     //用户ID
+	MatchId   string  //赛事ID
+	MatchType string  //赛事类型
+	Desc      string  //赛事
+	Level     int     //名次
+	Award     float64 //奖励
+	Count     int     //完成局数
+	Total     int64   //总得分
+	Last      int64   //尾副得分
+	Wins      int     //获胜次数
+	Period    int64   //累计时长
+	CreateDat int64   //时间
+}
+
+type SaveAllGameRecord struct {
+	Record     []GameAllRecord //记录数据
+	Total      int             //记录数量
+	PageNumber int             //当前页
+	PageSize   int             //一页显示的条数
+}
+
+type GameAllRecord struct {
 	UserId    int          //用户ID
 	MatchId   string       //赛事ID
 	MatchType string       //赛事类型
@@ -80,6 +99,36 @@ type GameRecord struct {
 	Rank      []Rank       //排行
 	Result    []GameResult //牌局详细
 	CreateDat int64        //时间
+}
+
+type C2S_GetGameRankRecord struct {
+	MatchID    string
+	PageNumber int // 页码数
+	PageSize   int // 一页显示的条数
+	RankNumber int // rank当前页
+	RankSize   int // rank页条目
+}
+
+type S2C_GetGameRankRecord struct {
+	Rank       []Rank //记录数据
+	Total      int    //记录数量
+	PageNumber int    //当前页
+	PageSize   int    //一页显示的条数
+}
+
+type C2S_GetGameResultRecord struct {
+	MatchID      string
+	PageNumber   int // 页码数
+	PageSize     int // 一页显示的条数
+	ResultNumber int // result当前页
+	ResultSize   int // result页条目
+}
+
+type S2C_GetGameResultRecord struct {
+	Result     []GameResult //记录数据
+	Total      int          //记录数量
+	PageNumber int          //当前页
+	PageSize   int          //一页显示的条数
 }
 
 type Rank struct {

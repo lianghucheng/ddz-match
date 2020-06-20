@@ -6,6 +6,7 @@ import (
 	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
+	. "ddz/game/values"
 	"ddz/msg"
 	"fmt"
 	"sort"
@@ -242,7 +243,8 @@ func (game *LandlordMatchRoom) StartGame() {
 		}, game.PositionUserIDs, playerData.position)
 		game.gameRecords[userID].Result[game.count-1].Count = game.count
 		game.gameRecords[userID].Result[game.count-1].HandCards = playerData.hands
-
+		// 目前只有1副牌,todo..
+		game.gameRecords[userID].Result[game.count-1].CardCount = 1
 	}
 	// 庄家叫分
 	game.score(game.dealerUserID)

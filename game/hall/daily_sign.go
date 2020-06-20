@@ -2,6 +2,7 @@ package hall
 
 import (
 	"ddz/conf"
+	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
@@ -21,7 +22,7 @@ func DailySign(user *player.User) {
 	user.GetUserData().SignTimes++
 	player.SaveUserData(user.GetUserData())
 
-	UpdateUserCoupon(user)
+	UpdateUserCoupon(user, addCoupon, db.DailySign)
 	user.WriteMsg(&msg.S2C_DailySign{
 		Coupon: addCoupon,
 	})

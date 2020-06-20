@@ -8,6 +8,7 @@ import (
 	"ddz/game/poker"
 	. "ddz/game/room"
 	"ddz/game/values"
+	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"fmt"
@@ -405,7 +406,7 @@ func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
 	game.gameRecords[userID].Total = playerData.roundResult.Total
 	game.gameRecords[userID].Wins = playerData.wins
 	for _, playerData := range game.userIDPlayerDatas {
-		r := Rank{
+		r := values.Rank{
 			Level:    playerData.Level,
 			NickName: playerData.user.BaseData.UserData.Nickname,
 			Count:    game.count,

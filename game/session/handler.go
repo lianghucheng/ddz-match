@@ -1,15 +1,12 @@
 package session
 
 import (
-	. "ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
 	"ddz/msg"
 	"reflect"
-
-	"gopkg.in/mgo.v2/bson"
 
 	"github.com/name5566/leaf/gate"
 	"github.com/szxby/tools/log"
@@ -30,6 +27,8 @@ func init() {
 	handler(&msg.C2S_LandlordMatchRound{}, handleGetRank)
 
 	handler(&msg.C2S_GetGameRecord{}, handleGetGameRecord)
+	handler(&msg.C2S_GetGameRankRecord{}, handleGetGameRankRecord)
+	handler(&msg.C2S_GetGameResultRecord{}, handleGetGameResultRecord)
 
 	handler(&msg.C2S_SetNickName{}, handleNickName)
 
@@ -48,6 +47,7 @@ func init() {
 	handler(&msg.C2S_AddBankCard{}, handleAddBankCard)
 	handler(&msg.C2S_AwardInfo{}, handleAwardInfo)
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
+	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -91,31 +91,45 @@ func handleGetGameRecord(args []interface{}) {
 	if m.PageSize < 1 {
 		m.PageSize = 10
 	}
-	var items []msg.GameRecord
-	count := 0
-	matchType := ""
-	if m.MatchType == 1 {
-		matchType = "海选赛"
-	}
-	if m.MatchType == 2 {
-		matchType = "复式赛"
-	}
-	skeleton.Go(func() {
-		db := MongoDB.Ref()
-		defer MongoDB.UnRef(db)
-		count, _ = db.DB(DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID, "matchtype": matchType}).Count()
+	user.SendMatchRecord(m.PageNumber, m.PageSize)
+}
 
-		db.DB(DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID, "matchtype": matchType}).
-			Sort("-createdat").Skip((m.PageNumber - 1) * m.PageSize).Limit(m.PageSize).All(&items)
+func handleGetGameRankRecord(args []interface{}) {
+	m := args[0].(*msg.C2S_GetGameRankRecord)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	if m.PageNumber < 1 {
+		m.PageNumber = 1
+	}
+	if m.PageSize < 1 {
+		m.PageSize = 10
+	}
+	user.SendMatchRankRecord(m.MatchID, m.PageNumber, m.PageSize, m.RankNumber, m.RankSize)
+}
 
-	}, func() {
-		user.WriteMsg(&msg.S2C_GetGameRecord{
-			Items:      items,
-			Total:      count,
-			PageNumber: m.PageNumber,
-			PageSize:   m.PageSize,
-		})
-	})
+func handleGetGameResultRecord(args []interface{}) {
+	m := args[0].(*msg.C2S_GetGameResultRecord)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	if m.PageNumber < 1 {
+		m.PageNumber = 1
+	}
+	if m.PageSize < 1 {
+		m.PageSize = 10
+	}
+	user.SendMatchResultRecord(m.MatchID, m.PageNumber, m.PageSize, m.ResultNumber, m.ResultSize)
 }
 
 func handleNickName(args []interface{}) {
@@ -474,4 +488,39 @@ func handleWithDraw(args []interface{}) {
 		return
 	}
 	hall.WithDraw(user, m.Amount)
+}
+
+func handleGetMatchList(args []interface{}) {
+	// m := args[0].(*msg.C2S_GetMatchList)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	list := []msg.OneMatch{}
+	myMatchID := ""
+	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
+		myMatchID = ma.MatchID
+	}
+	for _, m := range MatchList {
+		isSign := false
+		if m.MatchID == myMatchID {
+			isSign = true
+		}
+		list = append(list, msg.OneMatch{
+			MatchID:   m.MatchID,
+			MatchName: m.MatchName,
+			SignInNum: len(m.SignInPlayers),
+			Recommend: m.Recommend,
+			MaxPlayer: m.MaxPlayer,
+			EnterFee:  m.EnterFee,
+			IsSign:    isSign,
+		})
+	}
+	user.WriteMsg(&msg.S2C_GetMatchList{
+		List: list,
+	})
 }

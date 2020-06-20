@@ -38,6 +38,7 @@ type BaseMatch struct {
 	AwardTitle    []string  // 赛事title
 	AwardContent  []string  // 赛事正文
 	EnterFee      int64     // 报名费
+	Recommend     string    // 赛事推荐文字信息
 
 	AllPlayers   map[int]*User // 比赛剩余玩家对象
 	Rooms        []*Room       // 所有比赛房间对象
@@ -142,8 +143,6 @@ func (base *BaseMatch) CheckStart() {
 func (base *BaseMatch) Start() {
 	base.State = Playing
 	base.CurrentRound++
-	// 拷贝玩家
-	// base.AllPlayers = base.copyPlayers(base.SignInPlayers)
 	if base.myMatch != nil {
 		base.myMatch.Start()
 	}
@@ -175,51 +174,10 @@ func (base *BaseMatch) GetRank(uid int) {
 }
 
 func (base *BaseMatch) SendMatchDetail(uid int) {
-	// data := &msg.S2C_RaceDetail{
-	// 	ID:            base.MatchID,
-	// 	Desc:          base.MatchName,
-	// 	AwardDesc:     v.AwardDesc,
-	// 	AwardTitle:    v.AwardTitle,
-	// 	AwardContent:  v.AwardContent,
-	// 	MatchType:     v.MatchType,
-	// 	RoundNum:      v.RoundNum,
-	// 	EnterTime:     v.EnterTime,
-	// 	ConDes:        v.ConDes,
-	// 	SignNumDetail: signNumDetail,
-	// 	EnterFee:      v.EnterFee,
-	// 	SignNum:       len(s.User),
-	// }
-	// if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-	// 	if m.ID == s.MatchID {
-	// 		data.IsSign = true
-	// 	}
-	// }
-	// user.WriteMsg(data)
 	if base.myMatch != nil {
 		base.myMatch.SendMatchDetail(uid)
 	}
 }
-
-// func (base *BaseMatch) setConfig(c map[string]interface{}) error {
-// 	if c["maxplayer"] == nil {
-// 		log.Error("set config error:%v", c)
-// 		return errors.New("params error")
-// 	}
-// 	playerNum, ok := c["maxPlayer"].(int)
-// 	if !ok {
-// 		log.Error("set config error:%v", c)
-// 		return errors.New("params error")
-// 	}
-// 	base.matchID = c["matchid"].(int64)
-// 	base.matchType = c["matchtype"].(string)
-// 	base.config.maxPlayer = playerNum
-// 	if m := base.myMatch; m != nil {
-// 		if err := m.setConfig(c); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
 
 func (base *BaseMatch) broadcast(msg interface{}) {
 	for uid := range base.AllPlayers {
@@ -230,11 +188,3 @@ func (base *BaseMatch) broadcast(msg interface{}) {
 		user.WriteMsg(msg)
 	}
 }
-
-// func (base *BaseMatch) copyPlayers(players []int) []int {
-// 	tmp := []int{}
-// 	for _, v := range players {
-// 		tmp = append(tmp, v)
-// 	}
-// 	return tmp
-// }
