@@ -375,7 +375,6 @@ func (game *LandlordMatchRoom) GetProcess() []string {
 
 func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
 	playerData := game.userIDPlayerDatas[userID]
-	game.matchEndMail(userID, playerData.Level, 0)
 	result := poker.ResultLose
 	Type := 0
 	if utils.InArray(game.winnerUserIDs, userID) {
@@ -427,7 +426,7 @@ func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
 		game.gameRecords[userID].Rank = append(game.gameRecords[userID].Rank, r)
 		sortRank(game.gameRecords[userID].Rank)
 	}
-
+	game.matchEndMail(userID, playerData.Level, game.gameRecords[userID].Award)
 }
 
 //todo：卡住原因，每个玩家的当场总得分和总时长尚未开发，当场游戏的类型和前多少名的奖励未开发

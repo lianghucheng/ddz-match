@@ -92,16 +92,7 @@ func (sc *ScoreConfig) SignOut(uid int) {
 		return
 	}
 	// ok
-	for i, p := range sc.AllSignInPlayers {
-		if p != uid {
-			continue
-		}
-		if i == len(sc.AllSignInPlayers)-1 {
-			sc.AllSignInPlayers = sc.AllSignInPlayers[:i]
-		} else {
-			sc.AllSignInPlayers = append(sc.AllSignInPlayers[:i], sc.AllSignInPlayers[i+1:]...)
-		}
-	}
+	sc.RemoveSignPlayer(uid)
 	user.WriteMsg(&msg.S2C_Apply{
 		Error:  0,
 		RaceID: sc.MatchID,
@@ -175,4 +166,17 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 		IsSign:        isSign,
 	}
 	user.WriteMsg(data)
+}
+
+func (sc *ScoreConfig)RemoveSignPlayer(uid int) {
+	for i, p := range sc.AllSignInPlayers {
+		if p != uid {
+			continue
+		}
+		if i == len(sc.AllSignInPlayers)-1 {
+			sc.AllSignInPlayers = sc.AllSignInPlayers[:i]
+		} else {
+			sc.AllSignInPlayers = append(sc.AllSignInPlayers[:i], sc.AllSignInPlayers[i+1:]...)
+		}
+	}
 }

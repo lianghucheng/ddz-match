@@ -130,12 +130,14 @@ func (base *BaseMatch) End() {
 		game.Exit(uid)
 		delete(UserIDRooms, uid)
 		delete(UserIDMatch, uid)
+		base.Manager.(*ScoreConfig).RemoveSignPlayer(uid)
 	}
 	delete(MatchList, base.MatchID)
-	// Broadcast(&msg.S2C_MatchNum{
-	// 	MatchId: base.Manager.GetNormalConfig().MatchID,
-	// 	Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
-	// })
+
+	Broadcast(&msg.S2C_MatchNum{
+		MatchId: base.Manager.GetNormalConfig().MatchID,
+		Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
+	})
 	if base.myMatch != nil {
 		base.myMatch.End()
 	}

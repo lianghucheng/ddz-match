@@ -156,7 +156,7 @@ func GamePushMail(userid int, title, content string) {
 func MatchEndPushMail(userid int, matchName string, order int, award float64) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
-	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.ExpireValue = 30
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "比赛通知"
 	mailBox.Content = fmt.Sprintf("恭喜您在【%v】比赛中获得第【%v】名。", matchName, order)
@@ -188,7 +188,7 @@ func (ctx *MailBox) pushMailBox() {
 	}
 	ctx.ID = int64(id)
 	ctx.CreatedAt = time.Now().Unix()
-	ctx.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	ctx.ExpireValue = 30
 	game.GetSkeleton().Go(func() {
 		ctx.save()
 	}, func() {
@@ -214,7 +214,7 @@ func readUserMail(uid int) *[]UserMail {
 		limit -= len(*notRead)
 		readed := new([]UserMail)
 		err = se.DB(db.DB).C("usermail").
-			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix(), "userid": uid}}).
+			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid}).
 			Sort("-createdat").Limit(limit).All(readed)
 		if err != nil {
 			log.Error(err.Error())
