@@ -471,27 +471,19 @@ func handleGetMatchList(args []interface{}) {
 	if user == nil {
 		return
 	}
-	list := []msg.OneMatch{}
 	myMatchID := ""
 	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// myMatchID = ma.MatchID
 		myMatchID = ma.Manager.GetNormalConfig().MatchID
 	}
-	for _, m := range MatchManagerList {
-		isSign := false
-		c := m.GetNormalConfig()
-		if c.MatchID == myMatchID {
-			isSign = true
+	list := GetMatchManagerInfo(2).([]msg.OneMatch)
+	for i, v := range list {
+		// 已报名的比赛排序在最前面
+		if v.MatchID == myMatchID {
+			list[i].IsSign = true
+			list[i], list[0] = list[0], list[i]
+			break
 		}
-		list = append(list, msg.OneMatch{
-			MatchID:   c.MatchID,
-			MatchName: c.MatchName,
-			SignInNum: len(c.AllSignInPlayers),
-			Recommend: c.Recommend,
-			MaxPlayer: c.MaxPlayer,
-			EnterFee:  c.EnterFee,
-			IsSign:    isSign,
-		})
 	}
 	user.WriteMsg(&msg.S2C_GetMatchList{
 		List: list,

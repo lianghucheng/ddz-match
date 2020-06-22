@@ -70,7 +70,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	if len(sc.AllSignInPlayers)%tp == 0 && sc.TotalMatch <= 0 {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
-		RaceInfo := GetMatchManagerInfo()
+		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
 		Broadcast(&msg.S2C_RaceInfo{
 			Races: RaceInfo,
 		})
@@ -168,6 +168,18 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	user.WriteMsg(data)
 }
 
+// End 赛事結束的逻辑
+func (sc *ScoreConfig) End(matchID string) {
+	match, ok := MatchList[matchID]
+	if !ok {
+		return
+	}
+	for _, p := range match.SignInPlayers {
+		sc.RemoveSignPlayer(p)
+	}
+}
+
+// RemoveSignPlayer 清除签到玩家
 func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 	for i, p := range sc.AllSignInPlayers {
 		if p != uid {

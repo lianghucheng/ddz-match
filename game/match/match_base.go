@@ -121,8 +121,8 @@ func (base *BaseMatch) Start() {
 
 func (base *BaseMatch) End() {
 	base.State = Ending
-	for _, p := range base.AllPlayers {
-		uid := p.BaseData.UserData.UserID
+	for _, uid := range base.SignInPlayers {
+		// uid := p.BaseData.UserData.UserID
 		game, ok := UserIDRooms[uid]
 		if !ok {
 			continue
@@ -130,9 +130,8 @@ func (base *BaseMatch) End() {
 		game.Exit(uid)
 		delete(UserIDRooms, uid)
 		delete(UserIDMatch, uid)
-		base.Manager.(*ScoreConfig).RemoveSignPlayer(uid)
 	}
-	delete(MatchList, base.MatchID)
+	base.Manager.End(base.MatchID)
 
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId: base.Manager.GetNormalConfig().MatchID,
@@ -141,6 +140,7 @@ func (base *BaseMatch) End() {
 	if base.myMatch != nil {
 		base.myMatch.End()
 	}
+	delete(MatchList, base.MatchID)
 }
 
 func (base *BaseMatch) SplitTable() {
@@ -160,12 +160,6 @@ func (base *BaseMatch) GetRank(uid int) {
 		base.myMatch.GetRank(uid)
 	}
 }
-
-// func (base *BaseMatch) SendMatchDetail(uid int) {
-// 	if base.myMatch != nil {
-// 		base.myMatch.SendMatchDetail(uid)
-// 	}
-// }
 
 func (base *BaseMatch) broadcast(msg interface{}) {
 	for uid := range base.AllPlayers {

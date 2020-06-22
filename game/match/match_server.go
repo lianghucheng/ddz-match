@@ -58,29 +58,49 @@ func initMatchConfig() error {
 }
 
 // GetMatchManagerInfo 获取整个赛事列表的信息
-func GetMatchManagerInfo() []msg.RaceInfo {
+func GetMatchManagerInfo(opt int) interface{} {
 	matchManager := []values.MatchManager{}
-	raceInfo := []msg.RaceInfo{}
 	for _, v := range MatchManagerList {
 		matchManager = append(matchManager, v)
 	}
 	sortMatch(matchManager)
-	for _, v := range matchManager {
-		var award float64
-		info := v.GetNormalConfig()
-		if len(info.Award) > 0 {
-			award = values.ParseAward(info.Award[0])
+	switch opt {
+	case 1:
+		raceInfo := []msg.RaceInfo{}
+		for _, v := range matchManager {
+			var award float64
+			info := v.GetNormalConfig()
+			if len(info.Award) > 0 {
+				award = values.ParseAward(info.Award[0])
+			}
+			raceInfo = append(raceInfo, msg.RaceInfo{
+				ID:       info.MatchID,
+				Desc:     info.MatchName,
+				Award:    award,
+				EnterFee: float64(info.EnterFee) / 10,
+				ConDes:   info.MatchDesc,
+				JoinNum:  len(info.AllSignInPlayers),
+			})
 		}
-		raceInfo = append(raceInfo, msg.RaceInfo{
-			ID:       info.MatchID,
-			Desc:     info.MatchName,
-			Award:    award,
-			EnterFee: float64(info.EnterFee) / 10,
-			ConDes:   info.MatchDesc,
-			JoinNum:  len(info.AllSignInPlayers),
-		})
+		return raceInfo
+	case 2:
+		list := []msg.OneMatch{}
+		for _, m := range matchManager {
+			m := m.GetNormalConfig()
+			list = append(list, msg.OneMatch{
+				MatchID:   m.MatchID,
+				MatchName: m.MatchName,
+				SignInNum: len(m.AllSignInPlayers),
+				Recommend: m.Recommend,
+				MaxPlayer: m.MaxPlayer,
+				EnterFee:  m.EnterFee,
+				IsSign:    false,
+			})
+		}
+		return list
+	default:
+		return nil
 	}
-	return raceInfo
 }
 
 func sortMatch(list []values.MatchManager) {

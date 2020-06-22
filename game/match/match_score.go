@@ -345,63 +345,6 @@ func (sc *scoreMatch) GetRank(uid int) {
 	})
 }
 
-// func (sc *scoreMatch) SendMatchDetail(uid int) {
-// 	base := sc.base.(*BaseMatch)
-// 	user, ok := UserIDUsers[uid]
-// 	if !ok {
-// 		log.Debug("unknow user:%v", uid)
-// 		return
-// 	}
-// 	signNumDetail := sc.myConfig.StartType == 1
-// 	isSign := false
-// 	if m, ok := UserIDMatch[uid]; ok && m.MatchID == base.MatchID {
-// 		isSign = true
-// 	}
-// 	enterTime := ""
-// 	if sc.myConfig.StartTime > time.Now().Unix() {
-// 		enterTime = time.Unix(sc.myConfig.StartTime, 0).Format("2006-01-02 15:04:05")
-// 	}
-
-// 	data := &msg.S2C_RaceDetail{
-// 		ID:            base.MatchID,
-// 		Desc:          base.MatchName,
-// 		AwardDesc:     base.AwardDesc,
-// 		AwardList:     base.AwardList,
-// 		MatchType:     base.MatchType,
-// 		RoundNum:      sc.myConfig.RoundNum,
-// 		EnterTime:     enterTime,
-// 		ConDes:        base.MatchDesc,
-// 		SignNumDetail: signNumDetail,
-// 		EnterFee:      float64(base.EnterFee) / 10,
-// 		SignNum:       len(base.SignInPlayers),
-// 		IsSign:        isSign,
-// 	}
-// 	user.WriteMsg(data)
-// }
-
-// func (sc *scoreMatch) ReStart() {
-// 	newConfig := scoreConfig{MatchID: time.Now().Unix()}
-// 	base := sc.base.(*BaseMatch)
-// 	newConfig.MatchType = base.MatchType
-// 	newConfig.State = base.State
-// 	newConfig.SignInPlayers = []int{}
-// 	newConfig.BaseScore = sc.sConfig.BaseScore
-// 	newConfig.LimitPlayer = sc.sConfig.LimitPlayer
-// 	// c, _ := json.Marshal(newConfig)
-// 	NewScoreMatch(newConfig)
-// }
-
-// func (sc *scoreMatch) copyConfig() scoreConfig {
-// 	newConfig := scoreConfig{}
-// 	newConfig.BaseScore = sc.sConfig.BaseScore
-// 	newConfig.LimitPlayer = sc.sConfig.LimitPlayer
-// 	base := sc.base.(*BaseMatch)
-// 	newConfig.MatchID = base.MatchID
-// 	newConfig.MatchType = base.MatchType
-// 	newConfig.State = base.State
-// 	newConfig.SignInPlayers = base.SignInPlayers
-// 	return newConfig
-// }
 func (sc *scoreMatch) sortMatchPlayers() {
 	for i := 0; i < len(sc.matchPlayers); i++ {
 		for j := i + 1; j < len(sc.matchPlayers); j++ {
