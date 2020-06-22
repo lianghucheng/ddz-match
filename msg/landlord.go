@@ -50,7 +50,7 @@ type S2C_UpdateLandlordLastThree struct {
 
 // 出牌动作
 type S2C_ActionLandlordDiscard struct {
-	IsErr 			  int
+	IsErr             int
 	ActionDiscardType int // 出牌动作类型
 	Position          int
 	Countdown         int     // 倒计时

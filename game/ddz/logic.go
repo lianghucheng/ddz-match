@@ -347,7 +347,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 			countdown := conf.GetCfgTimeout().LandlordDiscard - after
 			if countdown > 1 {
 				playerData.user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
-					IsErr:isErr,
+					IsErr:             isErr,
 					ActionDiscardType: playerData.actionDiscardType,
 					Position:          playerData.position,
 					Countdown:         countdown - 1,

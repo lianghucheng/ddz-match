@@ -168,7 +168,7 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	user.WriteMsg(data)
 }
 
-func (sc *ScoreConfig)RemoveSignPlayer(uid int) {
+func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 	for i, p := range sc.AllSignInPlayers {
 		if p != uid {
 			continue

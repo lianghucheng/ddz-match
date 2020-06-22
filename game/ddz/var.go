@@ -30,7 +30,7 @@ const (
 
 //赛事规则
 type LandlordMatchRule struct {
-	MatchId    string   // 赛事ID
+	MatchId    string // 赛事ID
 	MatchName  string
 	MaxPlayers int      // 人数: 2、3
 	BaseScore  int      // 底分:
@@ -469,18 +469,18 @@ func (game *LandlordMatchRoom) FlushRank(gametype int, rankType string) {
 
 func (game *LandlordMatchRoom) matchEndMail(userid, order int, award float64) {
 	skeleton.ChanRPCServer.Go("SendMatchEndMail", &msg.RPC_SendMatchEndMail{
-		Userid:  userid,
+		Userid:    userid,
 		MatchName: game.rule.MatchName,
-		Order:   order,
-		Award:   award, //playerData.Award,
+		Order:     order,
+		Award:     award, //playerData.Award,
 	})
 }
 
 func (game *LandlordMatchRoom) matchInterrupt(userid int, conpon int) {
 	skeleton.ChanRPCServer.Go("SendInterruptMail", &msg.RPC_SendInterruptMail{
-		Userid:  userid,
+		Userid:    userid,
 		MatchName: game.rule.MatchName,
-		Coupon: game.rule.Coupon,
+		Coupon:    game.rule.Coupon,
 	})
 }
 

@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
@@ -36,7 +37,7 @@ func (ctx *BankCard) read() {
 	}
 }
 
-func AddBankCard(user *player.User, m *msg.C2S_AddBankCard) {
+func AddBankCard(user *player.User, m *msg.C2S_BindBankCard) {
 	bankCard := new(BankCard)
 	bankCard.Userid = user.BaseData.UserData.UserID
 	bankCard.BankName = m.BankName
@@ -44,11 +45,11 @@ func AddBankCard(user *player.User, m *msg.C2S_AddBankCard) {
 	bankCard.Province = m.Province
 	bankCard.City = m.City
 	bankCard.OpeningBank = m.OpeningBank
-	bankCard.addBankCard(user, m, BandBankCardAPI)
+	bankCard.addBankCard(user, edy_api.BandBankCardAPI)
 }
 
-func (ctx *BankCard)addBankCard(user *player.User, m *msg.C2S_AddBankCard, cb func(b *BankCard) error) {
-	if cb == nil {
+func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bankNo, BankName, BankAccount string) error) {
+	if api == nil {
 		SendAddBankCard(user, msg.ErrAddBankCardFail)
 		return
 	}
@@ -58,10 +59,10 @@ func (ctx *BankCard)addBankCard(user *player.User, m *msg.C2S_AddBankCard, cb fu
 	}
 	var err error
 	game.GetSkeleton().Go(func() {
-		err = cb(ctx)
+		err = api(ctx.Userid, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)
 	}, func() {
 		if err != nil {
-			SendAddBankCard(user, msg.ErrAddBankCardFail)
+			SendAddBankCard(user, msg.ErrAddBankCardBusiness)
 			return
 		}
 		user.BaseData.UserData.BankCardNo = ctx.BankCardNo
@@ -73,8 +74,4 @@ func (ctx *BankCard)addBankCard(user *player.User, m *msg.C2S_AddBankCard, cb fu
 		}
 		SendAddBankCard(user, msg.ErrAddBankCardSuccess)
 	})
-}
-
-func BandBankCardAPI(b *BankCard) error {
-	return nil
 }

@@ -54,6 +54,7 @@ type UserData struct {
 	RealName          string
 	IDCardNo          string
 	BankCardNo        string
+	SetNickNameCount  int
 }
 
 type User struct {
@@ -121,11 +122,11 @@ func ReadUserDataByID(id int) *UserData {
 	return userData
 }
 
-func (user *User)UID()int {
+func (user *User) UID() int {
 	return user.BaseData.UserData.UserID
 }
 
-func (user *User)RealName() string {
+func (user *User) RealName() string {
 	return user.BaseData.UserData.RealName
 }
 
@@ -141,14 +142,14 @@ func (user *User) Coupon() int64 {
 	return user.BaseData.UserData.Coupon
 }
 
-func (user *User)IDCardNo() string {
+func (user *User) IDCardNo() string {
 	return user.BaseData.UserData.IDCardNo
 }
 
-func (user *User)BankCardNo()string {
+func (user *User) BankCardNo() string {
 	return user.BaseData.UserData.BankCardNo
 }
 
-func (user *User)AcountID() int {
+func (user *User) AcountID() int {
 	return user.BaseData.UserData.AccountID
 }

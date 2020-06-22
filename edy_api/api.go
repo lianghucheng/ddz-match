@@ -4,28 +4,70 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/name5566/leaf/log"
 )
 
 var (
-	uri = "/player/identity_number/bind"
+	bind_id_uri   = "/player/identity_number/bind"
+	bind_bank_uri = "/player/bank_acc/bind"
 )
 
-func (ctx *IDBindReq)IDCardBind() error {
+func RealAuthApi(accountid int, idCardNo, realName, phoneNum string) error {
+	idBind := NewIDBindReq(accountid, idCardNo, realName, phoneNum)
+	return idBind.idCardBind()
+}
+
+func (ctx *IDBindReq) idCardBind() error {
 	b, err := json.Marshal(ctx)
 	if err != nil {
 		return err
 	}
-	rt, err := Post(uri, string(b))
+
+	c := NewClient(bind_id_uri, string(b), reqPost)
+	c.GenerateSign(reqPost)
+	rt, err := c.DoPost()
 	if err != nil {
+		log.Error(err.Error())
 		return err
 	}
-	fmt.Println(string(rt))
+	fmt.Println("【绑定身份证】", string(rt))
 	res := new(IDBindResp)
 	if err := json.Unmarshal(rt, res); err != nil {
 		return err
 	}
 
-	if res.RespCode != "0" {
+	if res.RespCode != "000000" {
+		return errors.New("请求接口失败")
+	}
+
+	return nil
+}
+
+func BandBankCardAPI(accountid int, bankNo, BankName, BankAccount string) error {
+	bindBankCard := NewBindBankCardReq(accountid, bankNo, BankName, BankAccount)
+	return bindBankCard.BindBankCard()
+}
+
+func (ctx *BindBankCardReq) BindBankCard() error {
+	b, err := json.Marshal(ctx)
+	if err != nil {
+		return err
+	}
+
+	c := NewClient(bind_bank_uri, string(b), reqPost)
+	c.GenerateSign(reqPost)
+	rt, err := c.DoPost()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	fmt.Println("【绑定银行卡】", string(rt))
+	res := new(BindBankCardResp)
+	if err := json.Unmarshal(rt, res); err != nil {
+		return err
+	}
+
+	if res.RespCode != "000000" {
 		return errors.New("请求接口失败")
 	}
 
