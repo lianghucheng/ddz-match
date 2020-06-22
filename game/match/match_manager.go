@@ -70,7 +70,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	if len(sc.AllSignInPlayers)%tp == 0 && sc.TotalMatch <= 0 {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
-		RaceInfo := GetMatchManagerInfo()
+		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
 		Broadcast(&msg.S2C_RaceInfo{
 			Races: RaceInfo,
 		})
