@@ -25,6 +25,7 @@ type MatchManager interface {
 	SignOut(uid int)
 	GetNormalConfig() NormalCofig
 	SendMatchDetail(uid int)
+	End(matchID string)
 }
 
 // NormalCofig 需要返回给客户端的通用配置

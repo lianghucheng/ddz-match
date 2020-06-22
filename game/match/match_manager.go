@@ -168,7 +168,19 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	user.WriteMsg(data)
 }
 
-func (sc *ScoreConfig)RemoveSignPlayer(uid int) {
+// End 赛事結束的逻辑
+func (sc *ScoreConfig) End(matchID string) {
+	match, ok := MatchList[matchID]
+	if !ok {
+		return
+	}
+	for _, p := range match.SignInPlayers {
+		sc.RemoveSignPlayer(p)
+	}
+}
+
+// RemoveSignPlayer 清除签到玩家
+func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 	for i, p := range sc.AllSignInPlayers {
 		if p != uid {
 			continue
