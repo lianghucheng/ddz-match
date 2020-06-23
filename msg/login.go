@@ -95,7 +95,8 @@ type C2S_SetNickName struct {
 }
 
 const (
-	S2C_SetNickName_Length = 1
+	S2C_SetNickName_Length = 1 //长度不合法
+	S2C_SetNickName_More   = 2 //超过修改次数
 )
 
 type S2C_UpdateNickName struct {

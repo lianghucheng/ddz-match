@@ -55,6 +55,7 @@ type UserData struct {
 	RealName          string
 	IDCardNo          string
 	BankCardNo        string
+	SetNickNameCount  int
 }
 
 type User struct {

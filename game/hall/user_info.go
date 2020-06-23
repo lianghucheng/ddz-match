@@ -16,7 +16,12 @@ func SetNickname(user *player.User, nickname string) {
 		})
 		return
 	}
-	user.BaseData.UserData.Nickname = nickname
+	ud := user.GetUserData()
+	if ud.SetNickNameCount >= 1 {
+		return
+	}
+	ud.Nickname = nickname
+	ud.SetNickNameCount++
 	player.UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"nickname": nickname}})
 	user.WriteMsg(&msg.S2C_UpdateNickName{
 		Error:    0,

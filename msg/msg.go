@@ -61,13 +61,13 @@ func init() {
 	Processor.Register(&S2C_RankingList{})
 	Processor.Register(&C2S_RealNameAuth{})
 	Processor.Register(&S2C_RealNameAuth{})
-	Processor.Register(&C2S_AddBankCard{})
-	Processor.Register(&S2C_AddBankCard{})
+	Processor.Register(&C2S_BindBankCard{})
+	Processor.Register(&S2C_BindBankCard{})
 	Processor.Register(&C2S_AwardInfo{})
 	Processor.Register(&S2C_AwardInfo{})
 	Processor.Register(&C2S_WithDraw{})
 	Processor.Register(&S2C_WithDraw{})
-	Processor.Register(&S2C_BankCard{})
+	Processor.Register(&S2C_BankCardInfo{})
 	Processor.Register(&C2S_GetMatchList{})
 	Processor.Register(&S2C_GetMatchList{})
 
@@ -196,37 +196,39 @@ type C2S_RealNameAuth struct {
 }
 
 const (
-	ErrRealNameAuthSuccess = 0 //成功
-	ErrRealNameAuthFail    = 1 //失败
-	ErrRealNameAuthAlready = 2 //已经实名认证
+	ErrRealNameAuthSuccess  = 0 //成功
+	ErrRealNameAuthFail     = 1 //失败
+	ErrRealNameAuthAlready  = 2 //已经实名认证
+	ErrRealNameAuthBusiness = 3 //三方接口未通过
 )
 
 type S2C_RealNameAuth struct {
-	RealName   string
-	Error int
+	RealName string
+	Error    int
 }
 
-type C2S_AddBankCard struct {
+type C2S_BindBankCard struct {
 	BankName    string
 	BankCardNo  string
 	Province    string
-	City		string
+	City        string
 	OpeningBank string
 }
 
 const (
-	ErrAddBankCardSuccess = 0
-	ErrAddBankCardFail    = 1
-	ErrAddBankCardAlready = 2
+	ErrAddBankCardSuccess  = 0 //成功
+	ErrAddBankCardFail     = 1 //失败
+	ErrAddBankCardAlready  = 2 //已经绑定
+	ErrAddBankCardBusiness = 3 //三方接口未通过
 )
 
-type S2C_AddBankCard struct {
-	BankCardNo    string
-	Error int
+type S2C_BindBankCard struct {
+	BankCardNo string
+	Error      int
 }
 
-type S2C_BankCard struct {
-	BankCardNo    string
+type S2C_BankCardInfo struct {
+	BankCardNo string
 }
 
 type C2S_AwardInfo struct {

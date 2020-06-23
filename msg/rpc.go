@@ -19,14 +19,14 @@ type RPC_SendMail struct {
 }
 
 type RPC_SendMatchEndMail struct {
-	Userid int
+	Userid    int
 	MatchName string
-	Order int
-	Award float64
+	Order     int
+	Award     float64
 }
 
 type RPC_SendInterruptMail struct {
-	Userid int
+	Userid    int
 	MatchName string
 	Coupon    int
 }
