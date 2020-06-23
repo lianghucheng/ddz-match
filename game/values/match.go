@@ -16,7 +16,9 @@ type Match interface {
 	SplitTable()             // 分桌逻辑
 	RoundOver(roomID string) // 单局结束，获取结果
 	End()
-	GetRank(uid int) // 获取排名情况
+	GetRank(uid int)         // 获取排名情况
+	SendRoundResult(uid int) // 给玩家发送单局结算
+	SendFinalResult(uid int) // 给玩家发送总结算
 }
 
 // MatchManager 比赛配置接口
@@ -26,6 +28,20 @@ type MatchManager interface {
 	GetNormalConfig() NormalCofig
 	SendMatchDetail(uid int)
 	End(matchID string)
+	RemoveSignPlayer(uid int)
+}
+
+// MatchPlayer 比赛玩家对象
+type MatchPlayer struct {
+	UID        int
+	Rank       int
+	Nickname   string
+	TotalScore int64
+	LastScore  int64
+	Wins       int
+	OpTime     int64
+	SignSort   int
+	Result     []Result //牌局详细
 }
 
 // NormalCofig 需要返回给客户端的通用配置

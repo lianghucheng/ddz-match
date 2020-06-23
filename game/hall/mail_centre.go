@@ -8,10 +8,11 @@ import (
 	"ddz/msg"
 	"encoding/json"
 	"fmt"
-	"github.com/szxby/tools/log"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"time"
+
+	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 
 type MailBox struct {
 	ID          int64   `bson:"_id"`          //唯一id
-	TargetID     int64   `json:"target_id"`     //目标用户， -1表示所有用户
+	TargetID    int64   `json:"target_id"`    //目标用户， -1表示所有用户
 	MailType    int     `json:"mail_type"`    //邮箱邮件类型
 	CreatedAt   int64   `json:"created_at"`   //收件时间
 	Title       string  `json:"title"`        //主题
@@ -77,17 +78,17 @@ func readUserMailByID(id int64) *UserMail {
 }
 
 func (ctx *UserMail) save() {
-		se := db.MongoDB.Ref()
-		defer db.MongoDB.UnRef(se)
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
 
-		if _, err := se.DB(db.DB).C("usermail").Upsert(bson.M{"_id": ctx.ID}, ctx);err != nil {
-			log.Error(err.Error())
-		}
+	if _, err := se.DB(db.DB).C("usermail").Upsert(bson.M{"_id": ctx.ID}, ctx); err != nil {
+		log.Error(err.Error())
+	}
 }
 
 //玩家登录调用一次，系统发邮件时调用一次
 func SendMail(user *player.User) {
-	mails := readMailBox(user.BaseData.UserData.UserID,user.GetUserData().LastTakenMail)
+	mails := readMailBox(user.BaseData.UserData.UserID, user.GetUserData().LastTakenMail)
 	if len(*mails) > 0 {
 		user.GetUserData().LastTakenMail = (*mails)[len(*mails)-1].ID
 	}
@@ -102,13 +103,13 @@ func SendMail(user *player.User) {
 	})
 }
 
-func readMailBox(userid int,lastId int64) *[]MailBox {
+func readMailBox(userid int, lastId int64) *[]MailBox {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 
 	rt := new([]MailBox)
 
-	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}, "$or": []bson.M{{"targetid": userid},{"targetid": -1}}}).All(rt)
+	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}, "$or": []bson.M{{"targetid": userid}, {"targetid": -1}}}).All(rt)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -116,12 +117,12 @@ func readMailBox(userid int,lastId int64) *[]MailBox {
 }
 
 func (ctx *MailBox) save() {
-		se := db.MongoDB.Ref()
-		defer db.MongoDB.UnRef(se)
-		_, err := se.DB(db.DB).C("mailbox").Upsert(bson.M{"_id": ctx.ID}, ctx)
-		if err != nil {
-			log.Error(err.Error())
-		}
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	_, err := se.DB(db.DB).C("mailbox").Upsert(bson.M{"_id": ctx.ID}, ctx)
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func pullMailBox(user *player.User, mails *[]MailBox) {
@@ -153,15 +154,15 @@ func GamePushMail(userid int, title, content string) {
 	mailBox.pushMailBox()
 }
 
-func MatchEndPushMail(userid int, matchName string, order int, award float64) {
+func MatchEndPushMail(userid int, matchName string, order int, award string) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = 30
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "比赛通知"
 	mailBox.Content = fmt.Sprintf("恭喜您在【%v】比赛中获得第【%v】名。", matchName, order)
-	if award != 0 {
-		mailBox.Content += fmt.Sprintf("【%v元奖励】已经发放至您的钱包或背包。请核对您的奖励信息。", award)
+	if len(award) > 0 {
+		mailBox.Content += fmt.Sprintf("【%v奖励】已经发放至您的钱包或背包。请核对您的奖励信息。", award)
 	}
 
 	mailBox.pushMailBox()
@@ -173,7 +174,7 @@ func MatchInterruptPushMail(userid int, matchName string, coupon int) {
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "退赛通知"
-	mailBox.Content = fmt.Sprintf("很抱歉，您报名的【%v】赛事因为人数不足而取消，" +
+	mailBox.Content = fmt.Sprintf("很抱歉，您报名的【%v】赛事因为人数不足而取消，"+
 		"您的报名费【%v点券】已经返回至您的账户，请注意查收！感谢您的支持，祝您下次获得好成绩！",
 		matchName, coupon)
 
@@ -261,7 +262,7 @@ func DeleteMail(mid int64) {
 }
 
 type MailBoxParam struct {
-	TargetID     int64   `json:"target_id"`     //目标用户， -1表示所有用户
+	TargetID    int64   `json:"target_id"`    //目标用户， -1表示所有用户
 	MailType    int     `json:"mail_type"`    //邮箱邮件类型
 	Title       string  `json:"title"`        //主题
 	Content     string  `json:"content"`      //内容

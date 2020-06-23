@@ -32,13 +32,15 @@ type BaseMatch struct {
 	MaxPlayer     int    // 最大参赛人数
 	SignInPlayers []int  // 比赛报名的所有玩家
 	AwardList     string // 赛事奖励列表
+	Round         int    // 几局制
 
-	AllPlayers   map[int]*User // 比赛剩余玩家对象
-	Rooms        []*Room       // 所有比赛房间对象
-	IsClosing    bool          // 是否正在关闭的赛事
-	CurrentRound int           // 当前轮次
-	Award        []string      // 赛事奖励
-	Manager      MatchManager  // 隶属于哪个管理下的赛事
+	AllPlayers       map[int]*User // 比赛剩余玩家对象
+	Rooms            []*Room       // 所有比赛房间对象
+	IsClosing        bool          // 是否正在关闭的赛事
+	CurrentRound     int           // 当前轮次
+	CurrentCardCount int           // 当前牌副数
+	Award            []string      // 赛事奖励
+	Manager          MatchManager  // 隶属于哪个管理下的赛事
 }
 
 func (base *BaseMatch) SignIn(uid int) error {
@@ -92,8 +94,10 @@ func (base *BaseMatch) SignOut(uid int) error {
 	}
 	if index == len(base.SignInPlayers)-1 {
 		base.SignInPlayers = base.SignInPlayers[:index]
+		// base.AllPlayers = base.AllPlayers[:index]
 	} else {
 		base.SignInPlayers = append(base.SignInPlayers[:index], base.SignInPlayers[index+1:]...)
+		// base.AllPlayers = append(base.AllPlayers[:index], base.AllPlayers[index+1:]...)
 	}
 
 	delete(UserIDMatch, uid)
@@ -114,6 +118,7 @@ func (base *BaseMatch) CheckStart() {
 func (base *BaseMatch) Start() {
 	base.State = Playing
 	base.CurrentRound++
+	base.CurrentCardCount++
 	if base.myMatch != nil {
 		base.myMatch.Start()
 	}
@@ -121,16 +126,16 @@ func (base *BaseMatch) Start() {
 
 func (base *BaseMatch) End() {
 	base.State = Ending
-	for _, uid := range base.SignInPlayers {
-		// uid := p.BaseData.UserData.UserID
-		game, ok := UserIDRooms[uid]
-		if !ok {
-			continue
-		}
-		game.Exit(uid)
-		delete(UserIDRooms, uid)
-		delete(UserIDMatch, uid)
-	}
+	// for _, uid := range base.SignInPlayers {
+	// 	// uid := p.BaseData.UserData.UserID
+	// 	game, ok := UserIDRooms[uid]
+	// 	if !ok {
+	// 		continue
+	// 	}
+	// 	game.Exit(uid)
+	// 	delete(UserIDRooms, uid)
+	// 	delete(UserIDMatch, uid)
+	// }
 	base.Manager.End(base.MatchID)
 
 	Broadcast(&msg.S2C_MatchNum{
@@ -185,4 +190,28 @@ func (base *BaseMatch) GetAwardItem() {
 		awards = append(awards, item[1])
 	}
 	base.Award = awards
+}
+
+// GetPlayer 从allplayers中获取
+func (base *BaseMatch) GetPlayer(uid int) *User {
+	for _, p := range base.AllPlayers {
+		if p.BaseData.UserData.UserID == uid {
+			return p
+		}
+	}
+	return nil
+}
+
+// SendRoundResult 给玩家发送单局结算
+func (base *BaseMatch) SendRoundResult(uid int) {
+	if base.myMatch != nil {
+		base.myMatch.SendRoundResult(uid)
+	}
+}
+
+// SendFinalResult 给玩家发送单局结算
+func (base *BaseMatch) SendFinalResult(uid int) {
+	if base.myMatch != nil {
+		base.myMatch.SendFinalResult(uid)
+	}
 }

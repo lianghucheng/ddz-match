@@ -41,11 +41,8 @@ type S2C_RoomPanel struct {
 }
 
 type S2C_MineRoundRank struct {
-	Result    int // 0 失败、1 胜利
 	RankOrder int
-	Award     float64
-	Spring    bool
-	Type      int // 0 防守方 1 进攻方
+	Award     string
 }
 
 // 获取战绩记录
@@ -134,16 +131,15 @@ type S2C_GetGameResultRecord struct {
 }
 
 type Rank struct {
-	Level    int     //名次
-	NickName string  //用户名
-	Count    int     //完成局数
-	Total    int64   //总得分
-	Last     int64   //尾副牌得分
-	Wins     int     //获胜次数
-	Period   int64   //累计时长
-	Sort     int     //报名次序
-	Award    float64 //奖励
-
+	Level    int    //名次
+	NickName string //用户名
+	Count    int    //完成局数
+	Total    int64  //总得分
+	Last     int64  //尾副牌得分
+	Wins     int    //获胜次数
+	Period   int64  //累计时长
+	Sort     int    //报名次序
+	Award    string //奖励
 }
 
 type GameResult struct {

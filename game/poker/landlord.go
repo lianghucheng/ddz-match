@@ -60,8 +60,8 @@ func (a LstPoker) Less(i, j int) bool { // 重写 Less() 方法， 从大到小�
 
 // 玩家单局成绩
 type LandlordPlayerRoundResult struct {
-	Uid      int
-	Position int    // 玩家位置
+	Uid int
+	// Position int    // 玩家位置
 	Nickname string // 昵称(用户绑定的真实姓名)
 	Wins     int    // 获胜次数
 	Chips    int64  `json:"-"` // 筹码
@@ -69,7 +69,7 @@ type LandlordPlayerRoundResult struct {
 	Last     int64  // 尾副牌得分
 	Time     int64  // 累计用时(单位毫秒)
 	Sort     int    // 报名排序
-	Continue bool   // 是否晋级下一局
+	// Continue bool   // 是否晋级下一局
 }
 
 // LandlordRankData 比赛排行榜信息

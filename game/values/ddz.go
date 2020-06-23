@@ -6,7 +6,7 @@ type DDZGameRecord struct {
 	MatchType string   //赛事类型
 	Desc      string   //赛事
 	Level     int      //名次
-	Award     float64  //奖励
+	Award     string   //奖励
 	Count     int      //完成局数
 	Total     int64    //总得分
 	Last      int64    //尾副得分
@@ -18,15 +18,15 @@ type DDZGameRecord struct {
 }
 
 type Rank struct {
-	Level    int     //名次
-	NickName string  //用户名
-	Count    int     //完成局数
-	Total    int64   //总得分
-	Last     int64   //尾副牌得分
-	Wins     int     //获胜次数
-	Period   int64   //累计时长
-	Sort     int     //报名次序
-	Award    float64 //奖励
+	Level    int    //名次
+	NickName string //用户名
+	Count    int    //完成局数
+	Total    int64  //总得分
+	Last     int64  //尾副牌得分
+	Wins     int    //获胜次数
+	Period   int64  //累计时长
+	Sort     int    //报名次序
+	Award    string //奖励
 }
 
 type Result struct {

@@ -14,8 +14,6 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/name5566/leaf/timer"
 	"github.com/szxby/tools/log"
 )
@@ -30,7 +28,7 @@ const (
 
 //赛事规则
 type LandlordMatchRule struct {
-	MatchId    string   // 赛事ID
+	MatchId    string // 赛事ID
 	MatchName  string
 	MaxPlayers int      // 人数: 2、3
 	BaseScore  int      // 底分:
@@ -59,7 +57,7 @@ const (
 
 // 玩家数据
 type LandlordMatchPlayerData struct {
-	user              *User
+	User              *User
 	state             int
 	position          int // 用户在桌子上的位置，从 0 开始
 	dealer            bool
@@ -72,7 +70,7 @@ type LandlordMatchPlayerData struct {
 	actionTimestamp   int64 // 记录动作时间戳
 	discardTimeStamp  int64 // 精确到毫秒
 	costTimeBydiscard int64 // 精确到毫秒
-	roundResult       *poker.LandlordPlayerRoundResult
+	// roundResult       *poker.LandlordPlayerRoundResult
 
 	hosted      bool // 是否被托管
 	originHands []int
@@ -93,19 +91,19 @@ type LandlordMatchRoom struct {
 	count int //房间当前局数
 	*Room
 	rule              *LandlordMatchRule
-	userIDPlayerDatas map[int]*LandlordMatchPlayerData // Key: userID
+	UserIDPlayerDatas map[int]*LandlordMatchPlayerData // Key: userID
 	cards             []int                            // 洗好的牌
 	lastThree         []int                            // 最后三张
 	discards          []int                            // 玩家出的牌
 	rests             []int                            // 剩余的牌
-	gameRoundResult   []poker.LandlordPlayerRoundResult
-	dealerUserID      int         // 庄家 userID(庄家第一个叫地主)
-	landlordUserID    int         // 地主 userID
-	peasantUserIDs    []int       // 农民 userID
-	discarderUserID   int         // 最近一次出牌的人 userID
-	inits             map[int]int //  发送getallplay命令的次数
-	finisherUserID    int         // 上一局出完牌的人 userID(做下一局庄家)
-	spring            bool        // 春天
+	// gameRoundResult   []poker.LandlordPlayerRoundResult
+	dealerUserID    int         // 庄家 userID(庄家第一个叫地主)
+	landlordUserID  int         // 地主 userID
+	peasantUserIDs  []int       // 农民 userID
+	discarderUserID int         // 最近一次出牌的人 userID
+	inits           map[int]int //  发送getallplay命令的次数
+	finisherUserID  int         // 上一局出完牌的人 userID(做下一局庄家)
+	Spring          bool        // 春天
 
 	bidTimer      *timer.Timer
 	doubleTimer   *timer.Timer
@@ -122,9 +120,9 @@ func (game *LandlordMatchRoom) broadcast(msg interface{}, positionUserIDs map[in
 		if position == pos {
 			continue
 		}
-		if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-			if playerData.user.State != 1 {
-				playerData.user.WriteMsg(msg)
+		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+			if playerData.User.State != 1 {
+				playerData.User.WriteMsg(msg)
 			}
 		}
 	}
@@ -150,14 +148,14 @@ func (game *LandlordMatchRoom) initRoom() {
 	}
 	game.StartTimestamp = time.Now().Unix()
 	game.EachRoundStartTimestamp = game.StartTimestamp
-	dealerPlayerData := game.userIDPlayerDatas[game.dealerUserID]
+	dealerPlayerData := game.UserIDPlayerDatas[game.dealerUserID]
 	dealerPlayerData.dealer = true
 	// 确定闲家(注：闲家的英文单词也为player)
 	dealerPos := dealerPlayerData.position
 	for i := 1; i < game.rule.MaxPlayers; i++ {
 		playerPos := (dealerPos + i) % game.rule.MaxPlayers
 		playerUserID := game.PositionUserIDs[playerPos]
-		playerPlayerData := game.userIDPlayerDatas[playerUserID]
+		playerPlayerData := game.UserIDPlayerDatas[playerUserID]
 		playerPlayerData.dealer = false
 	}
 	game.lastThree = []int{}
@@ -168,16 +166,16 @@ func (game *LandlordMatchRoom) initRoom() {
 	game.peasantUserIDs = []int{}
 	game.discarderUserID = -1
 	game.finisherUserID = -1
-	game.spring = false
+	game.Spring = false
 	game.winnerUserIDs = []int{}
 	game.inits = make(map[int]int)
 	game.maxscore = 0
-	game.gameRoundResult = make([]poker.LandlordPlayerRoundResult, 0)
+	// game.gameRoundResult = make([]poker.LandlordPlayerRoundResult, 0)
 }
 
 func (game *LandlordMatchRoom) initplayerData() {
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.userIDPlayerDatas[userID]
+		playerData := game.UserIDPlayerDatas[userID]
 		playerData.hands = []int{}
 		playerData.discards = [][]int{}
 		playerData.actionTimestamp = 0
@@ -191,8 +189,8 @@ func (game *LandlordMatchRoom) initplayerData() {
 		playerData.Boom = 0        //炸弹
 		playerData.Spring = 0      //春天
 		playerData.LSpring = 0     //反春天
-		log.Debug("当前总分:%v,玩家赢的次数:%v", playerData.roundResult.Total, playerData.roundResult.Wins)
-		playerData.roundResult.Chips = 0
+		log.Debug("当前总分:%v,玩家赢的次数:%v", playerData.User.BaseData.MatchPlayer.TotalScore, playerData.User.BaseData.MatchPlayer.Wins)
+		// playerData.roundResult.Chips = 0
 		playerData.count = 0
 	}
 }
@@ -200,7 +198,7 @@ func (game *LandlordMatchRoom) initplayerData() {
 func (game *LandlordMatchRoom) allWaiting() bool {
 	count := 0
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.userIDPlayerDatas[userID]
+		playerData := game.UserIDPlayerDatas[userID]
 		if playerData.state == landlordWaiting {
 			count++
 		}
@@ -213,7 +211,7 @@ func (game *LandlordMatchRoom) allWaiting() bool {
 
 func (game *LandlordMatchRoom) showHand() {
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.userIDPlayerDatas[userID]
+		playerData := game.UserIDPlayerDatas[userID]
 		if len(playerData.hands) > 0 {
 			game.broadcast(&msg.S2C_UpdatePokerHands{
 				Position:      playerData.position,
@@ -226,32 +224,32 @@ func (game *LandlordMatchRoom) showHand() {
 
 // 计算积分
 func (game *LandlordMatchRoom) calScore() {
-	game.spring = true
+	game.Spring = true
 	landlordWin := true
-	landlordPlayerData := game.userIDPlayerDatas[game.landlordUserID]
+	landlordPlayerData := game.UserIDPlayerDatas[game.landlordUserID]
 	var loserUserIDs []int // 用于连胜任务统计
 	if game.landlordUserID == game.winnerUserIDs[0] {
 		loserUserIDs = append(loserUserIDs, game.peasantUserIDs...)
 		for _, peasantUserID := range game.peasantUserIDs {
-			peasantPlayerData := game.userIDPlayerDatas[peasantUserID]
+			peasantPlayerData := game.UserIDPlayerDatas[peasantUserID]
 			if len(peasantPlayerData.discards) > 0 {
-				game.spring = false
+				game.Spring = false
 				break
 			}
 		}
 
-		log.Debug("游戏结束 地主胜利 春天: %v", game.spring)
+		log.Debug("游戏结束 地主胜利 春天: %v", game.Spring)
 	} else {
 		landlordWin = false
 		game.winnerUserIDs = game.peasantUserIDs
 		loserUserIDs = append(loserUserIDs, game.landlordUserID)
 		if len(landlordPlayerData.discards) > 1 {
-			game.spring = false
+			game.Spring = false
 		}
-		log.Debug("游戏结束 农民胜利 春天: %v", game.spring)
+		log.Debug("游戏结束 农民胜利 春天: %v", game.Spring)
 	}
-	if game.spring {
-		for userID, player := range game.userIDPlayerDatas {
+	if game.Spring {
+		for userID, player := range game.UserIDPlayerDatas {
 			//春天
 			if game.landlordUserID == game.winnerUserIDs[0] {
 				player.Spring = 1
@@ -262,7 +260,7 @@ func (game *LandlordMatchRoom) calScore() {
 			}
 			//反春天
 			player.LSpring = 1
-			if player.user.BaseData.UserData.UserID == game.landlordUserID {
+			if player.User.BaseData.UserData.UserID == game.landlordUserID {
 				player.Xian *= 2
 				game.sendRoomPanel(userID)
 				continue
@@ -273,30 +271,48 @@ func (game *LandlordMatchRoom) calScore() {
 
 	}
 
-	for userID, player := range game.userIDPlayerDatas {
+	for _, player := range game.UserIDPlayerDatas {
 		//公共*庄家*防守
-		log.Debug("玩家%v的公共%v庄家%v防守%v", player.user.BaseData.UserData.UserID, player.Public, player.Dealer, player.Xian)
+		log.Debug("玩家%v的公共%v庄家%v防守%v", player.User.BaseData.UserData.UserID, player.Public, player.Dealer, player.Xian)
 		if landlordWin {
-			if player.user.BaseData.UserData.UserID != game.landlordUserID {
-				player.roundResult.Chips = -int64(player.Public * player.Dealer * player.Xian)
-				game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+			if player.User.BaseData.UserData.UserID != game.landlordUserID {
+				player.User.BaseData.MatchPlayer.LastScore = -int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.TotalScore += -int64(player.Public * player.Dealer * player.Xian)
+				// player.roundResult.Chips = -int64(player.Public * player.Dealer * player.Xian)
+				// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Score = player.User.BaseData.MatchPlayer.LastScore
 			} else {
-				player.roundResult.Chips = int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.LastScore = int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.TotalScore += int64(player.Public * player.Dealer * player.Xian)
+				// player.roundResult.Chips = int64(player.Public * player.Dealer * player.Xian)
 				player.wins++
-				game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
-				game.gameRecords[userID].Result[game.count-1].Identity = 1
-				game.gameRecords[userID].Result[game.count-1].Event = 1
+				player.User.BaseData.MatchPlayer.Wins++
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Score = player.User.BaseData.MatchPlayer.LastScore
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Identity = 1
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Event = 1
+				// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+				// game.gameRecords[userID].Result[game.count-1].Identity = 1
+				// game.gameRecords[userID].Result[game.count-1].Event = 1
 			}
 		} else {
-			if player.user.BaseData.UserData.UserID == game.landlordUserID {
-				player.roundResult.Chips = -int64(player.Public * player.Dealer * player.Xian)
-				game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
-				game.gameRecords[userID].Result[game.count-1].Identity = 1
+			if player.User.BaseData.UserData.UserID == game.landlordUserID {
+				player.User.BaseData.MatchPlayer.LastScore = -int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.TotalScore += -int64(player.Public * player.Dealer * player.Xian)
+				// player.roundResult.Chips = -int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Score = player.User.BaseData.MatchPlayer.LastScore
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Identity = 1
+				// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+				// game.gameRecords[userID].Result[game.count-1].Identity = 1
 			} else {
-				player.roundResult.Chips = int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.LastScore = int64(player.Public * player.Dealer * player.Xian)
+				player.User.BaseData.MatchPlayer.TotalScore += int64(player.Public * player.Dealer * player.Xian)
+				// player.roundResult.Chips = int64(player.Public * player.Dealer * player.Xian)
 				player.wins++
-				game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
-				game.gameRecords[userID].Result[game.count-1].Event = 1
+				player.User.BaseData.MatchPlayer.Wins++
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Score = player.User.BaseData.MatchPlayer.LastScore
+				player.User.BaseData.MatchPlayer.Result[game.count-1].Event = 1
+				// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+				// game.gameRecords[userID].Result[game.count-1].Event = 1
 			}
 		}
 	}
@@ -307,43 +323,43 @@ func (game *LandlordMatchRoom) empty() bool {
 }
 
 // 发送单局结果
-func (game *LandlordMatchRoom) SendRoundResult(userID int) {
-	if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-		roundResults := game.gameRoundResult
-		result := poker.ResultLose
-		Type := 0
-		if utils.InArray(game.winnerUserIDs, userID) {
-			result = poker.ResultWin
-		}
-		if playerData.user.BaseData.UserData.UserID == game.landlordUserID {
-			Type = 1
-		}
-		tempMsg := &msg.S2C_LandlordRoundResult{
-			Result:       result,
-			Spring:       game.spring,
-			RoundResults: roundResults,
-			ContinueGame: true,
-			Type:         Type,
-			Position:     playerData.position,
-			Allcount:     game.rule.Round,
-			CurrCount:    game.count,
-			RankOrder:    playerData.Level,
-			Process:      game.GetProcess(),
-			Countdown:    conf.GetCfgTimeout().LandlordNextStart,
-		}
-		playerData.user.WriteMsg(tempMsg)
-		for _, value := range roundResults {
-			log.Debug("单局结算分数:%v,总分:%v,尾牌得分:%v", value.Chips, value.Total, value.Last)
-		}
-	}
-}
+// func (game *LandlordMatchRoom) SendRoundResult(userID int) {
+// 	if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+// 		roundResults := game.gameRoundResult
+// 		result := poker.ResultLose
+// 		Type := 0
+// 		if utils.InArray(game.winnerUserIDs, userID) {
+// 			result = poker.ResultWin
+// 		}
+// 		if playerData.User.BaseData.UserData.UserID == game.landlordUserID {
+// 			Type = 1
+// 		}
+// 		tempMsg := &msg.S2C_LandlordRoundResult{
+// 			Result:       result,
+// 			Spring:       game.Spring,
+// 			RoundResults: roundResults,
+// 			// ContinueGame: true,
+// 			Type: Type,
+// 			// Position:  playerData.position,
+// 			// Allcount:  game.rule.Round,
+// 			CurrCount: game.count,
+// 			// RankOrder: playerData.Level,
+// 			Process: game.GetProcess(),
+// 			// Countdown:    conf.GetCfgTimeout().LandlordNextStart,
+// 		}
+// 		playerData.User.WriteMsg(tempMsg)
+// 		for _, value := range roundResults {
+// 			log.Debug("单局结算分数:%v,总分:%v,尾牌得分:%v", value.Chips, value.Total, value.Last)
+// 		}
+// 	}
+// }
 
 func (game *LandlordMatchRoom) sendRoomPanel(userID int) {
-	game.userIDPlayerDatas[userID].sendRoomPanel(game.rule.BaseScore)
+	game.UserIDPlayerDatas[userID].sendRoomPanel(game.rule.BaseScore)
 }
 
 func (ctx *LandlordMatchPlayerData) sendRoomPanel(baseScore int) {
-	ctx.user.WriteMsg(&msg.S2C_RoomPanel{
+	ctx.User.WriteMsg(&msg.S2C_RoomPanel{
 		Spring:      ctx.Spring,
 		LSpring:     ctx.LSpring,
 		Boom:        ctx.Boom,
@@ -373,114 +389,95 @@ func (game *LandlordMatchRoom) GetProcess() []string {
 	}
 }
 
-func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
-	playerData := game.userIDPlayerDatas[userID]
-	result := poker.ResultLose
-	Type := 0
-	if utils.InArray(game.winnerUserIDs, userID) {
-		result = poker.ResultWin
-	}
-	if playerData.user.BaseData.UserData.UserID == game.landlordUserID {
-		Type = 1
-	}
+// func (game *LandlordMatchRoom) sendMineRoundRank(userID int) {
+// 	playerData := game.UserIDPlayerDatas[userID]
+// 	result := poker.ResultLose
+// 	Type := 0
+// 	if utils.InArray(game.winnerUserIDs, userID) {
+// 		result = poker.ResultWin
+// 	}
+// 	if playerData.User.BaseData.UserData.UserID == game.landlordUserID {
+// 		Type = 1
+// 	}
 
-	award := float64(0)
-	if playerData.Level-1 < len(game.rule.Awards) {
-		// 现金奖励
-		if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Money {
-			award = values.ParseAward(game.rule.Awards[playerData.Level-1])
-			playerData.user.BaseData.UserData.Fee += utils.Decimal(award * 0.8)
-			UpdateUserData(playerData.user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": playerData.user.BaseData.UserData.Fee}})
-			playerData.user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-				AfterTaxAward: playerData.user.BaseData.UserData.Fee,
-			})
-		} else if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Coupon { // 点券奖励 todo
+// 	award := float64(0)
+// 	if playerData.Level-1 < len(game.rule.Awards) {
+// 		// 现金奖励
+// 		if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Money {
+// 			award = values.ParseAward(game.rule.Awards[playerData.Level-1])
+// 			playerData.User.BaseData.UserData.Fee += utils.Decimal(award * 0.8)
+// 			UpdateUserData(playerData.User.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": playerData.User.BaseData.UserData.Fee}})
+// 			playerData.User.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
+// 				AfterTaxAward: playerData.User.BaseData.UserData.Fee,
+// 			})
+// 		} else if values.GetAwardType(game.rule.Awards[playerData.Level-1]) == values.Coupon { // 点券奖励 todo
 
-		}
-	}
-	playerData.user.WriteMsg(&msg.S2C_MineRoundRank{
-		Result:    result,
-		RankOrder: playerData.Level,
-		Award:     utils.Decimal(award * 0.8),
-		Spring:    game.spring,
-		Type:      Type,
-	})
-	game.gameRecords[userID].Award = utils.Decimal(award * 0.8)
-	game.gameRecords[userID].Level = playerData.Level
-	game.gameRecords[userID].Count = game.count
-	game.gameRecords[userID].Last = playerData.roundResult.Last
-	game.gameRecords[userID].Total = playerData.roundResult.Total
-	game.gameRecords[userID].Wins = playerData.wins
-	for _, playerData := range game.userIDPlayerDatas {
-		r := values.Rank{
-			Level:    playerData.Level,
-			NickName: playerData.user.BaseData.UserData.Nickname,
-			Count:    game.count,
-			Total:    playerData.roundResult.Total,
-			Last:     playerData.roundResult.Last,
-			Wins:     playerData.wins,
-			Period:   game.gameRecords[playerData.user.BaseData.UserData.UserID].Period,
-			Award:    game.gameRecords[playerData.user.BaseData.UserData.UserID].Award,
-			Sort:     playerData.roundResult.Sort,
-		}
-		game.gameRecords[userID].Rank = append(game.gameRecords[userID].Rank, r)
-		sortRank(game.gameRecords[userID].Rank)
-	}
-	game.matchEndMail(userID, playerData.Level, game.gameRecords[userID].Award)
-}
+// 		}
+// 	}
+// 	playerData.User.WriteMsg(&msg.S2C_MineRoundRank{
+// 		Result:    result,
+// 		RankOrder: playerData.Level,
+// 		Award:     utils.Decimal(award * 0.8),
+// 		Spring:    game.Spring,
+// 		Type:      Type,
+// 	})
+// 	game.gameRecords[userID].Award = utils.Decimal(award * 0.8)
+// 	game.gameRecords[userID].Level = playerData.Level
+// 	game.gameRecords[userID].Count = game.count
+// 	game.gameRecords[userID].Last = playerData.roundResult.Last
+// 	game.gameRecords[userID].Total = playerData.roundResult.Total
+// 	game.gameRecords[userID].Wins = playerData.wins
+// 	for _, playerData := range game.UserIDPlayerDatas {
+// 		r := values.Rank{
+// 			Level:    playerData.Level,
+// 			NickName: playerData.User.BaseData.UserData.Nickname,
+// 			Count:    game.count,
+// 			Total:    playerData.roundResult.Total,
+// 			Last:     playerData.roundResult.Last,
+// 			Wins:     playerData.wins,
+// 			Period:   game.gameRecords[playerData.User.BaseData.UserData.UserID].Period,
+// 			Award:    game.gameRecords[playerData.User.BaseData.UserData.UserID].Award,
+// 			Sort:     playerData.roundResult.Sort,
+// 		}
+// 		game.gameRecords[userID].Rank = append(game.gameRecords[userID].Rank, r)
+// 		sortRank(game.gameRecords[userID].Rank)
+// 	}
+// 	game.matchEndMail(userID, playerData.Level, game.gameRecords[userID].Award)
+// }
 
-//todo：卡住原因，每个玩家的当场总得分和总时长尚未开发，当场游戏的类型和前多少名的奖励未开发
-func (game *LandlordMatchRoom) FlushRank(gametype int, rankType string) {
+// FlushRank 刷新各种排行榜
+func FlushRank(gametype int, uid int, rankType string, award string, matchType string) {
 	cfghall := conf.GetCfgHall()
 	switch rankType {
 	case cfghall.RankTypeJoinNum:
-		for _, v := range game.PositionUserIDs {
-			hall.FlushRank(gametype, rankType, v, 0)
-		}
+		hall.FlushRank(gametype, rankType, uid, 0)
 	case cfghall.RankTypeWinNum:
-		for _, v := range game.winnerUserIDs {
-			hall.FlushRank(gametype, rankType, v, 0)
-		}
+		hall.FlushRank(gametype, rankType, uid, 0)
 	case cfghall.RankTypeFailNum:
-		allUserid := []int{}
-		for _, v := range game.PositionUserIDs {
-			allUserid = append(allUserid, v)
-		}
-		for _, v := range utils.Remove(allUserid, game.winnerUserIDs) {
-			hall.FlushRank(gametype, rankType, v, 0)
-		}
+		hall.FlushRank(gametype, rankType, uid, 0)
 	case cfghall.RankTypeAward:
-		for k, v := range game.userIDPlayerDatas {
-			if v.Level-1 < len(game.rule.Awards) {
-				if values.GetAwardType(game.rule.Awards[v.Level-1]) != values.Money {
-					continue
-				}
-				// skeleton.ChanRPCServer.Go("WriteAwardFlowData", &msg.RPC_WriteAwardFlowData{
-				// 	Userid:  k,
-				// 	Amount:  values.ParseAward(game.rule.Awards[v.Level-1]),
-				// 	Matchid: game.rule.MatchId,
-				// })
-				hall.WriteFlowData(k, values.ParseAward(game.rule.Awards[v.Level-1]), hall.FlowTypeAward, game.rule.MatchType)
-				hall.FlushRank(gametype, rankType, k, values.ParseAward(game.rule.Awards[v.Level-1]))
-			}
+		if len(award) == 0 || values.GetAwardType(award) != values.Money {
+			return
 		}
+		hall.WriteFlowData(uid, values.ParseAward(award), hall.FlowTypeAward, matchType)
+		hall.FlushRank(gametype, rankType, uid, values.ParseAward(award))
 	}
 }
 
 func (game *LandlordMatchRoom) matchEndMail(userid, order int, award float64) {
 	skeleton.ChanRPCServer.Go("SendMatchEndMail", &msg.RPC_SendMatchEndMail{
-		Userid:  userid,
+		Userid:    userid,
 		MatchName: game.rule.MatchName,
-		Order:   order,
-		Award:   award, //playerData.Award,
+		Order:     order,
+		Award:     award, //playerData.Award,
 	})
 }
 
 func (game *LandlordMatchRoom) matchInterrupt(userid int, conpon int) {
 	skeleton.ChanRPCServer.Go("SendInterruptMail", &msg.RPC_SendInterruptMail{
-		Userid:  userid,
+		Userid:    userid,
 		MatchName: game.rule.MatchName,
-		Coupon: game.rule.Coupon,
+		Coupon:    game.rule.Coupon,
 	})
 }
 
