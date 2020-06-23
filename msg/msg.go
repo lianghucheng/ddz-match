@@ -67,7 +67,6 @@ func init() {
 	Processor.Register(&S2C_AwardInfo{})
 	Processor.Register(&C2S_WithDraw{})
 	Processor.Register(&S2C_WithDraw{})
-	Processor.Register(&S2C_BankCardInfo{})
 	Processor.Register(&C2S_GetMatchList{})
 	Processor.Register(&S2C_GetMatchList{})
 
@@ -77,6 +76,7 @@ func init() {
 	Processor.Register(&S2C_GetGameRankRecord{})
 	Processor.Register(&C2S_GetGameResultRecord{})
 	Processor.Register(&S2C_GetGameResultRecord{})
+	Processor.Register(&S2C_PayOK{})
 }
 
 type C2S_Heartbeat struct{}
@@ -223,12 +223,13 @@ const (
 )
 
 type S2C_BindBankCard struct {
-	BankCardNo string
+	BankCardInfo *BankCardInfo
 	Error      int
 }
 
-type S2C_BankCardInfo struct {
-	BankCardNo string
+type BankCardInfo struct {
+	BankName       string //银行名称
+	BankCardNoTail string //银行卡号后四位
 }
 
 type C2S_AwardInfo struct {
@@ -263,4 +264,14 @@ const (
 type S2C_WithDraw struct {
 	Amount float64
 	Error  int
+}
+
+const (
+	ErrPaySuccess = 0  //成功
+	ErrPayFail = 1 //我们的错
+	ErrPayBusiness = 2//他们的错
+)
+type S2C_PayOK struct {
+	Error int
+	AddCoupon int
 }

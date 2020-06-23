@@ -122,6 +122,19 @@ func ReadUserDataByID(id int) *UserData {
 	return userData
 }
 
+func ReadUserDataByAid(accountid int) *UserData {
+	userData := new(UserData)
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	err := db.DB(DB).C("users").Find(bson.M{"accountid": accountid}).One(userData)
+	if err != nil {
+		log.Error(err.Error())
+		return nil
+	}
+
+	return userData
+}
+
 func (user *User) UID() int {
 	return user.BaseData.UserData.UserID
 }

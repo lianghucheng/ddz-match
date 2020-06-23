@@ -58,6 +58,8 @@ type S2C_Login struct {
 	Customer          string  //客服
 	RealName          string
 	PhoneNum          string
+	BankName       string //银行名称
+	BankCardNoTail string //银行卡号后四位
 }
 
 type S2C_FirstRechage struct {

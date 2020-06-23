@@ -29,7 +29,7 @@ func (ctx *BankCard) save() error {
 	return nil
 }
 
-func (ctx *BankCard) read() {
+func (ctx *BankCard) Read() {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	if err := se.DB(db.DB).C("bankcard").Find(bson.M{"userid": ctx.Userid}).One(ctx); err != nil {

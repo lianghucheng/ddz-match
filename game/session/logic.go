@@ -146,6 +146,13 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
 	}
 	autoHeartbeat(user)
+	bankCard := new(hall.BankCard)
+	bankCard.Userid = user.UID()
+	bankCard.Read()
+	tail := ""
+	if  bankCard.BankCardNo != "" {
+		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
+	}
 	user.WriteMsg(&msg.S2C_Login{
 		AccountID:         user.BaseData.UserData.AccountID,
 		Nickname:          user.BaseData.UserData.Nickname,
@@ -162,7 +169,11 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		Customer:          "yintan12345",
 		RealName:          user.RealName(),
 		PhoneNum:          user.PhoneNum(),
+		BankName:bankCard.BankName,
+		BankCardNoTail:tail,
 	})
+
+
 
 	hall.UpdateUserCoupon(user, 0, "")
 	hall.UpdateUserAfterTaxAward(user, user.Fee())
@@ -170,7 +181,6 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	hall.SendRaceInfo(user.BaseData.UserData.UserID)
-	hall.SendBankCard(user)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		for _, p := range s.AllPlayers {
 			if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {

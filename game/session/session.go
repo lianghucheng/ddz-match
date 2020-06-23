@@ -2,11 +2,14 @@ package session
 
 import (
 	"ddz/conf"
+	"ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
 	"ddz/msg"
+	"fmt"
+	"github.com/name5566/leaf/log"
 	"strings"
 	"time"
 
@@ -24,6 +27,7 @@ func init() {
 	skeleton.RegisterChanRPC("WriteAwardFlowData", rpcWriteAwardFlowData)
 	skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
+	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -160,4 +164,38 @@ func rpcSendInterruptMail(args []interface{}) {
 	m := args[0].(*msg.RPC_SendInterruptMail)
 
 	hall.MatchInterruptPushMail(m.Userid, m.MatchName, m.Coupon)
+}
+
+func rpcTempPayOK(args []interface{}) {
+	if len(args) != 1 {
+		return
+	}
+	m := args[0].(*msg.RPC_TempPayOK)
+
+	fmt.Println("【！！！！！！！！！】Accountid:", m.AccountID)
+	ud := ReadUserDataByAid(m.AccountID)
+
+	if ud == nil {
+		log.Error("不存在该用户")
+		return
+	}
+
+	addCoupon := m.TotalFee/10
+
+	if user, ok := UserIDUsers[ud.UserID]; ok {
+		user.GetUserData().Coupon += int64(addCoupon)
+		go func() {
+			SaveUserData(user.GetUserData())
+		}()
+		user.WriteMsg(&msg.S2C_PayOK{
+			Error: msg.ErrPaySuccess,
+			AddCoupon:addCoupon,
+		})
+		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
+	} else {
+		ud.Coupon += int64(addCoupon)
+		go func() {
+			SaveUserData(ud)
+		}()
+	}
 }

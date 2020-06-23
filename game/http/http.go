@@ -2,11 +2,14 @@ package http
 
 import (
 	"ddz/conf"
+	"ddz/game"
 	. "ddz/game/db"
 	"ddz/game/hall"
+	"ddz/msg"
 	"ddz/utils"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +27,7 @@ func startHTTPServer() {
 
 	mux.HandleFunc("/code", handleCode)
 	mux.HandleFunc("/pushmail", hall.HandlePushMail)
+	mux.HandleFunc("/temppay", HandleTempPay)
 
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -85,4 +89,22 @@ func handleCode(w http.ResponseWriter, req *http.Request) {
 	log.Debug("captcha send success,phone=%s,captcha=%s", account, code)
 	w.Write(strbyte(success))
 	return
+}
+
+func HandleTempPay(w http.ResponseWriter, r *http.Request) {
+	secret := r.FormValue("secret")
+	aid := r.FormValue("aid")
+	fee := r.FormValue("fee")
+
+	f, _ := strconv.Atoi(fee)
+	a, _ := strconv.Atoi(aid)
+	if secret != "123456" {
+		w.Write([]byte("1"))
+		return
+	}
+	w.Write([]byte("0"))
+	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
+		TotalFee: f,
+		AccountID:a,
+	})
 }

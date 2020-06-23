@@ -28,15 +28,19 @@ func UpdateRealName(user *player.User, status int) {
 	})
 }
 
-func SendBankCard(user *player.User) {
-	user.WriteMsg(&msg.S2C_BankCardInfo{
-		BankCardNo: user.BankCardNo(),
-	})
-}
-
 func SendAddBankCard(user *player.User, code int) {
+	bankCard := new(BankCard)
+	bankCard.Userid = user.UID()
+	bankCard.Read()
+	tail := ""
+	if  bankCard.BankCardNo != "" {
+		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
+	}
 	user.WriteMsg(&msg.S2C_BindBankCard{
-		BankCardNo: user.BankCardNo(),
+		BankCardInfo:&msg.BankCardInfo{
+			BankName:bankCard.BankName,
+			BankCardNoTail:tail,
+		},
 		Error:      code,
 	})
 }
