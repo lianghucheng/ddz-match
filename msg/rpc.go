@@ -43,6 +43,6 @@ type RPC_WriteAwardFlowData struct {
 }
 
 type RPC_TempPayOK struct {
-	TotalFee   int
-	AccountID  int
+	TotalFee  int
+	AccountID int
 }

@@ -150,7 +150,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	bankCard.Userid = user.UID()
 	bankCard.Read()
 	tail := ""
-	if  bankCard.BankCardNo != "" {
+	if bankCard.BankCardNo != "" {
 		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
 	}
 	user.WriteMsg(&msg.S2C_Login{
@@ -169,11 +169,9 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		Customer:          "yintan12345",
 		RealName:          user.RealName(),
 		PhoneNum:          user.PhoneNum(),
-		BankName:bankCard.BankName,
-		BankCardNoTail:tail,
+		BankName:          bankCard.BankName,
+		BankCardNoTail:    tail,
 	})
-
-
 
 	hall.UpdateUserCoupon(user, 0, "")
 	hall.UpdateUserAfterTaxAward(user, user.Fee())

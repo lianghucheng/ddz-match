@@ -224,7 +224,7 @@ const (
 
 type S2C_BindBankCard struct {
 	BankCardInfo *BankCardInfo
-	Error      int
+	Error        int
 }
 
 type BankCardInfo struct {
@@ -267,11 +267,12 @@ type S2C_WithDraw struct {
 }
 
 const (
-	ErrPaySuccess = 0  //成功
-	ErrPayFail = 1 //我们的错
-	ErrPayBusiness = 2//他们的错
+	ErrPaySuccess  = 0 //成功
+	ErrPayFail     = 1 //我们的错
+	ErrPayBusiness = 2 //他们的错
 )
+
 type S2C_PayOK struct {
-	Error int
+	Error     int
 	AddCoupon int
 }

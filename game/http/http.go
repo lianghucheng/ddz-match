@@ -104,7 +104,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("0"))
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
-		TotalFee: f,
-		AccountID:a,
+		TotalFee:  f,
+		AccountID: a,
 	})
 }

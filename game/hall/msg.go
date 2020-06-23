@@ -33,14 +33,14 @@ func SendAddBankCard(user *player.User, code int) {
 	bankCard.Userid = user.UID()
 	bankCard.Read()
 	tail := ""
-	if  bankCard.BankCardNo != "" {
+	if bankCard.BankCardNo != "" {
 		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
 	}
 	user.WriteMsg(&msg.S2C_BindBankCard{
-		BankCardInfo:&msg.BankCardInfo{
-			BankName:bankCard.BankName,
-			BankCardNoTail:tail,
+		BankCardInfo: &msg.BankCardInfo{
+			BankName:       bankCard.BankName,
+			BankCardNoTail: tail,
 		},
-		Error:      code,
+		Error: code,
 	})
 }

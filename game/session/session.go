@@ -164,7 +164,7 @@ func rpcTempPayOK(args []interface{}) {
 		return
 	}
 
-	addCoupon := m.TotalFee/10
+	addCoupon := m.TotalFee / 10
 
 	if user, ok := UserIDUsers[ud.UserID]; ok {
 		user.GetUserData().Coupon += int64(addCoupon)
@@ -172,8 +172,8 @@ func rpcTempPayOK(args []interface{}) {
 			SaveUserData(user.GetUserData())
 		}()
 		user.WriteMsg(&msg.S2C_PayOK{
-			Error: msg.ErrPaySuccess,
-			AddCoupon:addCoupon,
+			Error:     msg.ErrPaySuccess,
+			AddCoupon: addCoupon,
 		})
 		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
 	} else {
