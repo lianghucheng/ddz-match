@@ -72,18 +72,25 @@ type S2C_ClearAction struct{} // 清除动作
 
 // 单局成绩
 type S2C_LandlordRoundResult struct {
-	Result       int // 0 失败、1 胜利
-	RoomDesc     string
+	Result int // 0 失败、1 胜利
+	// RoomDesc     string
 	Spring       bool
 	RoundResults []poker.LandlordPlayerRoundResult
-	ContinueGame bool // 是否继续游戏
-	Type         int  // 0 防守方 1 进攻方
-	Position     int
-	Process      []string //总进度
-	Allcount     int      //总局数
-	RankOrder    int      //排名
-	CurrCount    int      //当前局数
-	Countdown    int      //下一局等待时间
+	// ContinueGame bool // 是否继续游戏
+	Type int // 0 防守方 1 进攻方
+	// Position     int
+	CurrCount int      //当前局数
+	Process   []string //总进度
+	Tables    int      //  剩余桌数
+	// Allcount     int      //总局数
+	// RankOrder    int      //排名
+	// Countdown    int      //下一局等待时间
+}
+
+// S2C_LandlordRoundFinalResult 单局总成绩
+type S2C_LandlordRoundFinalResult struct {
+	Results   []poker.LandlordPlayerRoundResult
+	Countdown int // 下一局开始时间
 }
 
 type S2C_GameStart struct{}

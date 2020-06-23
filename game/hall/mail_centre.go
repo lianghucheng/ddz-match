@@ -8,10 +8,11 @@ import (
 	"ddz/msg"
 	"encoding/json"
 	"fmt"
-	"github.com/szxby/tools/log"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"time"
+
+	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -153,15 +154,15 @@ func GamePushMail(userid int, title, content string) {
 	mailBox.pushMailBox()
 }
 
-func MatchEndPushMail(userid int, matchName string, order int, award float64) {
+func MatchEndPushMail(userid int, matchName string, order int, award string) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = 30
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "比赛通知"
 	mailBox.Content = fmt.Sprintf("恭喜您在【%v】比赛中获得第【%v】名。", matchName, order)
-	if award != 0 {
-		mailBox.Content += fmt.Sprintf("【%v元奖励】已经发放至您的钱包或背包。请核对您的奖励信息。", award)
+	if len(award) > 0 {
+		mailBox.Content += fmt.Sprintf("【%v奖励】已经发放至您的钱包或背包。请核对您的奖励信息。", award)
 	}
 
 	mailBox.pushMailBox()

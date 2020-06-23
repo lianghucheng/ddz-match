@@ -91,31 +91,53 @@ func (user *User) SendMatchRecord(page, num int) {
 func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int) {
 	uid := user.BaseData.UserData.UserID
 	log.Debug("player %v get rank,page:%v,rpage:%b,rnum:%v,matchid:%v", uid, page, rPage, rNum, matchID)
-	data := db.RedisGetMatchRecord(uid, page)
+	data := db.RedisGetMatchRankRecord(uid, matchID)
 	// 如果redis中没有数据，则去数据库中查
-	var items []msg.GameAllRecord
-	allRecord := &msg.SaveAllGameRecord{}
+	// var items []msg.GameAllRecord
+	// allRecord := &msg.SaveAllGameRecord{}
 	rank := []msg.Rank{}
-	count := 0
 	if data == nil {
+		match := map[string]interface{}{}
 		game.GetSkeleton().Go(func() {
 			s := db.MongoDB.Ref()
 			defer db.MongoDB.UnRef(s)
-			count, _ = s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).Count()
-
-			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
-				Sort("-createdat").Skip((num - 1) * page).Limit(num).All(&items)
-
-		}, func() {
-			allRecord.Record = items
-			allRecord.Total = count
-			allRecord.PageNumber = page
-			allRecord.PageSize = num
-			for _, r := range allRecord.Record {
-				if r.MatchId == matchID {
-					rank = r.Rank
-					break
+			if err := s.DB(db.DB).C("match").Find(bson.M{"matchid": matchID}).One(&match); err != nil {
+				log.Error("get data err:%v", err)
+				return
+			}
+			if match["rank"] == nil {
+				log.Error("no rank in match:%v", match)
+				match = nil
+				return
+			}
+			tmp1, ok := match["rank"].([]interface{})
+			if !ok {
+				log.Error("no rank in match:%v", match)
+				match = nil
+				return
+			}
+			for _, v := range tmp1 {
+				tmp2, ok := v.(map[string]interface{})
+				if !ok {
+					log.Error("no rank in match:%v", match)
+					continue
 				}
+				jsStr, err := json.Marshal(tmp2)
+				if err != nil {
+					log.Error("no rank in match:%v", match)
+					continue
+				}
+				final := msg.Rank{}
+				err = json.Unmarshal(jsStr, &final)
+				if err != nil {
+					log.Error("no rank in match:%v", match)
+					continue
+				}
+				rank = append(rank, final)
+			}
+		}, func() {
+			if match == nil || len(rank) == 0 {
+				return
 			}
 			sendData := msg.S2C_GetGameRankRecord{
 				Total:      len(rank),
@@ -134,24 +156,18 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			sendData.Rank = rank[(rPage-1)*rNum : end]
 
 			user.WriteMsg(sendData)
-			data, err := json.Marshal(allRecord)
+			data, err := json.Marshal(rank)
 			if err != nil {
 				log.Error("marshal fail:%v", err)
 				return
 			}
-			db.RedisMatchRecord(uid, page, data)
+			db.RedisMatchRankRecord(uid, matchID, data)
 		})
 	} else {
-		err := json.Unmarshal(data, allRecord)
+		err := json.Unmarshal(data, &rank)
 		if err != nil {
 			log.Error("umarshal fail:%v", err)
 			return
-		}
-		for _, r := range allRecord.Record {
-			if r.MatchId == matchID {
-				rank = r.Rank
-				break
-			}
 		}
 		data := &msg.S2C_GetGameRankRecord{}
 		data.Total = len(rank)

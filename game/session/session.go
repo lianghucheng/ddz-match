@@ -6,7 +6,6 @@ import (
 	"ddz/game/hall"
 	. "ddz/game/match"
 	. "ddz/game/player"
-	. "ddz/game/room"
 	"ddz/msg"
 	"fmt"
 	"github.com/name5566/leaf/log"
@@ -21,11 +20,10 @@ func init() {
 	skeleton.RegisterChanRPC("CloseAgent", rpcCloseAgent)
 	skeleton.RegisterChanRPC("TokenLogin", rpcTokenLogin)
 	skeleton.RegisterChanRPC("UsernamePasswordLogin", rpcUsernamePasswordLogin)
-	skeleton.RegisterChanRPC("EndMatch", rpcEndMatch)
 	skeleton.RegisterChanRPC("SendMail", rpcSendMail)
 	skeleton.RegisterChanRPC("SendRaceInfo", rpcSendRaceInfo)
 	skeleton.RegisterChanRPC("WriteAwardFlowData", rpcWriteAwardFlowData)
-	skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
+	// skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
 	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
 }
@@ -97,20 +95,6 @@ func rpcCloseAgent(args []interface{}) {
 	}
 }
 
-func rpcEndMatch(args []interface{}) {
-	m := args[0].(*msg.C2S_EndMatch)
-	delete(UserIDRooms, m.Id)
-	if game, ok := UserIDRooms[m.Id]; ok {
-		game.Exit(m.Id)
-	}
-	delete(UserIDMatch, m.Id)
-	delete(MatchList[m.MatchId].AllPlayers, m.Id)
-	Broadcast(&msg.S2C_MatchNum{
-		MatchId: m.MatchId,
-		Count:   len(MatchList[m.MatchId].AllPlayers),
-	})
-}
-
 func rpcSendMail(args []interface{}) {
 	if len(args) != 1 {
 		return
@@ -149,13 +133,13 @@ func rpcWriteAwardFlowData(args []interface{}) {
 	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].Manager.GetNormalConfig().MatchType)
 }
 
-func rpcSendMatchEndMail(args []interface{}) {
-	if len(args) != 1 {
-		return
-	}
-	m := args[0].(*msg.RPC_SendMatchEndMail)
-	hall.MatchEndPushMail(m.Userid, m.MatchName, m.Order, m.Award)
-}
+// func rpcSendMatchEndMail(args []interface{}) {
+// 	if len(args) != 1 {
+// 		return
+// 	}
+// 	m := args[0].(*msg.RPC_SendMatchEndMail)
+// 	hall.MatchEndPushMail(m.Userid, m.MatchName, m.Order, m.Award)
+// }
 
 func rpcSendInterruptMail(args []interface{}) {
 	if len(args) != 1 {

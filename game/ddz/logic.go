@@ -15,7 +15,7 @@ import (
 
 func (game *LandlordMatchRoom) score(userID int) {
 	//最高三分
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	playerData.state = landlordActionBid
 	score := make([]int, 0)
 	switch game.maxscore {
@@ -47,7 +47,7 @@ func (game *LandlordMatchRoom) score(userID int) {
 }
 
 func (game *LandlordMatchRoom) doscore(userID int, score int) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	if playerData.state != landlordActionBid {
 		return
 	}
@@ -62,7 +62,7 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 		Score:    score,
 	}, game.PositionUserIDs, -1)
 	log.Debug("玩家%v叫分%v", userID, score)
-	dealerPlayerData := game.userIDPlayerDatas[game.dealerUserID]
+	dealerPlayerData := game.UserIDPlayerDatas[game.dealerUserID]
 	nextUserID := game.PositionUserIDs[(playerData.position+1)%game.rule.MaxPlayers]
 	lastPos := (dealerPlayerData.position + game.rule.MaxPlayers - 1) % game.rule.MaxPlayers
 	playerData.score = score
@@ -78,15 +78,15 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 	}
 	if playerData.position == lastPos {
 		//比较叫分的大小决定谁是地主
-		max := game.userIDPlayerDatas[game.dealerUserID].score
+		max := game.UserIDPlayerDatas[game.dealerUserID].score
 		userID := game.dealerUserID
-		for i := 1; i < len(game.userIDPlayerDatas); i++ {
-			position := ((game.userIDPlayerDatas[userID].position) + 1) % game.rule.MaxPlayers
+		for i := 1; i < len(game.UserIDPlayerDatas); i++ {
+			position := ((game.UserIDPlayerDatas[userID].position) + 1) % game.rule.MaxPlayers
 			nextUserID := game.PositionUserIDs[position]
-			if game.userIDPlayerDatas[nextUserID].score <= max {
+			if game.UserIDPlayerDatas[nextUserID].score <= max {
 				continue
 			}
-			max = game.userIDPlayerDatas[nextUserID].score
+			max = game.UserIDPlayerDatas[nextUserID].score
 			userID = nextUserID
 
 		}
@@ -103,7 +103,7 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 	game.broadcast(&msg.S2C_ClearAction{}, game.PositionUserIDs, -1)
 
 	game.landlordUserID = userID
-	playerData := game.userIDPlayerDatas[game.landlordUserID]
+	playerData := game.UserIDPlayerDatas[game.landlordUserID]
 	for i := 1; i < game.rule.MaxPlayers; i++ {
 		peasantUserID := game.PositionUserIDs[(playerData.position+i)%game.rule.MaxPlayers]
 		game.peasantUserIDs = append(game.peasantUserIDs, peasantUserID)
@@ -111,16 +111,20 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 	//确定庄家以后，更新玩家的公共分
 	for i := 0; i < len(game.PositionUserIDs); i++ {
 		score := 1
-		if game.userIDPlayerDatas[game.landlordUserID].score == 0 {
+		if game.UserIDPlayerDatas[game.landlordUserID].score == 0 {
 			score *= game.rule.BaseScore
 		} else {
-			score = game.userIDPlayerDatas[game.landlordUserID].score * game.rule.BaseScore
+			score = game.UserIDPlayerDatas[game.landlordUserID].score * game.rule.BaseScore
 		}
-		game.userIDPlayerDatas[game.PositionUserIDs[i]].DealerScore = score
-		game.userIDPlayerDatas[game.PositionUserIDs[i]].Public = score
+
+		game.UserIDPlayerDatas[game.PositionUserIDs[i]].DealerScore = score
+		game.UserIDPlayerDatas[game.PositionUserIDs[i]].Public = score
+
+		// game.gameRecords[userID].Result[game.count-1].Bottom = score
+		player := game.UserIDPlayerDatas[game.PositionUserIDs[i]].User.BaseData.MatchPlayer
+		player.Result[game.count-1].Bottom = score
 
 		game.sendRoomPanel(game.PositionUserIDs[i])
-		game.gameRecords[userID].Result[game.count-1].Bottom = score
 
 	}
 
@@ -140,8 +144,8 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 	playerData.hands = append(playerData.hands, game.lastThree...)
 	sort.Sort(sort.Reverse(sort.IntSlice(playerData.hands)))
 
-	if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-		playerData.user.WriteMsg(&msg.S2C_UpdatePokerHands{
+	if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+		playerData.User.WriteMsg(&msg.S2C_UpdatePokerHands{
 			Position:      playerData.position,
 			Hands:         playerData.hands,
 			NumberOfHands: len(playerData.hands),
@@ -162,12 +166,12 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 func (game *LandlordMatchRoom) double() {
 	actionTimestamp := time.Now().Unix()
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.userIDPlayerDatas[userID]
+		playerData := game.UserIDPlayerDatas[userID]
 		playerData.state = landlordActionDouble
 		playerData.actionTimestamp = actionTimestamp
 
-		if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-			playerData.user.WriteMsg(&msg.S2C_ActionLandlordDouble{
+		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+			playerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
 				Countdown: conf.GetCfgTimeout().LandlordDouble,
 			})
 		}
@@ -175,7 +179,7 @@ func (game *LandlordMatchRoom) double() {
 	log.Debug("等待所有人加倍")
 	game.doubleTimer = skeleton.AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordDouble+2)*time.Second, func() {
 		for _, userID := range game.PositionUserIDs {
-			playerData := game.userIDPlayerDatas[userID]
+			playerData := game.UserIDPlayerDatas[userID]
 			if playerData.state == landlordActionDouble {
 				log.Debug("userID %v 自动不加倍", userID)
 				game.doDouble(userID, false)
@@ -185,7 +189,7 @@ func (game *LandlordMatchRoom) double() {
 }
 
 func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	if playerData.state != landlordActionDouble {
 		return
 	}
@@ -194,8 +198,11 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 	if double {
 		lable = 2
 	}
-	game.gameRecords[userID].Result[game.count-1].Multiple = lable
-	game.gameRecords[userID].Result[game.count-1].ThreeCards = game.lastThree
+	// game.gameRecords[userID].Result[game.count-1].Multiple = lable
+	// game.gameRecords[userID].Result[game.count-1].ThreeCards = game.lastThree
+	playerData.User.BaseData.MatchPlayer.Result[game.count-1].Multiple = lable
+	playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
+
 	game.broadcast(&msg.S2C_LandlordDouble{
 		Position: playerData.position,
 		Double:   double,
@@ -204,9 +211,9 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 		for i := 0; i < len(game.PositionUserIDs); i++ {
 			if game.PositionUserIDs[i] != game.landlordUserID {
 				if double {
-					game.userIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
+					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
 				} else {
-					game.userIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
+					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
 				}
 				game.sendRoomPanel(game.PositionUserIDs[i])
 			}
@@ -222,9 +229,9 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 		for i := 0; i < len(game.PositionUserIDs); i++ {
 			if game.PositionUserIDs[i] == game.landlordUserID {
 				if double {
-					game.userIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
+					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
 				} else {
-					game.userIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
+					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
 				}
 				game.sendRoomPanel(game.PositionUserIDs[i])
 			}
@@ -248,7 +255,7 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 
 // 出牌
 func (game *LandlordMatchRoom) discard(userID int, actionDiscardType int) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	playerData.state = landlordActionDiscard
 	playerData.actionDiscardType = actionDiscardType
 
@@ -270,7 +277,7 @@ func (game *LandlordMatchRoom) discard(userID int, actionDiscardType int) {
 		if playerData.hosted {
 			goto HOST
 		}
-		discarderPlayerData := game.userIDPlayerDatas[game.discarderUserID]
+		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
 		if !poker.CompareLandlordHands(prevDiscards, playerData.hands) {
 			hint = poker.GetDiscardHint(prevDiscards, playerData.hands)
@@ -282,8 +289,8 @@ func (game *LandlordMatchRoom) discard(userID int, actionDiscardType int) {
 			goto HOST
 		}
 	}
-	if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-		playerData.user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
+	if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+		playerData.User.WriteMsg(&msg.S2C_ActionLandlordDiscard{
 			ActionDiscardType: playerData.actionDiscardType,
 			Position:          playerData.position,
 			Countdown:         countdown,
@@ -303,8 +310,8 @@ func (game *LandlordMatchRoom) discard(userID int, actionDiscardType int) {
 			playerData.count++
 			if playerData.count >= 2 {
 				playerData.hosted = true
-				playerData.user.WriteMsg(&msg.S2C_ClearAction{})
-				playerData.user.WriteMsg(&msg.S2C_SystemHost{
+				playerData.User.WriteMsg(&msg.S2C_ClearAction{})
+				playerData.User.WriteMsg(&msg.S2C_SystemHost{
 					Position: playerData.position,
 					Host:     true,
 				})
@@ -320,7 +327,7 @@ HOST: // 托管出牌
 	return
 }
 func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	if playerData.state != landlordActionDiscard {
 		return
 	}
@@ -331,14 +338,14 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 
 	var prevDiscards []int
 	if game.discarderUserID > 0 && game.discarderUserID != userID {
-		discarderPlayerData := game.userIDPlayerDatas[game.discarderUserID]
+		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
 	}
 	if cardsLen == 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardMust ||
 		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardNothing ||
 		cardsLen > 0 && !contain || cardsLen > 0 && cardsType == poker.Error ||
 		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardAlternative && !poker.CompareLandlordDiscard(cards, prevDiscards) {
-		if playerData, ok := game.userIDPlayerDatas[userID]; ok {
+		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
 			after := int(time.Now().Unix() - playerData.actionTimestamp)
 			isErr := 0
 			if !contain || cardsLen > 0 && cardsType == poker.Error {
@@ -346,7 +353,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 			}
 			countdown := conf.GetCfgTimeout().LandlordDiscard - after
 			if countdown > 1 {
-				playerData.user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
+				playerData.User.WriteMsg(&msg.S2C_ActionLandlordDiscard{
 					IsErr:             isErr,
 					ActionDiscardType: playerData.actionDiscardType,
 					Position:          playerData.position,
@@ -375,7 +382,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 		if game.discarderUserID == nextUserID {
 			game.discard(nextUserID, poker.ActionLandlordDiscardMust)
 		} else {
-			nextUserPlayerData := game.userIDPlayerDatas[nextUserID]
+			nextUserPlayerData := game.UserIDPlayerDatas[nextUserID]
 			if poker.CompareLandlordHands(prevDiscards, nextUserPlayerData.hands) {
 				game.discard(nextUserID, poker.ActionLandlordDiscardNothing)
 			} else {
@@ -391,7 +398,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 	switch cardsType {
 
 	case poker.KingBomb, poker.Bomb:
-		for userID, player := range game.userIDPlayerDatas {
+		for userID, player := range game.UserIDPlayerDatas {
 			player.Boom++
 			player.Public *= 2
 			game.sendRoomPanel(userID)
@@ -404,8 +411,8 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 	playerData.discards = append(playerData.discards, cards)
 	playerData.hands = utils.Remove(playerData.hands, cards)
 	log.Debug("userID %v, 出牌: %v", userID, poker.ToCardsString(cards))
-	if playerData, ok := game.userIDPlayerDatas[userID]; ok {
-		playerData.user.WriteMsg(&msg.S2C_UpdatePokerHands{
+	if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+		playerData.User.WriteMsg(&msg.S2C_UpdatePokerHands{
 			Position:      playerData.position,
 			Hands:         playerData.hands,
 			NumberOfHands: len(playerData.hands),
@@ -427,7 +434,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 	if game.discarderUserID == nextUserID {
 		game.discard(nextUserID, poker.ActionLandlordDiscardMust)
 	} else {
-		nextUserPlayerData := game.userIDPlayerDatas[nextUserID]
+		nextUserPlayerData := game.UserIDPlayerDatas[nextUserID]
 		if poker.CompareLandlordHands(cards, nextUserPlayerData.hands) {
 			game.discard(nextUserID, poker.ActionLandlordDiscardNothing)
 		} else {
@@ -442,7 +449,7 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 
 // 托管出牌
 func (game *LandlordMatchRoom) doHostDiscard(userID int) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	if playerData.state != landlordActionDiscard {
 		return
 	}
@@ -463,12 +470,12 @@ func (game *LandlordMatchRoom) doHostDiscard(userID int) {
 }
 
 func (game *LandlordMatchRoom) doSystemHost(userID int, host bool) {
-	playerData := game.userIDPlayerDatas[userID]
+	playerData := game.UserIDPlayerDatas[userID]
 	if playerData.hosted == host || game.State != roomGame {
 		return
 	}
 	playerData.hosted = host
-	playerData.user.WriteMsg(&msg.S2C_SystemHost{
+	playerData.User.WriteMsg(&msg.S2C_SystemHost{
 		Position: playerData.position,
 		Host:     host,
 	})
@@ -480,78 +487,69 @@ func (game *LandlordMatchRoom) doSystemHost(userID int, host bool) {
 	}
 }
 
-func (game *LandlordMatchRoom) Leave(userID int) {
-	game.finisherUserID = -1
-	m := msg.C2S_EndMatch{
-		Id:      userID,
-		MatchId: game.rule.MatchId,
-	}
-	skeleton.ChanRPCServer.Go("EndMatch", &m)
-}
-
 // 断线重连
 func (game *LandlordMatchRoom) reconnect(userID int) {
-	thePlayerData := game.userIDPlayerDatas[userID]
+	thePlayerData := game.UserIDPlayerDatas[userID]
 	if thePlayerData == nil {
 		return
 	}
 	//取消托管
 	if thePlayerData.hosted {
 		thePlayerData.count = 0
-		thePlayerData.user.WriteMsg(&msg.S2C_SystemHost{
+		thePlayerData.User.WriteMsg(&msg.S2C_SystemHost{
 			Position: thePlayerData.position,
 			Host:     false,
 		})
 	}
-	thePlayerData.user.WriteMsg(&msg.S2C_GameStart{})
-	thePlayerData.user.WriteMsg(&msg.S2C_MatchInfo{
+	thePlayerData.User.WriteMsg(&msg.S2C_GameStart{})
+	thePlayerData.User.WriteMsg(&msg.S2C_MatchInfo{
 		RoundNum:    game.rule.RoundNum,
 		Process:     fmt.Sprintf("第%v局 第1幅", game.count),
 		Level:       fmt.Sprintf("%v/%v", thePlayerData.Level, game.rule.MaxPlayers),
 		Competition: "前3晋级",
 	})
 	if game.landlordUserID > 0 {
-		landlordPlayerData := game.userIDPlayerDatas[game.landlordUserID]
-		thePlayerData.user.WriteMsg(&msg.S2C_DecideLandlord{
+		landlordPlayerData := game.UserIDPlayerDatas[game.landlordUserID]
+		thePlayerData.User.WriteMsg(&msg.S2C_DecideLandlord{
 			Position: landlordPlayerData.position,
 		})
-		thePlayerData.user.WriteMsg(&msg.S2C_UpdateLandlordLastThree{
+		thePlayerData.User.WriteMsg(&msg.S2C_UpdateLandlordLastThree{
 			Cards: game.lastThree,
 		})
 		game.sendRoomPanel(userID)
 	}
 	if game.discarderUserID > 0 {
-		discarderPlayerData := game.userIDPlayerDatas[game.discarderUserID]
+		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		if len(discarderPlayerData.discards) > 1 {
 			prevDiscards := discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
-			thePlayerData.user.WriteMsg(&msg.S2C_LandlordDiscard{
+			thePlayerData.User.WriteMsg(&msg.S2C_LandlordDiscard{
 				Position: discarderPlayerData.position,
 				Cards:    prevDiscards,
 			})
 		}
 	}
-	game.getPlayerData(thePlayerData.user, thePlayerData, false)
+	game.getPlayerData(thePlayerData.User, thePlayerData, false)
 
 	for i := 1; i < game.rule.MaxPlayers; i++ {
 		otherUserID := game.PositionUserIDs[(thePlayerData.position+i)%game.rule.MaxPlayers]
-		otherPlayerData := game.userIDPlayerDatas[otherUserID]
+		otherPlayerData := game.UserIDPlayerDatas[otherUserID]
 
-		game.getPlayerData(thePlayerData.user, otherPlayerData, true)
+		game.getPlayerData(thePlayerData.User, otherPlayerData, true)
 	}
 }
 
-func (game *LandlordMatchRoom) getPlayerData(user *User, playerData *LandlordMatchPlayerData, other bool) {
+func (game *LandlordMatchRoom) getPlayerData(User *User, playerData *LandlordMatchPlayerData, other bool) {
 	hands := playerData.hands
 	if other {
 		hands = []int{}
 	}
-	user.WriteMsg(&msg.S2C_UpdatePokerHands{
+	User.WriteMsg(&msg.S2C_UpdatePokerHands{
 		Position:      playerData.position,
 		Hands:         hands,
 		NumberOfHands: len(playerData.hands),
 	})
 	if playerData.hosted {
-		user.WriteMsg(&msg.S2C_SystemHost{
+		User.WriteMsg(&msg.S2C_SystemHost{
 			Position: playerData.position,
 			Host:     true,
 		})
@@ -561,7 +559,7 @@ func (game *LandlordMatchRoom) getPlayerData(user *User, playerData *LandlordMat
 		after := int(time.Now().Unix() - playerData.actionTimestamp)
 		countdown := conf.GetCfgTimeout().LandlordBid - after
 		if countdown > 1 {
-			user.WriteMsg(&msg.S2C_ActionLandlordBid{
+			User.WriteMsg(&msg.S2C_ActionLandlordBid{
 				Position:  playerData.position,
 				Countdown: countdown - 1,
 			})
@@ -573,20 +571,20 @@ func (game *LandlordMatchRoom) getPlayerData(user *User, playerData *LandlordMat
 		after := int(time.Now().Unix() - playerData.actionTimestamp)
 		countdown := conf.GetCfgTimeout().LandlordDouble - after
 		if countdown > 1 {
-			user.WriteMsg(&msg.S2C_ActionLandlordDouble{
+			User.WriteMsg(&msg.S2C_ActionLandlordDouble{
 				Countdown: countdown - 1,
 			})
 		}
 	case landlordActionDiscard:
 		after := int(time.Now().Unix() - playerData.actionTimestamp)
 		var prevDiscards []int
-		if game.discarderUserID > 0 && game.discarderUserID != user.BaseData.UserData.UserID {
-			discarderPlayerData := game.userIDPlayerDatas[game.discarderUserID]
+		if game.discarderUserID > 0 && game.discarderUserID != User.BaseData.UserData.UserID {
+			discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 			prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
 		}
 		countdown := conf.GetCfgTimeout().LandlordDiscard - after
 		if countdown > 1 {
-			user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
+			User.WriteMsg(&msg.S2C_ActionLandlordDiscard{
 				ActionDiscardType: playerData.actionDiscardType,
 				Position:          playerData.position,
 				Countdown:         countdown - 1,
@@ -596,51 +594,51 @@ func (game *LandlordMatchRoom) getPlayerData(user *User, playerData *LandlordMat
 	}
 }
 func (game *LandlordMatchRoom) players(playerData *LandlordMatchPlayerData, userID int) {
-	hands := game.userIDPlayerDatas[userID].hands
-	if playerData.user.BaseData.UserData.UserID != userID {
+	hands := game.UserIDPlayerDatas[userID].hands
+	if playerData.User.BaseData.UserData.UserID != userID {
 		hands = []int{}
 	}
-	playerData.user.WriteMsg(&msg.S2C_UpdatePokerHands{
-		Position:      game.userIDPlayerDatas[userID].position,
+	playerData.User.WriteMsg(&msg.S2C_UpdatePokerHands{
+		Position:      game.UserIDPlayerDatas[userID].position,
 		Hands:         hands,
-		NumberOfHands: len(game.userIDPlayerDatas[userID].hands),
+		NumberOfHands: len(game.UserIDPlayerDatas[userID].hands),
 	})
 	if playerData.hosted {
-		playerData.user.WriteMsg(&msg.S2C_SystemHost{
-			Position: game.userIDPlayerDatas[userID].position,
+		playerData.User.WriteMsg(&msg.S2C_SystemHost{
+			Position: game.UserIDPlayerDatas[userID].position,
 			Host:     true,
 		})
 	}
-	switch game.userIDPlayerDatas[userID].state {
+	switch game.UserIDPlayerDatas[userID].state {
 	case landlordActionBid:
-		after := int(time.Now().Unix() - game.userIDPlayerDatas[userID].actionTimestamp)
+		after := int(time.Now().Unix() - game.UserIDPlayerDatas[userID].actionTimestamp)
 		countdown := conf.GetCfgTimeout().LandlordBid - after
 		if countdown > 1 {
-			playerData.user.WriteMsg(&msg.S2C_ActionLandlordBid{
-				Position:  game.userIDPlayerDatas[userID].position,
+			playerData.User.WriteMsg(&msg.S2C_ActionLandlordBid{
+				Position:  game.UserIDPlayerDatas[userID].position,
 				Countdown: countdown - 1,
 			})
 		}
 	case landlordActionDouble:
-		after := int(time.Now().Unix() - game.userIDPlayerDatas[userID].actionTimestamp)
+		after := int(time.Now().Unix() - game.UserIDPlayerDatas[userID].actionTimestamp)
 		countdown := conf.GetCfgTimeout().LandlordDouble - after
 		if countdown > 1 {
-			playerData.user.WriteMsg(&msg.S2C_ActionLandlordDouble{
+			playerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
 				Countdown: countdown - 1,
 			})
 		}
 	case landlordActionDiscard:
-		after := int(time.Now().Unix() - game.userIDPlayerDatas[userID].actionTimestamp)
+		after := int(time.Now().Unix() - game.UserIDPlayerDatas[userID].actionTimestamp)
 		var prevDiscards []int
 		if game.discarderUserID > 0 && game.discarderUserID != userID {
-			discarderPlayerData := game.userIDPlayerDatas[game.discarderUserID]
+			discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 			prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
 		}
 		countdown := conf.GetCfgTimeout().LandlordDiscard - after
 		if countdown > 1 {
-			playerData.user.WriteMsg(&msg.S2C_ActionLandlordDiscard{
-				ActionDiscardType: game.userIDPlayerDatas[userID].actionDiscardType,
-				Position:          game.userIDPlayerDatas[userID].position,
+			playerData.User.WriteMsg(&msg.S2C_ActionLandlordDiscard{
+				ActionDiscardType: game.UserIDPlayerDatas[userID].actionDiscardType,
+				Position:          game.UserIDPlayerDatas[userID].position,
 				Countdown:         countdown - 1,
 				PrevDiscards:      prevDiscards,
 			})
@@ -649,37 +647,37 @@ func (game *LandlordMatchRoom) players(playerData *LandlordMatchPlayerData, user
 
 }
 
-func (game *LandlordMatchRoom) rank() {
-	/*
-	   若遇到总得分相同时，则按照如下规则进行破同分：
+// func (game *LandlordMatchRoom) rank() {
+// 	/*
+// 	   若遇到总得分相同时，则按照如下规则进行破同分：
 
-	   （1）首先比较最后一副牌的得分，高者名次列前；
+// 	   （1）首先比较最后一副牌的得分，高者名次列前；
 
-	   （2）其次比较获胜（即得分>0）的牌副数，牌副数多者名次列前；
+// 	   （2）其次比较获胜（即得分>0）的牌副数，牌副数多者名次列前；
 
-	   （3）再次比较出牌总时间，出牌时间少者名次列前；
+// 	   （3）再次比较出牌总时间，出牌时间少者名次列前；
 
-	   （4）最后比较报名顺序，报名早者名次列前。
-	*/
-	sort.Sort(poker.LstPoker(game.gameRoundResult))
-	log.Debug("*************************:%v", game.gameRoundResult)
-	for key, value := range game.gameRoundResult {
-		log.Debug("key:%v******************:position:%v", key+1, value.Position)
-		game.userIDPlayerDatas[game.PositionUserIDs[value.Position]].Level = key + 1
-	}
-}
+// 	   （4）最后比较报名顺序，报名早者名次列前。
+// 	*/
+// 	sort.Sort(poker.LstPoker(game.gameRoundResult))
+// 	log.Debug("*************************:%v", game.gameRoundResult)
+// 	for key, value := range game.gameRoundResult {
+// 		log.Debug("key:%v******************:position:%v", key+1, value.Position)
+// 		game.UserIDPlayerDatas[game.PositionUserIDs[value.Position]].Level = key + 1
+// 	}
+// }
 func (game *LandlordMatchRoom) sendSimpleScore(userId int) {
 	result := make([]msg.Result, 0)
-	for _, p := range game.userIDPlayerDatas {
+	for _, p := range game.UserIDPlayerDatas {
 		r := msg.Result{
-			TotalScore: p.roundResult.Total,
+			TotalScore: p.User.BaseData.MatchPlayer.TotalScore,
 			Position:   p.position,
 		}
 		result = append(result, r)
 	}
-	for key, p := range game.userIDPlayerDatas {
+	for key, p := range game.UserIDPlayerDatas {
 		if key == userId {
-			p.user.WriteMsg(&msg.S2C_UpdateTotalScore{
+			p.User.WriteMsg(&msg.S2C_UpdateTotalScore{
 				Result: result,
 			})
 			break
@@ -688,15 +686,15 @@ func (game *LandlordMatchRoom) sendSimpleScore(userId int) {
 }
 func (game *LandlordMatchRoom) sendUpdateScore() {
 	result := make([]msg.Result, 0)
-	for _, p := range game.userIDPlayerDatas {
+	for _, p := range game.UserIDPlayerDatas {
 		r := msg.Result{
-			TotalScore: p.roundResult.Total,
+			TotalScore: p.User.BaseData.MatchPlayer.TotalScore,
 			Position:   p.position,
 		}
 		result = append(result, r)
 	}
-	for _, p := range game.userIDPlayerDatas {
-		p.user.WriteMsg(&msg.S2C_UpdateTotalScore{
+	for _, p := range game.UserIDPlayerDatas {
+		p.User.WriteMsg(&msg.S2C_UpdateTotalScore{
 			Result: result,
 		})
 	}

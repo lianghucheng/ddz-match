@@ -2,6 +2,7 @@ package player
 
 import (
 	. "ddz/game/db"
+	"ddz/game/values"
 	"fmt"
 	"time"
 
@@ -65,7 +66,8 @@ type User struct {
 	HeartbeatStop  bool
 }
 type BaseData struct {
-	UserData *UserData
+	UserData    *UserData
+	MatchPlayer *values.MatchPlayer
 }
 type AgentInfo struct {
 	User *User

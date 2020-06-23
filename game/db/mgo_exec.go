@@ -1,6 +1,7 @@
 package db
 
 import (
+	"ddz/game/values"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -33,4 +34,15 @@ func InsertItemLog(uid int, amount int64, item string, way string) {
 	if err != nil {
 		log.Error("insert fail:%v", err)
 	}
+}
+
+// InsertMatchRecord 插入玩家单次比赛战绩
+func InsertMatchRecord(record values.DDZGameRecord) {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	err := db.DB(DB).C("gamerecord").Insert(record)
+	if err != nil {
+		log.Error("save gamerecord %v data error: %v", record, err)
+	}
+
 }
