@@ -171,9 +171,8 @@ func rpcTempPayOK(args []interface{}) {
 		go func() {
 			SaveUserData(user.GetUserData())
 		}()
-		user.WriteMsg(&msg.S2C_PayOK{
+		user.WriteMsg(&msg.S2C_GetCoupon{
 			Error:     msg.ErrPaySuccess,
-			AddCoupon: addCoupon,
 		})
 		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
 	} else {
