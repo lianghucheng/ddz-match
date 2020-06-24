@@ -50,11 +50,11 @@ func AddBankCard(user *player.User, m *msg.C2S_BindBankCard) {
 
 func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bankNo, BankName, BankAccount string) error) {
 	if api == nil {
-		SendAddBankCard(user, msg.ErrAddBankCardFail)
+		SendAddBankCard(user, msg.ErrAddBankCardFail, "绑定失败")
 		return
 	}
 	if user.BankCardNo() != "" {
-		SendAddBankCard(user, msg.ErrAddBankCardAlready)
+		SendAddBankCard(user, msg.ErrAddBankCardAlready, "重复绑定")
 		return
 	}
 	var err error
@@ -62,16 +62,16 @@ func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bank
 		err = api(ctx.Userid, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)
 	}, func() {
 		if err != nil {
-			SendAddBankCard(user, msg.ErrAddBankCardBusiness)
+			SendAddBankCard(user, msg.ErrAddBankCardBusiness, err.Error())
 			return
 		}
 		user.BaseData.UserData.BankCardNo = ctx.BankCardNo
 		player.SaveUserData(user.GetUserData())
 		err = ctx.save()
 		if err != nil {
-			SendAddBankCard(user, msg.ErrAddBankCardFail)
+			SendAddBankCard(user, msg.ErrAddBankCardFail, "绑定失败")
 			return
 		}
-		SendAddBankCard(user, msg.ErrAddBankCardSuccess)
+		SendAddBankCard(user, msg.ErrAddBankCardSuccess, "绑定成功")
 	})
 }

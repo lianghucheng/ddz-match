@@ -205,6 +205,7 @@ const (
 type S2C_RealNameAuth struct {
 	RealName string
 	Error    int
+	ErrMsg   string
 }
 
 type C2S_BindBankCard struct {
@@ -225,6 +226,7 @@ const (
 type S2C_BindBankCard struct {
 	BankCardInfo *BankCardInfo
 	Error        int
+	ErrMsg 		 string
 }
 
 type BankCardInfo struct {

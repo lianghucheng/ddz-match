@@ -21,14 +21,15 @@ func UpdateUserCoupon(user *player.User, amount int64, way string) {
 	}
 }
 
-func UpdateRealName(user *player.User, status int) {
+func UpdateRealName(user *player.User, status int, errmsg string) {
 	user.WriteMsg(&msg.S2C_RealNameAuth{
 		RealName: user.RealName(),
 		Error:    status,
+		ErrMsg:errmsg,
 	})
 }
 
-func SendAddBankCard(user *player.User, code int) {
+func SendAddBankCard(user *player.User, code int, errmsg string) {
 	bankCard := new(BankCard)
 	bankCard.Userid = user.UID()
 	bankCard.Read()
@@ -42,5 +43,6 @@ func SendAddBankCard(user *player.User, code int) {
 			BankCardNoTail: tail,
 		},
 		Error: code,
+		ErrMsg:errmsg,
 	})
 }

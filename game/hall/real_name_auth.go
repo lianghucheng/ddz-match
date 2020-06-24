@@ -25,11 +25,11 @@ func RealNameAuth(user *player.User, m *msg.C2S_RealNameAuth) {
 
 func (ctx *Realname) realNameAuth(user *player.User, api func(accountid int, idCardNo, realName, phoneNum string) error) {
 	if api == nil {
-		UpdateRealName(user, msg.ErrRealNameAuthFail)
+		UpdateRealName(user, msg.ErrRealNameAuthFail,"认证失败")
 		return
 	}
 	if user.RealName() != "" {
-		UpdateRealName(user, msg.ErrRealNameAuthAlready)
+		UpdateRealName(user, msg.ErrRealNameAuthAlready,"重复认证")
 		return
 	}
 	var err error
@@ -38,13 +38,13 @@ func (ctx *Realname) realNameAuth(user *player.User, api func(accountid int, idC
 	}, func() {
 		if err != nil {
 			log.Error(err.Error())
-			UpdateRealName(user, msg.ErrRealNameAuthBusiness)
+			UpdateRealName(user, msg.ErrRealNameAuthBusiness, err.Error())
 			return
 		}
 		ud := user.GetUserData()
 		ud.RealName = ctx.RealName
 		ud.IDCardNo = ctx.IDCardNo
 		player.SaveUserData(ud)
-		UpdateRealName(user, msg.ErrRealNameAuthSuccess)
+		UpdateRealName(user, msg.ErrRealNameAuthSuccess, "认证成功")
 	})
 }

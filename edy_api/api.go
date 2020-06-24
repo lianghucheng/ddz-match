@@ -37,7 +37,8 @@ func (ctx *IDBindReq) idCardBind() error {
 	}
 
 	if res.RespCode != "000000" {
-		return errors.New("请求接口失败")
+		log.Error("【返回的错误码】%v", res.RespCode)
+		return errors.New(ErrMsg[res.RespCode])
 	}
 
 	return nil
@@ -68,7 +69,8 @@ func (ctx *BindBankCardReq) BindBankCard() error {
 	}
 
 	if res.RespCode != "000000" {
-		return errors.New("请求接口失败")
+		log.Error("【返回的错误码】%v", res.RespCode)
+		return errors.New(ErrMsg[res.RespCode])
 	}
 
 	return nil
