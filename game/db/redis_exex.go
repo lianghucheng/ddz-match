@@ -68,6 +68,7 @@ func RedisGetMatchRankRecord(uid int, matchID string) []byte {
 		log.Error("set match record fail:%v", err)
 		return nil
 	}
+	// log.Debug("check:%v", data)
 	ret, ok := data.([]byte)
 	if !ok {
 		log.Error("byte fail:%v", err)

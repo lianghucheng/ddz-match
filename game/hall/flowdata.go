@@ -3,9 +3,10 @@ package hall
 import (
 	"ddz/game"
 	"ddz/game/db"
-	"github.com/labstack/gommon/log"
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (

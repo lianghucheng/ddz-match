@@ -77,6 +77,7 @@ func init() {
 	Processor.Register(&C2S_GetGameResultRecord{})
 	Processor.Register(&S2C_GetGameResultRecord{})
 	Processor.Register(&S2C_PayOK{})
+	Processor.Register(&S2C_LandlordRoundFinalResult{})
 }
 
 type C2S_Heartbeat struct{}
@@ -226,7 +227,7 @@ const (
 type S2C_BindBankCard struct {
 	BankCardInfo *BankCardInfo
 	Error        int
-	ErrMsg 		 string
+	ErrMsg       string
 }
 
 type BankCardInfo struct {

@@ -8,9 +8,10 @@ import (
 	. "ddz/game/player"
 	"ddz/msg"
 	"fmt"
-	"github.com/name5566/leaf/log"
 	"strings"
 	"time"
+
+	"github.com/szxby/tools/log"
 
 	"github.com/name5566/leaf/gate"
 )
@@ -172,7 +173,7 @@ func rpcTempPayOK(args []interface{}) {
 			SaveUserData(user.GetUserData())
 		}()
 		user.WriteMsg(&msg.S2C_GetCoupon{
-			Error:     msg.ErrPaySuccess,
+			Error: msg.ErrPaySuccess,
 		})
 		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
 	} else {

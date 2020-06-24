@@ -89,8 +89,8 @@ type S2C_LandlordRoundResult struct {
 
 // S2C_LandlordRoundFinalResult 单局总成绩
 type S2C_LandlordRoundFinalResult struct {
-	Results   []poker.LandlordPlayerRoundResult
-	Countdown int // 下一局开始时间
+	RoundResults []poker.LandlordPlayerRoundResult
+	Countdown    int // 下一局开始时间
 }
 
 type S2C_GameStart struct{}
@@ -145,5 +145,6 @@ type OneMatch struct {
 	Recommend string
 	MaxPlayer int
 	EnterFee  int64
+	StartTime int64
 	IsSign    bool
 }

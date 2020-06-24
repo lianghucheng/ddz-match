@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // MgoGetMatchRecord 获取玩家战绩
@@ -44,5 +45,14 @@ func InsertMatchRecord(record values.DDZGameRecord) {
 	if err != nil {
 		log.Error("save gamerecord %v data error: %v", record, err)
 	}
+}
 
+// UpdateMatchManagerState 修改比赛赛事配置数据
+func UpdateMatchManagerState(matchID string, state int) {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	err := db.DB(DB).C("matchmanager").Update(bson.M{"matchid": matchID}, bson.M{"$set": bson.M{"state": state}})
+	if err != nil {
+		log.Error("update match manager %v state %v data error: %v", matchID, state, err)
+	}
 }

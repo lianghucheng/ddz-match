@@ -6,6 +6,7 @@ const (
 	DailySign    = "sign"         // 签到奖励
 	MatchSignIn  = "matchSignIn"  // 赛事报名
 	MatchSignOut = "matchSignOut" // 赛事签出
+	MatchAward   = "matchAward"   // 赛事奖励
 )
 
 // ItemLog 物品日志

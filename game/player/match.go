@@ -139,7 +139,7 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			if match == nil || len(rank) == 0 {
 				return
 			}
-			sendData := msg.S2C_GetGameRankRecord{
+			sendData := &msg.S2C_GetGameRankRecord{
 				Total:      len(rank),
 				MatchID:    matchID,
 				PageNumber: page,
@@ -156,12 +156,7 @@ func (user *User) SendMatchRankRecord(matchID string, page, num, rPage, rNum int
 			sendData.Rank = rank[(rPage-1)*rNum : end]
 
 			user.WriteMsg(sendData)
-			data, err := json.Marshal(rank)
-			if err != nil {
-				log.Error("marshal fail:%v", err)
-				return
-			}
-			db.RedisMatchRankRecord(uid, matchID, data)
+			db.RedisMatchRankRecord(uid, matchID, rank)
 		})
 	} else {
 		err := json.Unmarshal(data, &rank)

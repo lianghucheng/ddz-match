@@ -22,15 +22,17 @@ var skeleton = game.GetSkeleton()
 
 // 房间状态
 const (
-	roomIdle = iota // 0 空闲
-	roomGame        // 1 游戏中
+	RoomIdle = iota // 0 空闲
+	RoomGame        // 1 游戏中
+	Ending          // 结算中
 )
 
 //赛事规则
 type LandlordMatchRule struct {
 	MatchId    string // 赛事ID
 	MatchName  string
-	MaxPlayers int      // 人数: 2、3
+	AllPlayers int      // 赛事总人数
+	MaxPlayers int      // 房间最大人数: 2、3
 	BaseScore  int      // 底分:
 	Tickets    int64    // 需要消耗的点券
 	RoundNum   string   // 赛制

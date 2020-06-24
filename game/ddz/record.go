@@ -5,7 +5,7 @@ import (
 	. "ddz/game/values"
 	"time"
 
-	"github.com/labstack/gommon/log"
+	"github.com/szxby/tools/log"
 )
 
 func (game *LandlordMatchRoom) GameDDZRecordInit() {

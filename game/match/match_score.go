@@ -105,12 +105,13 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	base.AwardList = c.AwardList
 	base.Award = c.Award
 	base.Round = c.Round
+	base.AllPlayers = make(map[int]*User)
 
 	score.base = base
 	base.myMatch = score
 	MatchList[base.MatchID] = base
-	if score.myConfig.StartType == 2 && time.Now().Unix() < score.myConfig.StartTime {
-		game.GetSkeleton().AfterFunc(time.Duration(time.Unix(score.myConfig.StartTime, 0).Sub(time.Now()))*time.Second, func() {
+	if score.myConfig.StartType == 2 && score.myConfig.StartTime > 0 {
+		game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime)*time.Second, func() {
 			base.CheckStart()
 		})
 	}
@@ -164,9 +165,13 @@ func (sc *scoreMatch) CheckStart() {
 		if len(base.SignInPlayers) < sc.myConfig.LimitPlayer {
 			base.IsClosing = true
 			for _, uid := range base.SignInPlayers {
-				base.SignOut(uid)
+				base.Manager.SignOut(uid, base.MatchID)
 			}
+		} else {
+			base.Start()
 		}
+		// 重启一个新赛事
+		base.Manager.CreateOneMatch()
 	}
 }
 
@@ -213,9 +218,9 @@ func (sc *scoreMatch) End() {
 	// 刷新排行榜
 	for _, p := range sc.matchPlayers {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
-		if p.rank-1 < len(base.Award) {
+		if p.rank < len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], base.Manager.GetNormalConfig().MatchType)
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank], base.Manager.GetNormalConfig().MatchType)
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
@@ -247,23 +252,23 @@ func (sc *scoreMatch) SplitTable() {
 	index := 0
 	indexs := rand.Perm(len(base.AllPlayers))
 	if len(base.Rooms) == 0 {
+		rule := &ddz.LandlordMatchRule{
+			AllPlayers: len(base.AllPlayers),
+			MaxPlayers: sc.myConfig.TablePlayer,
+			BaseScore:  sc.myConfig.BaseScore,
+			Round:      sc.myConfig.Round,
+			MatchId:    base.MatchID,
+			MatchName:  base.Manager.GetNormalConfig().MatchName,
+			Tickets:    c.EnterFee,
+			RoundNum:   sc.myConfig.RoundNum,
+			Desc:       c.MatchName,
+			MatchType:  c.MatchType,
+			GameType:   hall.RankGameTypeAward,
+			Awards:     base.Award,
+			AwardList:  base.AwardList,
+			Coupon:     int(base.Manager.GetNormalConfig().EnterFee),
+		}
 		for i := 0; i < num; i++ {
-			rule := &ddz.LandlordMatchRule{
-				MaxPlayers: base.MaxPlayer,
-				BaseScore:  sc.myConfig.BaseScore,
-				Round:      sc.myConfig.Round,
-				MatchId:    base.MatchID,
-				MatchName:  base.Manager.GetNormalConfig().MatchName,
-				Tickets:    c.EnterFee,
-				RoundNum:   sc.myConfig.RoundNum,
-				Desc:       c.MatchName,
-				MatchType:  c.MatchType,
-				GameType:   hall.RankGameTypeAward,
-				Awards:     base.Award,
-				AwardList:  base.AwardList,
-				Coupon:     int(base.Manager.GetNormalConfig().EnterFee),
-			}
-
 			room := InitRoom()
 			base.Rooms = append(base.Rooms, room)
 			ddzRoom := ddz.LandlordInit(rule)
@@ -272,20 +277,24 @@ func (sc *scoreMatch) SplitTable() {
 			room.Game.OnInit(room)
 		}
 	}
+	log.Debug("num:%v,rooms:%v", num, len(base.Rooms))
 	// 所有玩家先退出原来的房间
 	for _, r := range base.Rooms {
 		game := r.Game.(*ddz.LandlordMatchRoom)
 		for _, playerData := range game.UserIDPlayerDatas {
+			log.Debug("kick player:%v", playerData.User.BaseData.UserData.UserID)
 			game.Exit(playerData.User.BaseData.UserData.UserID)
 		}
+		// 房间状态重新重置为空闲
+		game.State = ddz.RoomIdle
 	}
 	if num < len(base.Rooms) { // 淘汰玩家后，先拆除房间
 		n := len(base.Rooms) - num // 需要拆开的房间数
 		base.Rooms = base.Rooms[:len(base.Rooms)-n]
 	}
-	for _, room := range base.Rooms {
-		// 随机分配桌子
-		game.GetSkeleton().AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordNextStart)*time.Millisecond, func() {
+	game.GetSkeleton().AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordNextStart)*time.Millisecond, func() {
+		for _, room := range base.Rooms {
+			// 随机分配桌子
 			for i := 0; i < sc.myConfig.TablePlayer; i++ {
 				uid := sc.matchPlayers[indexs[index]].uid
 				user := base.AllPlayers[uid]
@@ -294,8 +303,8 @@ func (sc *scoreMatch) SplitTable() {
 				}
 				index++
 			}
-		})
-	}
+		}
+	})
 }
 
 func (sc *scoreMatch) RoundOver(roomID string) {
@@ -335,10 +344,10 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 			for _, playerData := range game.UserIDPlayerDatas {
 				player := playerData.User.BaseData.MatchPlayer
 				tempMsg := &msg.S2C_LandlordRoundResult{
-					Result:       player.Result[base.CurrentRound].Event,
+					Result:       player.Result[base.CurrentRound-1].Event,
 					Spring:       game.Spring,
 					RoundResults: results,
-					Type:         player.Result[base.CurrentRound].Identity,
+					Type:         player.Result[base.CurrentRound-1].Identity,
 					CurrCount:    base.CurrentRound,
 					Process:      sc.GetProcess(),
 					Tables:       len(base.Rooms) - sc.OverRoomCount,
@@ -363,15 +372,15 @@ func (sc *scoreMatch) NextRound() {
 		// 广播单局总结算
 		sort.Sort(poker.LstPoker(sc.AllResults))
 		base.broadcast(&msg.S2C_LandlordRoundFinalResult{
-			Results:   sc.AllResults,
-			Countdown: conf.GetCfgTimeout().LandlordNextStart,
+			RoundResults: sc.AllResults,
+			Countdown:    conf.GetCfgTimeout().LandlordNextStart,
 		})
-
-		// 清理数据
-		sc.ClearRoundData()
 
 		// 淘汰玩家
 		sc.eliminatePlayers()
+
+		// 清理数据
+		sc.ClearRoundData()
 
 		// 下局开始，先分桌
 		base.CurrentRound++
@@ -406,17 +415,20 @@ func (sc *scoreMatch) GetRank(uid int) {
 
 func (sc *scoreMatch) sortMatchPlayers() {
 	base := sc.base.(*BaseMatch)
-	for i := 0; i < len(sc.matchPlayers); i++ {
-		for j := i + 1; j < len(sc.matchPlayers); j++ {
+	for i := 0; i < len(base.AllPlayers); i++ {
+		for j := i + 1; j < len(base.AllPlayers); j++ {
 			// 从大到小排序
 			if !rankWay(sc.matchPlayers[i], sc.matchPlayers[j]) {
-				sc.matchPlayers[i].rank = j
-				sc.matchPlayers[j].rank = i
+				// 实际rank为下标+1
+				sc.matchPlayers[i].rank = j + 1
+				sc.matchPlayers[j].rank = i + 1
 				sc.matchPlayers[i], sc.matchPlayers[j] = sc.matchPlayers[j], sc.matchPlayers[i]
 			}
 		}
-		// 同步排名信息
-		base.AllPlayers[sc.matchPlayers[i].uid].BaseData.MatchPlayer.Rank = sc.matchPlayers[i].rank
+		// 同步未被淘汰的玩家的排名信息
+		if _, ok := base.AllPlayers[sc.matchPlayers[i].uid]; ok {
+			base.AllPlayers[sc.matchPlayers[i].uid].BaseData.MatchPlayer.Rank = sc.matchPlayers[i].rank
+		}
 	}
 }
 
@@ -444,8 +456,8 @@ func (sc *scoreMatch) checkConfig() {
 func (sc *scoreMatch) eliminatePlayers() {
 	base := sc.base.(*BaseMatch)
 	eliminate := 0 // 淘汰后剩余的玩家数
-	if base.CurrentRound < len(sc.myConfig.Eliminate) {
-		eliminate = sc.myConfig.Eliminate[base.CurrentRound]
+	if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
+		eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
 	}
 	// eliminate>0代表剩余人数，eliminate<0代表淘汰人数
 	if eliminate < 0 {
@@ -511,28 +523,28 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				AfterTaxAward: user.BaseData.UserData.Fee,
 			})
 		} else if values.GetAwardType(base.Award[player.Rank-1]) == values.Coupon { // 点券奖励 todo
-
+			hall.UpdateUserCoupon(user, int64(values.ParseAward(base.Award[player.Rank-1])), db.MatchAward)
 		}
 	}
 	// 写入战绩
+	record := values.DDZGameRecord{
+		UserId:    uid,
+		MatchId:   base.MatchID,
+		MatchType: base.Manager.GetNormalConfig().MatchType,
+		Desc:      base.Manager.GetNormalConfig().MatchName,
+		Level:     player.Rank,
+		Award:     award,
+		Count:     base.CurrentRound,
+		Total:     player.TotalScore,
+		Last:      player.LastScore,
+		Wins:      player.Wins,
+		Period:    player.OpTime,
+		Result:    player.Result[:base.CurrentRound],
+		CreateDat: time.Now().Unix(),
+	}
 	game.GetSkeleton().Go(
 		func() {
 			hall.MatchEndPushMail(uid, base.Manager.GetNormalConfig().MatchName, player.Rank, award)
-			record := values.DDZGameRecord{
-				UserId:    uid,
-				MatchId:   base.MatchID,
-				MatchType: base.Manager.GetNormalConfig().MatchType,
-				Desc:      base.Manager.GetNormalConfig().MatchName,
-				Level:     player.Rank,
-				Award:     award,
-				Count:     base.CurrentRound,
-				Total:     player.TotalScore,
-				Last:      player.LastScore,
-				Wins:      player.Wins,
-				Period:    player.OpTime,
-				Result:    player.Result,
-				CreateDat: time.Now().Unix(),
-			}
 			db.InsertMatchRecord(record)
 		}, nil)
 
@@ -540,7 +552,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	sc.myConfig.Rank = append(sc.myConfig.Rank, Rank{
 		Level:    player.Rank,
 		NickName: user.BaseData.UserData.Nickname,
-		Count:    player.Wins,
+		Count:    base.CurrentRound,
 		Total:    player.TotalScore,
 		Last:     player.LastScore,
 		Wins:     player.Wins,
@@ -692,10 +704,10 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 	sort.Sort(poker.LstPoker(results))
 	player := user.BaseData.MatchPlayer
 	tempMsg := &msg.S2C_LandlordRoundResult{
-		Result:       player.Result[base.CurrentRound].Event,
+		Result:       player.Result[base.CurrentRound-1].Event,
 		Spring:       game.Spring,
 		RoundResults: results,
-		Type:         player.Result[base.CurrentRound].Identity,
+		Type:         player.Result[base.CurrentRound-1].Identity,
 		CurrCount:    base.CurrentRound,
 		Process:      sc.GetProcess(),
 		Tables:       len(base.Rooms) - sc.OverRoomCount,
@@ -712,17 +724,6 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 	var award string
 	if player.Rank-1 < len(base.Award) {
 		award = base.Award[player.Rank-1]
-		// 现金奖励
-		if values.GetAwardType(base.Award[player.Rank-1]) == values.Money {
-			awardAmount := values.ParseAward(base.Award[player.Rank-1])
-			user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
-			UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
-			user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-				AfterTaxAward: user.BaseData.UserData.Fee,
-			})
-		} else if values.GetAwardType(base.Award[player.Rank-1]) == values.Coupon { // 点券奖励 todo
-
-		}
 	}
 	user.WriteMsg(&msg.S2C_MineRoundRank{
 		RankOrder: player.Rank,

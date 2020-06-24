@@ -6,7 +6,6 @@ import (
 	. "ddz/game/values"
 	"ddz/msg"
 	"errors"
-	"strings"
 
 	"github.com/szxby/tools/log"
 )
@@ -176,30 +175,14 @@ func (base *BaseMatch) broadcast(msg interface{}) {
 	}
 }
 
-// GetAwardItem 根据list，解析出具体的奖励物品
-func (base *BaseMatch) GetAwardItem() {
-	list := base.AwardList
-	items := strings.Split(list, ",")
-	awards := []string{}
-	log.Debug("check items:%v", items)
-	for _, s := range items {
-		item := strings.Split(s, ":")
-		if len(item) < 2 {
-			continue
-		}
-		awards = append(awards, item[1])
-	}
-	base.Award = awards
-}
-
 // GetPlayer 从allplayers中获取
 func (base *BaseMatch) GetPlayer(uid int) *User {
-	for _, p := range base.AllPlayers {
-		if p.BaseData.UserData.UserID == uid {
-			return p
-		}
-	}
-	return nil
+	// for _, p := range base.AllPlayers {
+	// 	if p.BaseData.UserData.UserID == uid {
+	// 		return p
+	// 	}
+	// }
+	return base.AllPlayers[uid]
 }
 
 // SendRoundResult 给玩家发送单局结算

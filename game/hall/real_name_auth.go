@@ -5,7 +5,8 @@ import (
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
-	"github.com/name5566/leaf/log"
+
+	"github.com/szxby/tools/log"
 )
 
 type Realname struct {
@@ -25,11 +26,11 @@ func RealNameAuth(user *player.User, m *msg.C2S_RealNameAuth) {
 
 func (ctx *Realname) realNameAuth(user *player.User, api func(accountid int, idCardNo, realName, phoneNum string) error) {
 	if api == nil {
-		UpdateRealName(user, msg.ErrRealNameAuthFail,"认证失败")
+		UpdateRealName(user, msg.ErrRealNameAuthFail, "认证失败")
 		return
 	}
 	if user.RealName() != "" {
-		UpdateRealName(user, msg.ErrRealNameAuthAlready,"重复认证")
+		UpdateRealName(user, msg.ErrRealNameAuthAlready, "重复认证")
 		return
 	}
 	var err error

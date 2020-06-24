@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/log"
+	"github.com/szxby/tools/log"
 )
 
 var (
@@ -128,15 +128,17 @@ func RandomNumber(length int) string {
 func StructCopy(dst, src interface{}) {
 	// log.Debugf("%#v %#v", dst, src)
 	if dst == nil || src == nil {
-		log.Info("nil value")
+		log.Error("nil value")
 		return
 	}
 
 	srcVal := Indirect(ValueOf(src))
+	// log.Debug("src:%v", srcVal)
 	dstVal := Indirect(ValueOf(dst))
+	// log.Debug("dst:%v", dstVal)
 	// log.Debugf("srcVal.Kind():%v,dstVal.Kind():%v", srcVal.Kind(), dstVal.Kind())
 	if !(srcVal.Kind() == Struct && dstVal.Kind() == Struct) {
-		log.Error("type is not struct ptr")
+		log.Error("type is not struct ptr,src:%v,dst:%v", srcVal.Kind(), dstVal.Kind())
 		return
 	}
 

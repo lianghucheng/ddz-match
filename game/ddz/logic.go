@@ -471,7 +471,7 @@ func (game *LandlordMatchRoom) doHostDiscard(userID int) {
 
 func (game *LandlordMatchRoom) doSystemHost(userID int, host bool) {
 	playerData := game.UserIDPlayerDatas[userID]
-	if playerData.hosted == host || game.State != roomGame {
+	if playerData.hosted == host || game.State != RoomGame {
 		return
 	}
 	playerData.hosted = host
@@ -505,7 +505,7 @@ func (game *LandlordMatchRoom) reconnect(userID int) {
 	thePlayerData.User.WriteMsg(&msg.S2C_MatchInfo{
 		RoundNum:    game.rule.RoundNum,
 		Process:     fmt.Sprintf("第%v局 第1幅", game.count),
-		Level:       fmt.Sprintf("%v/%v", thePlayerData.Level, game.rule.MaxPlayers),
+		Level:       fmt.Sprintf("%v/%v", thePlayerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
 		Competition: "前3晋级",
 	})
 	if game.landlordUserID > 0 {

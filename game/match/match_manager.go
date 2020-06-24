@@ -1,6 +1,8 @@
 package match
 
 import (
+	"ddz/game"
+	"ddz/game/db"
 	. "ddz/game/player"
 	. "ddz/game/values"
 	"ddz/msg"
@@ -16,6 +18,10 @@ import (
 func NewScoreManager(sc *ScoreConfig) {
 	sc.GetAwardItem()
 	MatchManagerList[sc.MatchID] = sc
+	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
+	if sc.StartType == 2 {
+		sc.CreateOneMatch()
+	}
 }
 
 // SignIn 赛事管理报名
@@ -25,22 +31,9 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		log.Error("unknow user:%v", uid)
 		return
 	}
+	// 当前没有空闲赛事，则创建一个赛事
 	if sc.LastMatch == nil || sc.LastMatch.State != Signing {
-		// 当前没有空闲赛事，则创建一个赛事
-		matchID := ""
-		if sc.CurrentIDIndex < len(sc.OfficalIDs) {
-			matchID = sc.OfficalIDs[sc.CurrentIDIndex]
-		} else {
-			matchID = strconv.FormatInt(time.Now().Unix(), 10)
-		}
-		nSconfig := &ScoreConfig{}
-		utils.StructCopy(nSconfig, sc)
-		nSconfig.MatchID = matchID
-		newMatch := NewScoreMatch(nSconfig)
-		newMatch.Manager = sc
-		sc.LastMatch = newMatch
-		sc.TotalMatch--
-		sc.CurrentIDIndex++
+		sc.CreateOneMatch()
 	}
 
 	if err := sc.LastMatch.SignIn(uid); err != nil {
@@ -48,11 +41,11 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	}
 
 	// ok
-	tp := sc.TablePlayer
-	if tp < 3 {
-		tp = 3
-	}
 	sc.AllSignInPlayers = append(sc.AllSignInPlayers, uid)
+	// 报名满人则清零
+	if len(sc.AllSignInPlayers) >= sc.MaxPlayer && sc.StartType == 1 {
+		sc.AllSignInPlayers = []int{}
+	}
 
 	user.WriteMsg(&msg.S2C_Apply{
 		Error:  0,
@@ -67,29 +60,40 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	})
 
 	// 赛事结束
-	if len(sc.AllSignInPlayers)%tp == 0 && sc.TotalMatch <= 0 {
+	if sc.TotalMatch <= 0 {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
 		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
 		Broadcast(&msg.S2C_RaceInfo{
 			Races: RaceInfo,
 		})
+		// 修改赛事配置数据
+		game.GetSkeleton().Go(func() {
+			db.UpdateMatchManagerState(sc.MatchID, Ending)
+		}, nil)
 	}
 }
 
 // SignOut 赛事管理报名
-func (sc *ScoreConfig) SignOut(uid int) {
+func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
 		return
 	}
 
-	if sc.LastMatch == nil {
-		return
-	}
-	if err := sc.LastMatch.SignOut(uid); err != nil {
-		return
+	// 玩家自己退出比赛
+	if _, ok := MatchManagerList[matchID]; ok {
+		if sc.LastMatch == nil {
+			return
+		}
+		if err := sc.LastMatch.SignOut(uid); err != nil {
+			return
+		}
+	} else if match, ok := MatchList[matchID]; ok { // 系统赛事倒计时时间到了，人数不够，清理玩家
+		if err := match.SignOut(uid); err != nil {
+			return
+		}
 	}
 	// ok
 	sc.RemoveSignPlayer(uid)
@@ -107,11 +111,11 @@ func (sc *ScoreConfig) SignOut(uid int) {
 }
 
 // GetNormalConfig 获取通用配置
-func (sc *ScoreConfig) GetNormalConfig() NormalCofig {
+func (sc *ScoreConfig) GetNormalConfig() *NormalCofig {
 	c := &NormalCofig{}
 	utils.StructCopy(c, sc)
 	// log.Debug("check sc:%+v", c)
-	return *c
+	return c
 }
 
 // GetAwardItem 根据list，解析出具体的奖励物品
@@ -125,7 +129,12 @@ func (sc *ScoreConfig) GetAwardItem() {
 		if len(item) < 2 {
 			continue
 		}
-		awards = append(awards, item[1])
+		one := strings.Split(item[1][:len(item[1])-1], `"`)
+		if len(one) < 2 {
+			continue
+		}
+		awards = append(awards, one[1])
+		// awards = append(awards, item[1][:len(item[1])-1])
 	}
 	sc.Award = awards
 	// log.Debug("check award:%v", sc.Award)
@@ -191,4 +200,22 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 			sc.AllSignInPlayers = append(sc.AllSignInPlayers[:i], sc.AllSignInPlayers[i+1:]...)
 		}
 	}
+}
+
+// createOneMatch 创建子赛事
+func (sc *ScoreConfig) CreateOneMatch() {
+	matchID := ""
+	if sc.CurrentIDIndex < len(sc.OfficalIDs) {
+		matchID = sc.OfficalIDs[sc.CurrentIDIndex]
+	} else {
+		matchID = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	nSconfig := &ScoreConfig{}
+	utils.StructCopy(nSconfig, sc)
+	nSconfig.MatchID = matchID
+	newMatch := NewScoreMatch(nSconfig)
+	newMatch.Manager = sc
+	sc.LastMatch = newMatch
+	sc.TotalMatch--
+	sc.CurrentIDIndex++
 }

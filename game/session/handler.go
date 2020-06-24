@@ -384,7 +384,7 @@ func handleApply(args []interface{}) {
 	if m.Action == 1 {
 		v.SignIn(user.BaseData.UserData.UserID)
 	} else if m.Action == 2 {
-		v.SignOut(user.BaseData.UserData.UserID)
+		v.SignOut(user.BaseData.UserData.UserID, m.MatchId)
 	}
 }
 

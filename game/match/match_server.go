@@ -74,12 +74,13 @@ func GetMatchManagerInfo(opt int) interface{} {
 				award = values.ParseAward(info.Award[0])
 			}
 			raceInfo = append(raceInfo, msg.RaceInfo{
-				ID:       info.MatchID,
-				Desc:     info.MatchName,
-				Award:    award,
-				EnterFee: float64(info.EnterFee) / 10,
-				ConDes:   info.MatchDesc,
-				JoinNum:  len(info.AllSignInPlayers),
+				ID:        info.MatchID,
+				Desc:      info.MatchName,
+				Award:     award,
+				EnterFee:  float64(info.EnterFee) / 10,
+				ConDes:    info.MatchDesc,
+				JoinNum:   len(info.AllSignInPlayers),
+				StartTime: info.StartTime,
 			})
 		}
 		return raceInfo
@@ -94,6 +95,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				Recommend: m.Recommend,
 				MaxPlayer: m.MaxPlayer,
 				EnterFee:  m.EnterFee,
+				StartTime: m.StartTime,
 				IsSign:    false,
 			})
 		}

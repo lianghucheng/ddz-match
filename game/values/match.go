@@ -3,8 +3,6 @@ package values
 import (
 	"strconv"
 	"strings"
-
-	"github.com/labstack/gommon/log"
 )
 
 // Match 比赛接口
@@ -24,11 +22,12 @@ type Match interface {
 // MatchManager 比赛配置接口
 type MatchManager interface {
 	SignIn(uid int)
-	SignOut(uid int)
-	GetNormalConfig() NormalCofig
+	SignOut(uid int, matchID string)
+	GetNormalConfig() *NormalCofig
 	SendMatchDetail(uid int)
 	End(matchID string)
 	RemoveSignPlayer(uid int)
+	CreateOneMatch()
 }
 
 // MatchPlayer 比赛玩家对象
@@ -56,6 +55,7 @@ type NormalCofig struct {
 	Recommend        string // 赛事推荐文字信息
 	MaxPlayer        int
 	AllSignInPlayers []int // 所有已报名该赛事的玩家
+	StartTime        int64 // 比赛开始时间或者比赛倒计时
 	Sort             int   // 赛事排序
 }
 
@@ -72,7 +72,7 @@ func GetAwardType(award string) string {
 
 // ParseAward 解析奖励的数量
 func ParseAward(award string) float64 {
-	log.Debug("parse award:%v", award)
+	// log.Debug("parse award:%v", award)
 	num := []byte{}
 	for _, s := range []byte(award) {
 		if s <= 57 && s >= 46 {

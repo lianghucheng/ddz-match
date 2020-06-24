@@ -101,6 +101,7 @@ func usernamePasswordLogin(user *User, account string, code string) {
 		return
 	}
 	anotherLogin := false
+	log.Debug("player %v login", userData.UserID)
 	if oldUser, ok := UserIDUsers[userData.UserID]; ok {
 		oldUser.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_LoginRepeated})
 		oldUser.Close()
@@ -180,12 +181,18 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendFirstRecharge(user)
 	hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		for _, p := range s.AllPlayers {
-			if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {
-				s.AllPlayers[user.BaseData.UserData.UserID] = user
-				break
-			}
+		// for uid, p := range s.AllPlayers {
+		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {
+
+		// 		s.AllPlayers[user.BaseData.UserData.UserID] = user
+		// 		break
+		// 	}
+		// }
+		p := s.AllPlayers[user.BaseData.UserData.UserID]
+		if user.BaseData.MatchPlayer == nil {
+			user.BaseData.MatchPlayer = p.BaseData.MatchPlayer
 		}
+		s.AllPlayers[user.BaseData.UserData.UserID] = user
 	}
 	if r, ok := UserIDRooms[user.BaseData.UserData.UserID]; ok {
 		user.WriteMsg(&msg.S2C_MatchPrepare{})

@@ -70,6 +70,7 @@ func (game *LandlordMatchRoom) Enter(User *User) bool {
 		})
 		return true
 	}
+	log.Debug("player %v enter room:%v", userID, game.Number)
 	for pos := 0; pos < game.rule.MaxPlayers; pos++ {
 		if _, ok := game.PositionUserIDs[pos]; ok {
 			continue
@@ -156,22 +157,22 @@ func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
 	}
 	game.sendSimpleScore(User.BaseData.UserData.UserID)
 	//断线重连机制
-	if game.State == roomIdle && game.count > 0 && game.count < game.rule.Round {
+	if game.State == Ending && game.count > 0 && game.count < game.rule.Round {
 		// game.SendRoundResult(User.BaseData.UserData.UserID)
 		game.Match.SendRoundResult(User.BaseData.UserData.UserID)
 		return
 	}
-	if game.State == roomIdle && game.count == game.rule.Round {
+	if game.State == Ending && game.count == game.rule.Round {
 		// game.sendMineRoundRank(User.BaseData.UserData.UserID)
 		game.Match.SendFinalResult(User.BaseData.UserData.UserID)
 		return
 	}
-	if game.State == roomGame {
+	if game.State == RoomGame {
 		game.reconnect(User.BaseData.UserData.UserID)
 		return
 	}
 	if !ok {
-		if len(game.inits) >= game.rule.MaxPlayers && game.State == roomIdle && game.count == 0 {
+		if len(game.inits) >= game.rule.MaxPlayers && game.State == RoomIdle {
 			game.StartGame()
 			return
 		}
@@ -182,7 +183,7 @@ func (game *LandlordMatchRoom) StartGame() {
 	if game.count == 0 {
 		game.GameDDZRecordInit()
 	}
-	game.State = roomGame
+	game.State = RoomGame
 	game.prepare()
 	game.count++
 	game.broadcast(&msg.S2C_GameStart{}, game.PositionUserIDs, -1)
@@ -191,7 +192,7 @@ func (game *LandlordMatchRoom) StartGame() {
 		info := msg.S2C_MatchInfo{
 			RoundNum:    game.rule.RoundNum,
 			Process:     fmt.Sprintf("第%v局 第1副", game.count),
-			Level:       fmt.Sprintf("%v/%v", playerData.Level, game.rule.MaxPlayers),
+			Level:       fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
 			Competition: "前3晋级",
 			AwardList:   game.rule.AwardList,
 		}
@@ -238,7 +239,7 @@ func (game *LandlordMatchRoom) StartGame() {
 }
 func (game *LandlordMatchRoom) EndGame() {
 
-	game.State = roomIdle
+	game.State = Ending
 	game.showHand()
 	game.calScore()
 
