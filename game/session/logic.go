@@ -5,11 +5,13 @@ import (
 	"ddz/game"
 	. "ddz/game/db"
 	"ddz/game/hall"
+	"ddz/game/http"
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
 	"ddz/msg"
 	"ddz/utils"
+	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"strings"
 	"time"
@@ -59,29 +61,29 @@ func tokenLogin(user *User, token string) {
 }
 
 func usernamePasswordLogin(user *User, account string, code string) {
-	//codeRedis, err := GetCaptchaCache(account)
-	//if err != nil {
-	//	if err == redis.ErrNil {
-	//		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Error})
-	//
-	//		return
-	//	} else {
-	//		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
-	//
-	//		return
-	//	}
-	//}
-	//if code != codeRedis {
-	//	user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Valid})
-	//
-	//	return
-	//}
+	codeRedis, err := http.GetCaptchaCache(account)
+	if err != nil {
+		if err == redis.ErrNil {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Error})
+
+			return
+		} else {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+
+			return
+		}
+	}
+	if code != codeRedis {
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Valid})
+
+		return
+	}
 	firstLogin := false
 	userData := new(UserData)
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
 	// load userData
-	err := db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
+	err = db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
 	if err == mgo.ErrNotFound {
 		firstLogin = true
 		err = userData.InitValue(0)
