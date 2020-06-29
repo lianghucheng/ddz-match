@@ -48,6 +48,7 @@ func init() {
 	handler(&msg.C2S_AwardInfo{}, handleAwardInfo)
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
+	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -488,4 +489,20 @@ func handleGetMatchList(args []interface{}) {
 	user.WriteMsg(&msg.S2C_GetMatchList{
 		List: list,
 	})
+}
+
+func handleChangePassword(args []interface{}) {
+	m := args[0].(*msg.C2S_ChangePassword)
+	a := args[1].(gate.Agent)
+
+	if a.UserData() == nil {
+		return
+	}
+
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+
+	hall.ChangePassword(user, m)
 }

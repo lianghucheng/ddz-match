@@ -4,6 +4,7 @@ import (
 	. "ddz/game/db"
 	"ddz/game/values"
 	"fmt"
+	"strconv"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -40,6 +41,7 @@ type UserData struct {
 	ExpireAt          int64 // token 过期时间
 	Role              int   // 1 玩家、2 代理、3 管理员、4 超管
 	Username          string
+	Password 		  string
 	Coupon            int64 // 点券
 	Wins              int   // 胜场
 	CreatedAt         int64
@@ -87,6 +89,7 @@ func (data *UserData) InitValue(channel int) error {
 	data.AccountID = time.Now().Year()*100 + userID
 	data.CreatedAt = time.Now().Unix()
 	data.Channel = channel
+	data.Nickname = "用户" + strconv.Itoa(data.AccountID)
 	return nil
 }
 

@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
@@ -18,6 +19,9 @@ func SetNickname(user *player.User, nickname string) {
 	}
 	ud := user.GetUserData()
 	if ud.SetNickNameCount >= 1 {
+		user.WriteMsg(&msg.S2C_UpdateNickName{
+			Error: msg.S2C_SetNickName_More,
+		})
 		return
 	}
 	ud.Nickname = nickname
@@ -41,4 +45,23 @@ func UpdateUserAfterTaxAward(user *player.User, value float64) {
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
 		AfterTaxAward: utils.Decimal(value),
 	})
+}
+
+func ChangePassword(user *player.User, m *msg.C2S_ChangePassword){
+	ud := user.GetUserData()
+	if ud.Password != m.OldPassword {
+		user.WriteMsg(&msg.S2C_ChangePassword{
+			Error: msg.ErrChangePasswordOldNo,
+		})
+		return
+	}
+
+	ud.Password = m.NewPassword
+
+	game.GetSkeleton().Go(func() {
+		player.SaveUserData(ud)
+		user.WriteMsg(&msg.S2C_ChangePassword{
+			Error: msg.ErrChangePasswordSuccess,
+		})
+	},nil)
 }

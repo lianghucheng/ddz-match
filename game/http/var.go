@@ -2,6 +2,7 @@ package http
 
 import (
 	. "ddz/game/db"
+	"ddz/msg"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,6 +28,8 @@ const (
 	ACCOUNTREGISTERD     = 1008
 	ACCOUNT_INVALID      = 1009
 	PASSWORD_INVALID     = 1010
+	FORMAT_FAIL 		 = 1011 //数据格式错误
+
 )
 
 var success = NewError(SUCCESS, "成功")
@@ -148,4 +151,20 @@ func NewJuHeSmsLog(juHeResult *SmSJUHEResult, captcha string, ip string, phone s
 	log.Ip = ip
 	log.SendTime = time.Now().Unix()
 	return log
+}
+
+func CheckSms(account, code string) int {
+	codeRedis, err := GetCaptchaCache(account)
+	if err != nil {
+		if err == redis.ErrNil {
+			return msg.S2C_Close_Code_Error
+		} else {
+			return msg.S2C_Close_InnerError
+		}
+	}
+	if code != codeRedis {
+		return msg.S2C_Close_Code_Valid
+	}
+
+	return 0
 }

@@ -11,6 +11,9 @@ func init() {
 
 	msg.Processor.SetRouter(&msg.C2S_TokenLogin{}, login.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_AccountLogin{}, login.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_UsrnPwdLogin{}, login.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_Register{}, login.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_FindPassword{}, login.ChanRPC)
 	// game
 
 	msg.Processor.SetRouter(&msg.C2S_Heartbeat{}, game.ChanRPC)
@@ -57,4 +60,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_GetGameRankRecord{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_GetGameResultRecord{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_TempPayOK{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_ChangePassword{}, game.ChanRPC)
 }

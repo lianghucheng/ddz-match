@@ -12,12 +12,12 @@ import (
 	"ddz/msg"
 	"ddz/utils"
 	"github.com/garyburd/redigo/redis"
+	"gopkg.in/mgo.v2"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/szxby/tools/log"
-	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -60,45 +60,38 @@ func tokenLogin(user *User, token string) {
 	})
 }
 
-func usernamePasswordLogin(user *User, account string, code string) {
-	codeRedis, err := http.GetCaptchaCache(account)
-	if err != nil {
-		if err == redis.ErrNil {
-			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Error})
-
-			return
-		} else {
-			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
-
-			return
-		}
-	}
-	if code != codeRedis {
-		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Valid})
-
-		return
-	}
+func usernamePasswordLogin(user *User, account string, password string) {
 	firstLogin := false
 	userData := new(UserData)
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
 	// load userData
-	err = db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
+	err := db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
 	if err == mgo.ErrNotFound {
-		firstLogin = true
-		err = userData.InitValue(0)
-		userData.Username = account
-		userData.Headimgurl = DefaultAvatar
-		if err != nil {
-			userData = nil
-			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
-			user.Close()
-			return
-		}
+	//	firstLogin = true
+	//	err = userData.InitValue(0)
+	//	userData.Username = account
+	//	userData.Headimgurl = DefaultAvatar
+	//	if err != nil {
+	//		userData = nil
+	//		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+	//		user.Close()
+	//		return
+	//	}
+		userData = nil
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Usrn_Nil})
+		user.Close()
+		return
 	}
-	if err != nil && err != mgo.ErrNotFound {
+	if err != nil {//&& err != mgo.ErrNotFound {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+		user.Close()
+		return
+	}
+	if userData.Password != password {
+		userData = nil
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Pwd_Error})
 		user.Close()
 		return
 	}
@@ -202,4 +195,62 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 			r.Enter(user)
 		})
 	}
+}
+
+func AccountLogin(user *User, account string, code string) {
+	codeRedis, err := http.GetCaptchaCache(account)
+	if err != nil {
+		if err == redis.ErrNil {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Error})
+
+			return
+		} else {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+
+			return
+		}
+	}
+	if code != codeRedis {
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Code_Valid})
+
+		return
+	}
+	firstLogin := false
+	userData := new(UserData)
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	// load userData
+	err = db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
+	if err == mgo.ErrNotFound {
+		firstLogin = true
+		err = userData.InitValue(0)
+		userData.Username = account
+		userData.Headimgurl = DefaultAvatar
+		if err != nil {
+			userData = nil
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+			user.Close()
+			return
+		}
+	}
+	if err != nil && err != mgo.ErrNotFound {
+		userData = nil
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+		user.Close()
+		return
+	}
+	anotherLogin := false
+	if oldUser, ok := UserIDUsers[userData.UserID]; ok {
+		oldUser.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_LoginRepeated})
+		oldUser.Close()
+		log.Debug("userID: %v 重复登录", userData.UserID)
+		if oldUser == user {
+			return
+		}
+		user.BaseData = oldUser.BaseData
+		userData = oldUser.BaseData.UserData
+	}
+	UserIDUsers[userData.UserID] = user
+	user.BaseData.UserData = userData
+	onLogin(user, firstLogin, anotherLogin)
 }

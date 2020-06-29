@@ -67,7 +67,8 @@ DB = 2
 [CfgJuHeSms]
 AppKey="e538800bd0c8d7f6ad0aba9c04cfa44b" 
 FindTemplate="150994"
-RegisterTemplate="150988"
+RegisterTemplate="218592"
+#RegisterTemplate="218592"
 
 # ----------------------------首充-------------------------------
 [[CfgFirstRecharge]]

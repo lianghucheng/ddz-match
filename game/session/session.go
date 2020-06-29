@@ -21,6 +21,7 @@ func init() {
 	skeleton.RegisterChanRPC("CloseAgent", rpcCloseAgent)
 	skeleton.RegisterChanRPC("TokenLogin", rpcTokenLogin)
 	skeleton.RegisterChanRPC("UsernamePasswordLogin", rpcUsernamePasswordLogin)
+	skeleton.RegisterChanRPC("AccountLogin", rpcAccountLogin)
 	skeleton.RegisterChanRPC("SendMail", rpcSendMail)
 	skeleton.RegisterChanRPC("SendRaceInfo", rpcSendRaceInfo)
 	skeleton.RegisterChanRPC("WriteAwardFlowData", rpcWriteAwardFlowData)
@@ -65,21 +66,21 @@ func rpcTokenLogin(args []interface{}) {
 
 func rpcUsernamePasswordLogin(args []interface{}) {
 	a := args[0].(gate.Agent)
-	m := args[1].(*msg.C2S_AccountLogin)
+	m := args[1].(*msg.C2S_UsrnPwdLogin)
 
 	agentInfo := a.UserData().(*AgentInfo)
 	// network closed
 	if agentInfo == nil || agentInfo.User != nil {
 		return
 	}
-	if strings.TrimSpace(m.Account) == "" {
+	if strings.TrimSpace(m.Username) == "" {
 		a.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_UsernameInvalid})
 		a.Close()
 		return
 	}
 	newUser := newUser(a)
 	a.UserData().(*AgentInfo).User = newUser
-	usernamePasswordLogin(newUser, m.Account, m.Code)
+	usernamePasswordLogin(newUser, m.Username, m.Password)
 }
 
 func rpcCloseAgent(args []interface{}) {
@@ -182,4 +183,23 @@ func rpcTempPayOK(args []interface{}) {
 			SaveUserData(ud)
 		}()
 	}
+}
+
+func rpcAccountLogin(args []interface{}) {
+	a := args[0].(gate.Agent)
+	m := args[1].(*msg.C2S_AccountLogin)
+
+	agentInfo := a.UserData().(*AgentInfo)
+	// network closed
+	if agentInfo == nil || agentInfo.User != nil {
+		return
+	}
+	if strings.TrimSpace(m.Account) == "" {
+		a.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_UsernameInvalid})
+		a.Close()
+		return
+	}
+	newUser := newUser(a)
+	a.UserData().(*AgentInfo).User = newUser
+	AccountLogin(newUser, m.Account, m.Code)
 }

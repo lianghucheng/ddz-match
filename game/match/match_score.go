@@ -520,7 +520,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 			user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
 			UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
 			user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-				AfterTaxAward: user.BaseData.UserData.Fee,
+				AfterTaxAward: utils.Decimal(user.BaseData.UserData.Fee),
 			})
 		} else if values.GetAwardType(base.Award[player.Rank-1]) == values.Coupon { // 点券奖励 todo
 			hall.UpdateUserCoupon(user, int64(values.ParseAward(base.Award[player.Rank-1])), db.MatchAward)

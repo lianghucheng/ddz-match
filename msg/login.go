@@ -11,6 +11,13 @@ func init() {
 	Processor.Register(&S2C_GetCoupon{})
 	Processor.Register(&C2S_SetNickName{})
 	Processor.Register(&S2C_UpdateNickName{})
+	Processor.Register(&C2S_UsrnPwdLogin{})
+	Processor.Register(&C2S_Register{})
+	Processor.Register(&S2C_Register{})
+	Processor.Register(&C2S_FindPassword{})
+	Processor.Register(&S2C_FindPassword{})
+	Processor.Register(&C2S_ChangePassword{})
+	Processor.Register(&S2C_ChangePassword{})
 }
 
 type C2S_TokenLogin struct {
@@ -20,6 +27,57 @@ type C2S_TokenLogin struct {
 type C2S_AccountLogin struct {
 	Account string //手机号
 	Code    string //验证码
+	Password string //密码
+}
+
+type C2S_UsrnPwdLogin struct {
+	Username string
+	Password string
+}
+
+type C2S_Register struct {
+	Account string //手机号
+	Code    string //验证码
+	Password string //密码
+}
+
+const (
+	ErrRegisterSuccess = 0
+)
+
+type S2C_Register struct {
+	Error int
+	ErrMsg string
+}
+
+type C2S_FindPassword struct {
+	Account string //手机号
+	Code    string //验证码
+	Password string //密码
+}
+
+const (
+	ErrFindPasswordSuccess = 0
+)
+
+type S2C_FindPassword struct {
+	Error int
+	ErrMsg string
+}
+
+type C2S_ChangePassword struct {
+	OldPassword  string
+	NewPassword  string
+}
+
+const (
+	ErrChangePasswordSuccess = 0
+	ErrChangePasswordFail = 1
+	ErrChangePasswordOldNo = 2
+)
+
+type S2C_ChangePassword struct {
+	Error  int
 }
 
 // Close
@@ -33,11 +91,15 @@ const (
 	S2C_Close_IPChanged       = 8  // 登录IP发生变化，非本人操作请注意修改密码
 	S2C_Close_Code_Valid      = 9  // 验证码错误
 	S2C_Close_Code_Error      = 10 // 验证码过期了
+	S2C_Close_Pwd_Error       = 11 // 密码错误
+	S2C_Close_Usrn_Nil  	  = 12 // 用户名不存在
+	S2C_Close_Usrn_Exist  	  = 13 // 用户名不存在
 )
 
 type S2C_Close struct {
 	Error        int
 	WeChatNumber string
+
 }
 
 type S2C_Login struct {

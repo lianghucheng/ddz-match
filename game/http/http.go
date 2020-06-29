@@ -5,8 +5,10 @@ import (
 	"ddz/game"
 	. "ddz/game/db"
 	"ddz/game/hall"
+	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -28,6 +30,8 @@ func startHTTPServer() {
 	mux.HandleFunc("/code", handleCode)
 	mux.HandleFunc("/pushmail", hall.HandlePushMail)
 	mux.HandleFunc("/temppay", HandleTempPay)
+	mux.HandleFunc("/register", handleRegister)
+	mux.HandleFunc("/findpwd", handleFindPwd)
 
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -37,7 +41,16 @@ func startHTTPServer() {
 
 func handleCode(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	account := req.FormValue("account")
+	data := req.FormValue("data")
+	log.Debug("data   %v", data)
+	temp := map[string]interface{}{}
+	err := json.Unmarshal([]byte(data), &temp)
+	if err != nil {
+		errMsg := NewError(PHONENUMBER_INVALID, "号码不合法")
+		w.Write(strbyte(errMsg))
+		return
+	}
+	account := temp["Account"].(string)
 	if !utils.PhoneRegexp(account) {
 		errMsg := NewError(PHONENUMBER_INVALID, "号码不合法")
 		w.Write(strbyte(errMsg))
@@ -62,6 +75,7 @@ func handleCode(w http.ResponseWriter, req *http.Request) {
 	code := utils.RandomNumber(6)
 	tplValue := fmt.Sprintf(captchaTpl, code)
 	//result, err := SingleSend("b3cbbc5586f0314533a96a52ea3c06dc", text, account)
+	log.Debug("模板号 %v", conf.GetCfgJuHeSms().RegisterTemplate)
 	juHeResult, err := JuSend(conf.GetCfgJuHeSms().AppKey, conf.GetCfgJuHeSms().RegisterTemplate, tplValue, account)
 	log.Debug("%v:", juHeResult)
 	if err != nil {
@@ -107,4 +121,87 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 		TotalFee:  f,
 		AccountID: a,
 	})
+}
+
+func handleRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	data := r.FormValue("data")
+	log.Debug("！！！！！！！！！！！！！！%v", string(data))
+	m := new(msg.C2S_Register)
+	err := json.Unmarshal([]byte(data), m)
+	if err != nil {
+		log.Debug("数据格式错误, %v", string(data))
+		errMsg := NewError(FORMAT_FAIL, "数据格式错误")
+		w.Write(strbyte(errMsg))
+		return
+	}
+	//todo:没问题之后再加密
+	account, code, password := m.Account, m.Code, m.Password
+	_ = code
+	if status := CheckSms(account, code); status != 0 {
+		w.Write(strbyte(NewError(int64(status), "数据格式错误")))
+		return
+	}
+	userData := new(player.UserData)
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	// load userData
+	err = db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
+
+	if err == nil {
+		userData = nil
+		w.Write(strbyte(NewError(msg.S2C_Close_Usrn_Exist, "用户名已存在")))
+		return
+	}
+
+	err = userData.InitValue(0)
+	if err != nil {
+		userData = nil
+		w.Write(strbyte(NewError(msg.S2C_Close_InnerError, "注册失败")))
+		return
+	}
+
+	userData.Username = account
+	userData.Password = password
+	userData.Headimgurl = player.DefaultAvatar
+
+	player.SaveUserData(userData)
+	w.Write(strbyte(NewError(msg.ErrRegisterSuccess, "注册成功")))
+}
+
+func handleFindPwd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	data := r.FormValue("data")
+	log.Debug("%v", string(data))
+	m := new(msg.C2S_FindPassword)
+	err := json.Unmarshal([]byte(data), m)
+	if err != nil {
+		log.Debug("数据格式错误, %v", data)
+		errMsg := NewError(FORMAT_FAIL, "数据格式错误")
+		w.Write(strbyte(errMsg))
+		return
+	}
+	account, code, password := m.Account, m.Code, m.Password
+	_ = code 
+	//if status := CheckSms(account, code); status != 0 {
+	//	w.Write(strbyte(NewError(int64(status), "数据格式错误")))
+	//	return
+	//}
+
+	userData := new(player.UserData)
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	// load userData
+	err = db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
+
+	if err != nil {
+		userData = nil
+		w.Write(strbyte(NewError(msg.S2C_Close_Usrn_Nil, "用户名不存在")))
+		return
+	}
+
+	userData.Password = password
+	player.SaveUserData(userData)
+	w.Write(strbyte(NewError(msg.ErrFindPasswordSuccess, "成功")))
+	return
 }
