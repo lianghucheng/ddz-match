@@ -285,8 +285,8 @@ func (sc *scoreMatch) SplitTable() {
 			log.Debug("kick player:%v", playerData.User.BaseData.UserData.UserID)
 			game.Exit(playerData.User.BaseData.UserData.UserID)
 		}
-		// 房间状态重新重置为空闲
-		game.State = ddz.RoomIdle
+		// 房间重置
+		game.Reset()
 	}
 	if num < len(base.Rooms) { // 淘汰玩家后，先拆除房间
 		n := len(base.Rooms) - num // 需要拆开的房间数

@@ -131,7 +131,7 @@ func (game *LandlordMatchRoom) StandUp(User *User, pos int) {
 	delete(game.UserIDPlayerDatas, User.BaseData.UserData.UserID)
 }
 func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
-	_, ok := game.inits[User.BaseData.UserData.UserID]
+	// _, ok := game.inits[User.BaseData.UserData.UserID]
 	game.inits[User.BaseData.UserData.UserID] = 1
 	if len(game.inits) == 3 {
 		if game.prepareTimer != nil {
@@ -171,13 +171,10 @@ func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
 		game.reconnect(User.BaseData.UserData.UserID)
 		return
 	}
-	if !ok {
-		if len(game.inits) >= game.rule.MaxPlayers && game.State == RoomIdle {
-			game.StartGame()
-			return
-		}
+	if len(game.inits) >= game.rule.MaxPlayers && game.State == RoomIdle {
+		game.StartGame()
+		return
 	}
-	return
 }
 func (game *LandlordMatchRoom) StartGame() {
 	if game.count == 0 {

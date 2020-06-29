@@ -175,6 +175,12 @@ func (game *LandlordMatchRoom) initRoom() {
 	// game.gameRoundResult = make([]poker.LandlordPlayerRoundResult, 0)
 }
 
+// Reset 重置房间的状态
+func (game *LandlordMatchRoom) Reset() {
+	game.State = RoomIdle
+	game.inits = make(map[int]int)
+}
+
 func (game *LandlordMatchRoom) initplayerData() {
 	for _, userID := range game.PositionUserIDs {
 		playerData := game.UserIDPlayerDatas[userID]
