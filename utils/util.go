@@ -138,7 +138,7 @@ func StructCopy(dst, src interface{}) {
 	// log.Debug("dst:%v", dstVal)
 	// log.Debugf("srcVal.Kind():%v,dstVal.Kind():%v", srcVal.Kind(), dstVal.Kind())
 	if !(srcVal.Kind() == Struct && dstVal.Kind() == Struct) {
-		log.Error("type is not struct ptr,src:%v,dst:%v", srcVal.Kind(), dstVal.Kind())
+		// log.Error("type is not struct ptr,src:%v,dst:%v", srcVal.Kind(), dstVal.Kind())
 		return
 	}
 

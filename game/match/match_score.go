@@ -36,28 +36,31 @@ type ScoreConfig struct {
 
 	// score配置
 	BaseScore   int64  `bson:"basescore"`   // 基础分数
-	StartTime   int64  `bson:"entertime"`   // 比赛开始时间
+	StartTime   int64  `bson:"starttime"`   // 比赛开始时间
 	LimitPlayer int    `bson:"limitplayer"` // 比赛开始的最少人数
 	TablePlayer int    `bson:"tableplayer"` // 一桌的游戏人数
 	Round       int    `bson:"round"`       // 几局制
 	RoundNum    string `bson:"roundnum"`    // 赛制制(2局1副)
-	StartType   int    `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示比赛到点满足多少人条件即可开赛抉择出前几名获取奖励)
+	StartType   int    `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示倒计时多久开赛判断,3表示比赛到点开赛)
 	Eliminate   []int  `bson:"eliminate"`   // 每轮淘汰人数
 	Rank        []Rank `bson:"rank"`        // 整个比赛的总排行
 
 	// 赛事管理配置
-	MatchName        string     `bson:"matchname"`        // 赛事名称
-	MatchDesc        string     `bson:"matchdesc"`        // 赛事描述
-	MatchType        string     `bson:"matchtype"`        // 赛事类型
-	MatchRank        []int      `bson:"matchrank"`        // 比賽排序
-	EnterFee         int64      `bson:"enterfee"`         // 报名费
-	Recommend        string     `bson:"recommend"`        // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
-	TotalMatch       int        `bson:"totalmatch"`       // 后台配置的该种比赛可创建的比赛次数
-	OfficalIDs       []string   `bson:"officalIDs"`       // 后台配置的可用比赛id号
-	AllSignInPlayers []int      `bson:"allsigninplayers"` // 已报名玩家该种赛事的所有玩家
-	Sort             int        `bso:"sort"`              // 赛事排序
-	CurrentIDIndex   int        `bson:"-"`                // 当前赛事取id的序号
-	LastMatch        *BaseMatch `bson:"-"`                // 最新分配的一个赛事
+	MatchName        string     `bson:"matchname"`  // 赛事名称
+	MatchDesc        string     `bson:"matchdesc"`  // 赛事描述
+	MatchType        string     `bson:"matchtype"`  // 赛事类型
+	MatchRank        []int      `bson:"matchrank"`  // 比賽排序
+	EnterFee         int64      `bson:"enterfee"`   // 报名费
+	Recommend        string     `bson:"recommend"`  // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
+	TotalMatch       int        `bson:"totalmatch"` // 后台配置的该种比赛可创建的比赛次数
+	UseMatch         int        `bson:"usematch"`   // 已使用次数
+	OfficalIDs       []string   `bson:"officalIDs"` // 后台配置的可用比赛id号
+	ShelfTime        int64      `bson:"shelftime"`  // 上架时间
+	Sort             int        `bso:"sort"`        // 赛事排序
+	AllSignInPlayers []int      `bson:"-"`          // 已报名玩家该种赛事的所有玩家
+	CurrentIDIndex   int        `bson:"-"`          // 当前赛事取id的序号
+	LastMatch        *BaseMatch `bson:"-"`          // 最新分配的一个赛事
+	ReadyTime        int64      `bson:"-"`          // 比赛开始时间
 }
 
 type sConfig struct {
@@ -106,6 +109,7 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	base.Award = c.Award
 	base.Round = c.Round
 	base.AllPlayers = make(map[int]*User)
+	base.NormalCofig = c.GetNormalConfig()
 
 	score.base = base
 	base.myMatch = score
@@ -114,13 +118,17 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 		game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime)*time.Second, func() {
 			base.CheckStart()
 		})
+	} else if score.myConfig.StartType == 3 && score.myConfig.StartTime > 0 {
+		game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime-time.Now().Unix())*time.Second, func() {
+			base.CheckStart()
+		})
 	}
 	return base
 }
 
 func (sc *scoreMatch) SignIn(uid int) error {
 	base := sc.base.(*BaseMatch)
-	c := base.Manager.GetNormalConfig()
+	c := base.NormalCofig
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
@@ -140,7 +148,7 @@ func (sc *scoreMatch) SignIn(uid int) error {
 
 func (sc *scoreMatch) SignOut(uid int) error {
 	base := sc.base.(*BaseMatch)
-	c := base.Manager.GetNormalConfig()
+	c := base.NormalCofig
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
@@ -164,6 +172,8 @@ func (sc *scoreMatch) CheckStart() {
 		//赛事开赛人数未达到指定的最小人数(赛事作废,重新开赛)
 		if len(base.SignInPlayers) < sc.myConfig.LimitPlayer {
 			base.IsClosing = true
+			// log.Debug("check,%v", base.SignInPlayers)
+			// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
 			for _, uid := range base.SignInPlayers {
 				base.Manager.SignOut(uid, base.MatchID)
 			}
@@ -220,7 +230,7 @@ func (sc *scoreMatch) End() {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
 		if p.rank < len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank], base.Manager.GetNormalConfig().MatchType)
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank], base.NormalCofig.MatchType)
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
@@ -235,7 +245,7 @@ func (sc *scoreMatch) End() {
 	// 先排序rank
 	sc.sortRank()
 	record := &ScoreConfig{}
-	utils.StructCopy(record, base.Manager.GetNormalConfig())
+	utils.StructCopy(record, base.NormalCofig)
 	utils.StructCopy(record, base)
 	utils.StructCopy(record, sc.myConfig)
 	game.GetSkeleton().Go(func() {
@@ -247,7 +257,7 @@ func (sc *scoreMatch) End() {
 
 func (sc *scoreMatch) SplitTable() {
 	base := sc.base.(*BaseMatch)
-	c := base.Manager.GetNormalConfig()
+	c := base.NormalCofig
 	num := len(base.AllPlayers) / sc.myConfig.TablePlayer
 	index := 0
 	indexs := rand.Perm(len(base.AllPlayers))
@@ -258,7 +268,7 @@ func (sc *scoreMatch) SplitTable() {
 			BaseScore:  sc.myConfig.BaseScore,
 			Round:      sc.myConfig.Round,
 			MatchId:    base.MatchID,
-			MatchName:  base.Manager.GetNormalConfig().MatchName,
+			MatchName:  base.NormalCofig.MatchName,
 			Tickets:    c.EnterFee,
 			RoundNum:   sc.myConfig.RoundNum,
 			Desc:       c.MatchName,
@@ -266,7 +276,7 @@ func (sc *scoreMatch) SplitTable() {
 			GameType:   hall.RankGameTypeAward,
 			Awards:     base.Award,
 			AwardList:  base.AwardList,
-			Coupon:     int(base.Manager.GetNormalConfig().EnterFee),
+			Coupon:     int(base.NormalCofig.EnterFee),
 		}
 		for i := 0; i < num; i++ {
 			room := InitRoom()
@@ -479,10 +489,10 @@ func (sc *scoreMatch) eliminatePlayers() {
 	}
 
 	// 广播比赛剩余人数
-	Broadcast(&msg.S2C_MatchNum{
-		MatchId: base.MatchID,
-		Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
-	})
+	// Broadcast(&msg.S2C_MatchNum{
+	// 	MatchId: base.MatchID,
+	// 	Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
+	// })
 }
 
 // 淘汰指定玩家
@@ -497,7 +507,7 @@ func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 		room.Exit(uid)
 	}
 
-	base.Manager.RemoveSignPlayer(uid)
+	// base.Manager.RemoveSignPlayer(uid)
 	delete(UserIDMatch, uid)
 	delete(UserIDRooms, uid)
 	delete(base.AllPlayers, uid)
@@ -530,8 +540,8 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	record := values.DDZGameRecord{
 		UserId:    uid,
 		MatchId:   base.MatchID,
-		MatchType: base.Manager.GetNormalConfig().MatchType,
-		Desc:      base.Manager.GetNormalConfig().MatchName,
+		MatchType: base.NormalCofig.MatchType,
+		Desc:      base.NormalCofig.MatchName,
 		Level:     player.Rank,
 		Award:     award,
 		Count:     base.CurrentRound,
@@ -544,7 +554,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	}
 	game.GetSkeleton().Go(
 		func() {
-			hall.MatchEndPushMail(uid, base.Manager.GetNormalConfig().MatchName, player.Rank, award)
+			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.Rank, award)
 			db.InsertMatchRecord(record)
 		}, nil)
 

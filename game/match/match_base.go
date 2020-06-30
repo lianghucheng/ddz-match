@@ -40,6 +40,7 @@ type BaseMatch struct {
 	CurrentCardCount int           // 当前牌副数
 	Award            []string      // 赛事奖励
 	Manager          MatchManager  // 隶属于哪个管理下的赛事
+	NormalCofig      *NormalCofig  // 一些通用配置
 }
 
 func (base *BaseMatch) SignIn(uid int) error {
@@ -64,7 +65,9 @@ func (base *BaseMatch) SignIn(uid int) error {
 	base.AllPlayers[uid] = user
 	UserIDMatch[uid] = base
 	// 每签到一个玩家检查一次
-	base.CheckStart()
+	if base.NormalCofig.StartType == 1 {
+		base.CheckStart()
+	}
 	return nil
 }
 
@@ -137,10 +140,10 @@ func (base *BaseMatch) End() {
 	// }
 	base.Manager.End(base.MatchID)
 
-	Broadcast(&msg.S2C_MatchNum{
-		MatchId: base.Manager.GetNormalConfig().MatchID,
-		Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
-	})
+	// Broadcast(&msg.S2C_MatchNum{
+	// 	MatchId: base.Manager.GetNormalConfig().MatchID,
+	// 	Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
+	// })
 	if base.myMatch != nil {
 		base.myMatch.End()
 	}

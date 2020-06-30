@@ -47,12 +47,12 @@ func InsertMatchRecord(record values.DDZGameRecord) {
 	}
 }
 
-// UpdateMatchManagerState 修改比赛赛事配置数据
-func UpdateMatchManagerState(matchID string, state int) {
+// UpdateMatchManager 修改比赛赛事配置数据
+func UpdateMatchManager(matchID string, update interface{}) {
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
-	err := db.DB(DB).C("matchmanager").Update(bson.M{"matchid": matchID}, bson.M{"$set": bson.M{"state": state}})
+	err := db.DB(DB).C("matchmanager").Update(bson.M{"matchid": matchID}, update)
 	if err != nil {
-		log.Error("update match manager %v state %v data error: %v", matchID, state, err)
+		log.Error("update match manager %v update: %v error: %v", matchID, update, err)
 	}
 }
