@@ -1,7 +1,16 @@
-package edy_api
+package internal
 
 import (
+	"ddz/edy_api/internal/base"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/szxby/tools/log"
 	"strconv"
+)
+
+var (
+	bind_bank_uri = "/player/bank_acc/bind"
 )
 
 type IDBindReq struct {
@@ -19,7 +28,7 @@ type IDBindResp struct {
 
 func NewIDBindReq(accountid int, idCardNo, realName, phoneNum string) *IDBindReq {
 	idBind := new(IDBindReq)
-	idBind.CpID = cp_id
+	idBind.CpID = base.CpID
 	idBind.PlayerID = strconv.Itoa(accountid)
 	idBind.RealName = realName
 	idBind.PlayerIDNumber = idCardNo
@@ -38,25 +47,29 @@ func (ctx *IDBindReq) ToStr() string {
 	return str
 }
 
-type BindBankCardReq struct {
-	CpID        string `json:"cp_id"`        //厂商ID，必填
-	PlayerID    string `json:"player_id"`    //厂商端用户ID，必填
-	BankNo      string `json:"bank_no"`      //开户行联行号，必填
-	BankName    string `json:"bank_name"`    //开户行名称 ，必填
-	BankAccount string `json:"bank_account"` //银行账号 ，必填
-}
+func (ctx *IDBindReq) IdCardBind() error {
+	b, err := json.Marshal(ctx)
+	if err != nil {
+		return err
+	}
 
-type BindBankCardResp struct {
-	RespCode string `json:"resp_code"` //编码，Y
-	RespMsg  string `json:"resp_msg"`  //信息，Y
-}
+	c := base.NewClient(bind_id_uri, string(b), base.ReqPost)
+	c.GenerateSign(base.ReqPost)
+	rt, err := c.DoPost()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	fmt.Println("【绑定身份证】", string(rt))
+	res := new(IDBindResp)
+	if err := json.Unmarshal(rt, res); err != nil {
+		return err
+	}
 
-func NewBindBankCardReq(accountid int, bankNo, BankName, BankAccount string) *BindBankCardReq {
-	bindBankCard := new(BindBankCardReq)
-	bindBankCard.CpID = cp_id
-	bindBankCard.PlayerID = strconv.Itoa(accountid)
-	bindBankCard.BankNo = bankNo
-	bindBankCard.BankName = BankName
-	bindBankCard.BankAccount = BankAccount
-	return bindBankCard
+	if res.RespCode != "000000" {
+		log.Error("【返回的错误码】%v", res.RespCode)
+		return errors.New(base.ErrMsg[res.RespCode])
+	}
+
+	return nil
 }

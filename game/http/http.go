@@ -183,10 +183,10 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 	}
 	account, code, password := m.Account, m.Code, m.Password
 	_ = code 
-	//if status := CheckSms(account, code); status != 0 {
-	//	w.Write(strbyte(NewError(int64(status), "数据格式错误")))
-	//	return
-	//}
+	if status := CheckSms(account, code); status != 0 {
+		w.Write(strbyte(NewError(int64(status), "数据格式错误")))
+		return
+	}
 
 	userData := new(player.UserData)
 	db := MongoDB.Ref()

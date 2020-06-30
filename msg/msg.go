@@ -243,10 +243,17 @@ const (
 	FlowTypeWithDraw = 2
 )
 
+const (
+	FlowDataStatusNormal = 0
+	FlowDataStatusAction = 1
+	FlowDataStatusOver   = 2
+)
+
 type WithDrawData struct {
 	FlowType  int
 	MatchType string
 	Amount    float64
+	Status    int
 	CreatedAt int64
 }
 

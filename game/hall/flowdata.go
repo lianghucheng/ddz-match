@@ -14,12 +14,21 @@ const (
 	FlowTypeWithDraw = 2
 )
 
+const (
+	FlowDataStatusNormal = 0
+	FlowDataStatusAction = 1
+	FlowDataStatusOver   = 2
+	FlowDataStatusBack   = 3
+)
+
 type FlowData struct {
-	Userid    int
-	Amount    float64
-	FlowType  int
-	MatchType string
-	CreatedAt int64
+	Userid    		int
+	Amount    		float64
+	FlowType  		int
+	MatchType 		string
+	Status    		int
+	CreatedAt 		int64
+	FlowReceipts 	[]int64
 }
 
 func (ctx *FlowData) save() {

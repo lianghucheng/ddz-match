@@ -214,13 +214,12 @@ func (sc *scoreMatch) Start() {
 
 func (sc *scoreMatch) End() {
 	base := sc.base.(*BaseMatch)
-
 	// 刷新排行榜
 	for _, p := range sc.matchPlayers {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
-		if p.rank < len(base.Award) {
+		if p.rank <= len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank], base.Manager.GetNormalConfig().MatchType)
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank - 1], base.Manager.GetNormalConfig().MatchType)
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

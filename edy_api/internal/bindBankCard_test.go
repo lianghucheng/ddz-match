@@ -1,4 +1,4 @@
-package edy_api
+package internal
 
 import "testing"
 
