@@ -1,10 +1,12 @@
 package match
 
 import (
+	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/values"
 	"ddz/msg"
 	"encoding/json"
+	"time"
 
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
@@ -48,7 +50,14 @@ func initMatchConfig() error {
 				log.Error("get config error:%v", err)
 				return nil
 			}
-			NewScoreManager(sConfig)
+			// 上架时间
+			if sConfig.ShelfTime > time.Now().Unix() {
+				game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+					NewScoreManager(sConfig)
+				})
+			} else {
+				NewScoreManager(sConfig)
+			}
 		default:
 			log.Error("unknown match:%v", one)
 		}
@@ -73,6 +82,10 @@ func GetMatchManagerInfo(opt int) interface{} {
 			if len(info.Award) > 0 {
 				award = values.ParseAward(info.Award[0])
 			}
+			sTime := info.StartTime
+			if info.StartType == 2 {
+				sTime = info.ReadyTime - time.Now().Unix()
+			}
 			raceInfo = append(raceInfo, msg.RaceInfo{
 				ID:        info.MatchID,
 				Desc:      info.MatchName,
@@ -80,7 +93,8 @@ func GetMatchManagerInfo(opt int) interface{} {
 				EnterFee:  float64(info.EnterFee) / 10,
 				ConDes:    info.MatchDesc,
 				JoinNum:   len(info.AllSignInPlayers),
-				StartTime: info.StartTime,
+				StartTime: sTime,
+				StartType: info.StartType,
 			})
 		}
 		return raceInfo
@@ -88,6 +102,10 @@ func GetMatchManagerInfo(opt int) interface{} {
 		list := []msg.OneMatch{}
 		for _, m := range matchManager {
 			m := m.GetNormalConfig()
+			sTime := m.StartTime
+			if m.StartType == 2 {
+				sTime = m.ReadyTime - time.Now().Unix()
+			}
 			list = append(list, msg.OneMatch{
 				MatchID:   m.MatchID,
 				MatchName: m.MatchName,
@@ -95,7 +113,8 @@ func GetMatchManagerInfo(opt int) interface{} {
 				Recommend: m.Recommend,
 				MaxPlayer: m.MaxPlayer,
 				EnterFee:  m.EnterFee,
-				StartTime: m.StartTime,
+				StartTime: sTime,
+				StartType: m.StartType,
 				IsSign:    false,
 			})
 		}

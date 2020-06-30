@@ -475,7 +475,7 @@ func handleGetMatchList(args []interface{}) {
 	myMatchID := ""
 	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// myMatchID = ma.MatchID
-		myMatchID = ma.Manager.GetNormalConfig().MatchID
+		myMatchID = ma.NormalCofig.MatchID
 	}
 	list := GetMatchManagerInfo(2).([]msg.OneMatch)
 	for i, v := range list {

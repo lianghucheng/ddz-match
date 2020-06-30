@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // NewScoreManager 创建一个新的比赛类型
@@ -19,8 +20,12 @@ func NewScoreManager(sc *ScoreConfig) {
 	sc.GetAwardItem()
 	MatchManagerList[sc.MatchID] = sc
 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
-	if sc.StartType == 2 {
+	if sc.StartType >= 2 {
 		sc.CreateOneMatch()
+	} else {
+		Broadcast(&msg.S2C_RaceInfo{
+			Races: GetMatchManagerInfo(1).([]msg.RaceInfo),
+		})
 	}
 }
 
@@ -33,6 +38,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	}
 	// 当前没有空闲赛事，则创建一个赛事
 	if sc.LastMatch == nil || sc.LastMatch.State != Signing {
+		log.Debug("check")
 		sc.CreateOneMatch()
 	}
 
@@ -60,17 +66,14 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	})
 
 	// 赛事结束
-	if sc.TotalMatch <= 0 {
+	if sc.UseMatch >= sc.TotalMatch {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
 		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
 		Broadcast(&msg.S2C_RaceInfo{
 			Races: RaceInfo,
 		})
-		// 修改赛事配置数据
-		game.GetSkeleton().Go(func() {
-			db.UpdateMatchManagerState(sc.MatchID, Ending)
-		}, nil)
+		sc.EndMatchManager()
 	}
 }
 
@@ -91,6 +94,8 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 			return
 		}
 	} else if match, ok := MatchList[matchID]; ok { // 系统赛事倒计时时间到了，人数不够，清理玩家
+		// log.Debug("player %v kickout", uid)
+		// log.Debug("check:%v", match.SignInPlayers)
 		if err := match.SignOut(uid); err != nil {
 			return
 		}
@@ -150,16 +155,15 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	signNumDetail := sc.StartType == 1
 	isSign := false
 	if m, ok := UserIDMatch[uid]; ok {
-		c := m.Manager.GetNormalConfig()
-		if c.MatchID == sc.MatchID {
+		// c := m.Manager.GetNormalConfig()
+		if m.NormalCofig.MatchID == sc.MatchID {
 			isSign = true
 		}
 	}
-	enterTime := ""
-	if sc.StartTime > time.Now().Unix() {
-		enterTime = time.Unix(sc.StartTime, 0).Format("2006-01-02 15:04:05")
+	sTime := sc.StartTime
+	if sc.StartType == 2 {
+		sTime = sc.ReadyTime - time.Now().Unix()
 	}
-
 	data := &msg.S2C_RaceDetail{
 		ID:            sc.MatchID,
 		Desc:          sc.MatchName,
@@ -167,7 +171,8 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 		AwardList:     sc.AwardList,
 		MatchType:     sc.MatchType,
 		RoundNum:      sc.RoundNum,
-		EnterTime:     enterTime,
+		StartTime:     sTime,
+		StartType:     sc.StartType,
 		ConDes:        sc.MatchDesc,
 		SignNumDetail: signNumDetail,
 		EnterFee:      float64(sc.EnterFee) / 10,
@@ -179,13 +184,16 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 
 // End 赛事結束的逻辑
 func (sc *ScoreConfig) End(matchID string) {
-	match, ok := MatchList[matchID]
-	if !ok {
-		return
-	}
-	for _, p := range match.SignInPlayers {
-		sc.RemoveSignPlayer(p)
-	}
+	// match, ok := MatchList[matchID]
+	// if !ok {
+	// 	return
+	// }
+	// for _, p := range match.SignInPlayers {
+	// 	sc.RemoveSignPlayer(p)
+	// }
+	game.GetSkeleton().Go(func() {
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"usematch": sc.UseMatch}})
+	}, nil)
 }
 
 // RemoveSignPlayer 清除签到玩家
@@ -202,20 +210,35 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 	}
 }
 
-// createOneMatch 创建子赛事
+// CreateOneMatch 创建子赛事
 func (sc *ScoreConfig) CreateOneMatch() {
 	matchID := ""
 	if sc.CurrentIDIndex < len(sc.OfficalIDs) {
 		matchID = sc.OfficalIDs[sc.CurrentIDIndex]
 	} else {
-		matchID = strconv.FormatInt(time.Now().Unix(), 10)
+		matchID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
 	}
+	// log.Debug("check:%v", matchID)
 	nSconfig := &ScoreConfig{}
 	utils.StructCopy(nSconfig, sc)
 	nSconfig.MatchID = matchID
 	newMatch := NewScoreMatch(nSconfig)
 	newMatch.Manager = sc
 	sc.LastMatch = newMatch
-	sc.TotalMatch--
+	sc.UseMatch++
 	sc.CurrentIDIndex++
+	if sc.StartType == 2 {
+		sc.ReadyTime = time.Now().Unix() + sc.StartTime
+	}
+	Broadcast(&msg.S2C_RaceInfo{
+		Races: GetMatchManagerInfo(1).([]msg.RaceInfo),
+	})
+}
+
+// EndMatchManager 该类赛事结束
+func (sc *ScoreConfig) EndMatchManager() {
+	// 修改赛事配置数据
+	game.GetSkeleton().Go(func() {
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Ending}})
+	}, nil)
 }

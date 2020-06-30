@@ -146,5 +146,6 @@ type OneMatch struct {
 	MaxPlayer int
 	EnterFee  int64
 	StartTime int64
+	StartType int
 	IsSign    bool
 }

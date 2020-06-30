@@ -56,6 +56,8 @@ type NormalCofig struct {
 	MaxPlayer        int
 	AllSignInPlayers []int // 所有已报名该赛事的玩家
 	StartTime        int64 // 比赛开始时间或者比赛倒计时
+	StartType        int   // 比赛开赛种类
+	ReadyTime        int64 // 剩余时间
 	Sort             int   // 赛事排序
 }
 
