@@ -1,8 +1,8 @@
 package hall
 
 import (
-	"ddz/game"
 	"ddz/game/db"
+	"ddz/game/player"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -12,6 +12,7 @@ import (
 const (
 	FlowTypeAward    = 1
 	FlowTypeWithDraw = 2
+	FlowTypeGift     = 3
 )
 
 const (
@@ -24,23 +25,26 @@ const (
 type FlowData struct {
 	ID    					int `bson:"_id"`
 	Userid    				int
+	Accountid      			int
 	ChangeAmount    		float64
 	FlowType  				int
 	MatchType 				string
 	Status    				int
 	CreatedAt 				int64
-	FlowID 					[]int
+	FlowIDs 				[]int
+	Realname 				string
+	TakenFee 			float64
+	AtferTaxFee 				float64
+	Desc 					string
 }
 
 func (ctx *FlowData) save() {
-	game.GetSkeleton().Go(func() {
-		se := db.MongoDB.Ref()
-		defer db.MongoDB.UnRef(se)
-		_, err := se.DB(db.DB).C("flowdata").Upsert(bson.M{"_id": ctx.ID}, ctx)
-		if err != nil {
-			log.Error(err.Error())
-		}
-	}, nil)
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	_, err := se.DB(db.DB).C("flowdata").Upsert(bson.M{"_id": ctx.ID}, ctx)
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func (ctx *FlowData) readAllByID() {
@@ -76,14 +80,21 @@ func (ctx *FlowData) readAllNormal() *[]FlowData {
 	return rt
 }
 
-func WriteFlowData(userid int, amount float64, flowType int, matchType string, flows []int) {
+func WriteFlowData(ud *player.UserData, amount float64, flowType int, matchType string, flows []int) {
 	flowData := new(FlowData)
-	flowData.Userid = userid
+	flowData.Userid = ud.UserID
 	flowData.ChangeAmount = amount
 	flowData.FlowType = flowType
 	flowData.MatchType = matchType
 	flowData.CreatedAt = time.Now().Unix()
-	flowData.FlowID = flows
+	flowData.FlowIDs = flows
+	flowData.Realname = ud.RealName
+	flowData.TakenFee = ud.TakenFee
+	flowData.AtferTaxFee = ud.Fee
+	flowData.Accountid = ud.AccountID
 	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
+	if flowType == FlowTypeWithDraw {
+		flowData.Status = FlowDataStatusAction
+	}
 	flowData.save()
 }

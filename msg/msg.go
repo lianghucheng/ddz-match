@@ -78,6 +78,7 @@ func init() {
 	Processor.Register(&S2C_GetGameResultRecord{})
 	Processor.Register(&S2C_PayOK{})
 	Processor.Register(&S2C_LandlordRoundFinalResult{})
+	Processor.Register(&Test_WriteFlowData{})
 }
 
 type C2S_Heartbeat struct{}
@@ -286,4 +287,8 @@ const (
 type S2C_PayOK struct {
 	Error     int
 	AddCoupon int
+}
+
+type Test_WriteFlowData struct {
+
 }

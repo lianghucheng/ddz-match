@@ -3,6 +3,7 @@ package hall
 import (
 	"ddz/conf"
 	"ddz/edy_api"
+	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
 	"fmt"
@@ -42,6 +43,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
+	ud.TakenFee += changeAmount
 	go func() {
 		player.SaveUserData(ud)
 	}()
@@ -50,8 +52,11 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		Error:  msg.ErrWithDrawSuccess,
 		ErrMsg: "成功",
 	})
-	WriteFlowData(user.BaseData.UserData.UserID, changeAmount, FlowTypeWithDraw, "", flowIDs)
-	sendAwardInfo(user)
+	game.GetSkeleton().Go(func() {
+		WriteFlowData(user.GetUserData(), changeAmount, FlowTypeWithDraw, "", flowIDs)
+	}, func() {
+		sendAwardInfo(user)
+	})
 }
 
 func flowIDAndAmount() (flowIDs []int, changeAmount float64) {

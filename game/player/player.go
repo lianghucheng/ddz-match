@@ -58,6 +58,8 @@ type UserData struct {
 	IDCardNo          string
 	BankCardNo        string
 	SetNickNameCount  int
+	TakenFee   			float64
+	FirstLogin 			bool
 }
 
 type User struct {
