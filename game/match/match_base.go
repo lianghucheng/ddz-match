@@ -32,6 +32,7 @@ type BaseMatch struct {
 	SignInPlayers []int  // 比赛报名的所有玩家
 	AwardList     string // 赛事奖励列表
 	Round         int    // 几局制
+	CreateTime    int64  // 比赛创建时间
 
 	AllPlayers       map[int]*User // 比赛剩余玩家对象
 	Rooms            []*Room       // 所有比赛房间对象

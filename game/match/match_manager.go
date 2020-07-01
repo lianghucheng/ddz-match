@@ -156,6 +156,8 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	isSign := false
 	if m, ok := UserIDMatch[uid]; ok {
 		// c := m.Manager.GetNormalConfig()
+		log.Debug("check,%v", m.NormalCofig.MatchID)
+		log.Debug("check,%v", sc.MatchID)
 		if m.NormalCofig.MatchID == sc.MatchID {
 			isSign = true
 		}
@@ -223,6 +225,7 @@ func (sc *ScoreConfig) CreateOneMatch() {
 	utils.StructCopy(nSconfig, sc)
 	nSconfig.MatchID = matchID
 	newMatch := NewScoreMatch(nSconfig)
+	newMatch.NormalCofig = sc.GetNormalConfig()
 	newMatch.Manager = sc
 	sc.LastMatch = newMatch
 	sc.UseMatch++
