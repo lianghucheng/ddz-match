@@ -38,9 +38,11 @@ type MatchPlayer struct {
 	TotalScore int64
 	LastScore  int64
 	Wins       int
+	OneOpTime  int64 // 单局操作时间
 	OpTime     int64
 	SignSort   int
 	Result     []Result //牌局详细
+	Multiples  string   // 当局所有加倍详情
 }
 
 // NormalCofig 需要返回给客户端的通用配置
@@ -59,6 +61,21 @@ type NormalCofig struct {
 	StartType        int   // 比赛开赛种类
 	ReadyTime        int64 // 剩余时间
 	Sort             int   // 赛事排序
+}
+
+// MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
+type MatchRecord struct {
+	RoundCount int    // 第几局
+	CardCount  int    // 第几副牌
+	RoomCount  int    // 房间编号
+	Identity   int    //0 防守方 1 进攻方
+	Name       string // 玩家姓名
+	HandCards  []int  //手牌
+	ThreeCards []int  //底牌
+	Event      int    //0:失败 1:胜利
+	Score      int64  //得分
+	Multiple   int    //倍数
+	Bottom     int    //底分
 }
 
 // GetAwardType 获取奖励类型

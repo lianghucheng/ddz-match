@@ -32,6 +32,7 @@ type ScoreConfig struct {
 	SignInPlayers []int    `bson:"signinplayers"` // 比赛报名的所有玩家
 	AwardDesc     string   `bson:"awarddesc"`     // 奖励描述
 	AwardList     string   `bson:"awardlist"`     // 奖励列表
+	CreateTime    int64    `bson:"createtime"`    // 比赛创建时间
 	Award         []string // 具体的赛事奖励
 
 	// score配置
@@ -109,7 +110,8 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	base.Award = c.Award
 	base.Round = c.Round
 	base.AllPlayers = make(map[int]*User)
-	base.NormalCofig = c.GetNormalConfig()
+	// base.NormalCofig = c.GetNormalConfig()
+	base.CreateTime = time.Now().Unix()
 
 	score.base = base
 	base.myMatch = score
@@ -229,7 +231,7 @@ func (sc *scoreMatch) End() {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
 		if p.rank <= len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank - 1], base.Manager.GetNormalConfig().MatchType)
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], base.Manager.GetNormalConfig().MatchType)
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

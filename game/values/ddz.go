@@ -12,7 +12,6 @@ type DDZGameRecord struct {
 	Last      int64    //尾副得分
 	Wins      int      //获胜次数
 	Period    int64    //累计时长
-	Rank      []Rank   //排行
 	Result    []Result //牌局详细
 	CreateDat int64    //时间
 }

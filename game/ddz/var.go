@@ -113,7 +113,6 @@ type LandlordMatchRoom struct {
 	prepareTimer  *timer.Timer
 	maxscore      int //当前房间的最大叫分
 	winnerUserIDs []int
-	gameRecords   map[int]*DDZGameRecord
 	Match         values.Match // 比赛对象
 }
 
@@ -323,6 +322,8 @@ func (game *LandlordMatchRoom) calScore() {
 				// game.gameRecords[userID].Result[game.count-1].Event = 1
 			}
 		}
+		// 记录当前局的所有加倍信息
+		// player.user.BaseData.MatchPlayer.Multiples=fmt.Sprintf("春天:%v,炸弹:%v,底分:%v,叫分:%v,明牌:%v,公共:%v,庄家:%v")
 	}
 }
 
@@ -464,7 +465,7 @@ func FlushRank(gametype int, uid int, rankType string, award string, matchType s
 	case cfghall.RankTypeFailNum:
 		hall.FlushRank(gametype, rankType, uid, 0)
 	case cfghall.RankTypeAward:
-		log.Debug("【刷新奖金】%v %v, %v, %v, %v",award, len(award), values.GetAwardType(award), values.Money, values.ParseAward(award))
+		log.Debug("【刷新奖金】%v %v, %v, %v, %v", award, len(award), values.GetAwardType(award), values.Money, values.ParseAward(award))
 		if len(award) == 0 || values.GetAwardType(award) != values.Money {
 			return
 		}

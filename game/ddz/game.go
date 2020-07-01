@@ -4,7 +4,6 @@ import (
 	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
-	. "ddz/game/values"
 	"ddz/msg"
 	"fmt"
 	"sort"
@@ -22,7 +21,6 @@ func (game *LandlordMatchRoom) OnInit(room *Room) {
 	game.UserIDPlayerDatas = make(map[int]*LandlordMatchPlayerData)
 	game.Room = room
 	game.UserIDPlayerDatas = make(map[int]*LandlordMatchPlayerData)
-	game.gameRecords = make(map[int]*DDZGameRecord)
 	game.inits = make(map[int]int)
 }
 func (game *LandlordMatchRoom) Play(command interface{}, userId int) {
@@ -177,9 +175,6 @@ func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
 	}
 }
 func (game *LandlordMatchRoom) StartGame() {
-	if game.count == 0 {
-		game.GameDDZRecordInit()
-	}
 	game.State = RoomGame
 	game.prepare()
 	game.count++
@@ -262,6 +257,8 @@ func (game *LandlordMatchRoom) EndGame() {
 		// })
 		// game.gameRecords[userID].Period += playerData.costTimeBydiscard
 		playerData.User.BaseData.MatchPlayer.OpTime += playerData.costTimeBydiscard
+		playerData.User.BaseData.MatchPlayer.OneOpTime = playerData.costTimeBydiscard
+
 	}
 	game.EndTimestamp = time.Now().Unix()
 	// game.rank()
