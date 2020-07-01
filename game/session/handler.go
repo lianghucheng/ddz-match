@@ -459,7 +459,7 @@ func handleWithDraw(args []interface{}) {
 	if user == nil {
 		return
 	}
-	hall.WithDraw(user, m.Amount)
+	hall.WithDraw(user)
 }
 
 func handleGetMatchList(args []interface{}) {

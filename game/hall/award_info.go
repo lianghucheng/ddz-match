@@ -14,7 +14,7 @@ func sendAwardInfo(user *player.User) {
 	flowData.Userid = user.BaseData.UserData.UserID
 	user.WriteMsg(&msg.S2C_AwardInfo{
 		Amount:       user.Fee(), //todo:尚未开发
-		WithDrawList: *withDrawList(flowData.readAllByID()),
+		WithDrawList: *withDrawList(flowData.readAllByUserID()),
 	})
 }
 
@@ -24,7 +24,7 @@ func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 		*rt = append(*rt, msg.WithDrawData{
 			FlowType:  v.FlowType,
 			MatchType: v.MatchType,
-			Amount:    v.Amount,
+			Amount:    v.ChangeAmount,
 			Status:    v.Status,
 			CreatedAt: v.CreatedAt,
 		})

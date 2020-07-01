@@ -263,17 +263,18 @@ type S2C_AwardInfo struct {
 }
 
 type C2S_WithDraw struct {
-	Amount float64
 }
 
 const (
 	ErrWithDrawSuccess = 0
 	ErrWithDrawFail    = 1
+	ErrWithDrawLack    = 2
 )
 
 type S2C_WithDraw struct {
 	Amount float64
 	Error  int
+	ErrMsg string
 }
 
 const (

@@ -132,7 +132,7 @@ func rpcWriteAwardFlowData(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_WriteAwardFlowData)
 
-	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].NormalCofig.MatchType)
+	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].NormalCofig.MatchType,[]int{})
 }
 
 // func rpcSendMatchEndMail(args []interface{}) {

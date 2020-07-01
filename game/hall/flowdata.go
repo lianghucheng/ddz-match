@@ -22,27 +22,37 @@ const (
 )
 
 type FlowData struct {
-	Userid    		int
-	Amount    		float64
-	FlowType  		int
-	MatchType 		string
-	Status    		int
-	CreatedAt 		int64
-	FlowReceipts 	[]int64
+	ID    					int `bson:"_id"`
+	Userid    				int
+	ChangeAmount    		float64
+	FlowType  				int
+	MatchType 				string
+	Status    				int
+	CreatedAt 				int64
+	FlowID 					[]int
 }
 
 func (ctx *FlowData) save() {
 	game.GetSkeleton().Go(func() {
 		se := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(se)
-		_, err := se.DB(db.DB).C("flowdata").Upsert(bson.M{"userid": ctx.Userid}, ctx)
+		_, err := se.DB(db.DB).C("flowdata").Upsert(bson.M{"_id": ctx.ID}, ctx)
 		if err != nil {
 			log.Error(err.Error())
 		}
 	}, nil)
 }
 
-func (ctx *FlowData) readAllByID() *[]FlowData {
+func (ctx *FlowData) readAllByID() {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid": ctx.ID}).One(ctx)
+	if err != nil {
+		log.Error(err.Error())
+	}
+}
+
+func (ctx *FlowData) readAllByUserID() *[]FlowData {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	rt := new([]FlowData)
@@ -54,13 +64,26 @@ func (ctx *FlowData) readAllByID() *[]FlowData {
 	return rt
 }
 
-func WriteFlowData(userid int, amount float64, flowType int, matchType string) {
+func (ctx *FlowData) readAllNormal() *[]FlowData {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	rt := new([]FlowData)
+	err := se.DB(db.DB).C("flowdata").Find(bson.M{"status": FlowDataStatusNormal}).All(rt)
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	return rt
+}
+
+func WriteFlowData(userid int, amount float64, flowType int, matchType string, flows []int) {
 	flowData := new(FlowData)
 	flowData.Userid = userid
-	flowData.Amount = amount
+	flowData.ChangeAmount = amount
 	flowData.FlowType = flowType
 	flowData.MatchType = matchType
 	flowData.CreatedAt = time.Now().Unix()
-
+	flowData.FlowID = flows
+	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
 	flowData.save()
 }
