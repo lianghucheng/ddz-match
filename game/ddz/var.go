@@ -323,7 +323,9 @@ func (game *LandlordMatchRoom) calScore() {
 			}
 		}
 		// 记录当前局的所有加倍信息
-		// player.user.BaseData.MatchPlayer.Multiples=fmt.Sprintf("春天:%v,炸弹:%v,底分:%v,叫分:%v,明牌:%v,公共:%v,庄家:%v")
+		player.User.BaseData.MatchPlayer.Multiples = fmt.Sprintf("春天:%v,炸弹:%v,底分:%v,叫分:%v,明牌:%v,公共:%v,庄家:%v,防守方:%v,总倍数:%v",
+			player.Spring, player.Boom, game.rule.BaseScore, player.DealerScore, player.Ming, player.Public, player.Dealer, player.Xian,
+			player.Public*player.Dealer*player.Xian)
 	}
 }
 

@@ -51,7 +51,7 @@ func InsertMatchRecord(record values.DDZGameRecord) {
 func UpdateMatchManager(matchID string, update interface{}) {
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
-	err := db.DB(DB).C("matchmanager").Update(bson.M{"matchid": matchID}, update)
+	_, err := db.DB(DB).C("matchmanager").Upsert(bson.M{"matchid": matchID}, update)
 	if err != nil {
 		log.Error("update match manager %v update: %v error: %v", matchID, update, err)
 	}

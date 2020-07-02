@@ -33,10 +33,10 @@
 [CfgTimeout]
  ConnectTimeout=3 #连接授权验证连接时间 秒
  HeartTimeout=120  #心跳维持时间 秒
- LandlordBid= 3    #叫分的准备时间 秒
- LandlordDouble= 3 #加倍的准备时间   秒
+ LandlordBid= 8    #叫分的准备时间 秒
+ LandlordDouble= 6 #加倍的准备时间   秒
  LandlordSystemHost = 0  #托管出牌时间 秒
- LandlordDiscard        = 1 #出牌的准备时间 秒
+ LandlordDiscard        = 14 #出牌的准备时间 秒
  LandlordDiscardNothing = 3  #要不起准备时间 秒
  LandloadMatchPrepare         = 2500 # 满三人开赛准备时间 毫秒
  LandlordEndPrepare           = 1500 # 结算的准备时间    毫秒

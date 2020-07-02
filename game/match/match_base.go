@@ -20,13 +20,16 @@ const (
 	Signing = iota // 报名中
 	Playing        // 比赛中
 	Ending         // 结算中
+	Cancel         // 下架赛事
+	Delete         // 删除赛事
 )
 
 // BaseMatch 通用的比赛对象
 type BaseMatch struct {
 	myMatch Match // 不同的赛事
 
-	MatchID       string // 赛事id号
+	// MatchID       string // 赛事id号
+	SonMatchID    string // 子赛事id
 	State         int    // 赛事状态
 	MaxPlayer     int    // 最大参赛人数
 	SignInPlayers []int  // 比赛报名的所有玩家
@@ -107,7 +110,7 @@ func (base *BaseMatch) SignOut(uid int) error {
 	delete(base.AllPlayers, uid)
 	// 清理赛事
 	if len(base.SignInPlayers) == 0 && base.IsClosing {
-		delete(MatchList, base.MatchID)
+		delete(MatchList, base.SonMatchID)
 	}
 	return nil
 }
@@ -139,7 +142,7 @@ func (base *BaseMatch) End() {
 	// 	delete(UserIDRooms, uid)
 	// 	delete(UserIDMatch, uid)
 	// }
-	base.Manager.End(base.MatchID)
+	base.Manager.End(base.SonMatchID)
 
 	// Broadcast(&msg.S2C_MatchNum{
 	// 	MatchId: base.Manager.GetNormalConfig().MatchID,
@@ -148,7 +151,7 @@ func (base *BaseMatch) End() {
 	if base.myMatch != nil {
 		base.myMatch.End()
 	}
-	delete(MatchList, base.MatchID)
+	delete(MatchList, base.SonMatchID)
 }
 
 func (base *BaseMatch) SplitTable() {

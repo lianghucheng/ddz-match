@@ -4,6 +4,7 @@ import (
 	"ddz/game"
 	"ddz/game/db"
 	. "ddz/game/player"
+	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
@@ -139,6 +140,12 @@ func (sc *ScoreConfig) GetAwardItem() {
 			continue
 		}
 		awards = append(awards, one[1])
+		count := ParseAward(one[1])
+		if GetAwardType(one[1]) == values.Money {
+			sc.MoneyAward += count
+		} else if GetAwardType(one[1]) == values.Coupon {
+			sc.CouponAward += count
+		}
 		// awards = append(awards, item[1][:len(item[1])-1])
 	}
 	sc.Award = awards
@@ -156,8 +163,8 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	isSign := false
 	if m, ok := UserIDMatch[uid]; ok {
 		// c := m.Manager.GetNormalConfig()
-		log.Debug("check,%v", m.NormalCofig.MatchID)
-		log.Debug("check,%v", sc.MatchID)
+		// log.Debug("check,%v", m.NormalCofig.MatchID)
+		// log.Debug("check,%v", sc.MatchID)
 		if m.NormalCofig.MatchID == sc.MatchID {
 			isSign = true
 		}
@@ -214,18 +221,16 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 
 // CreateOneMatch 创建子赛事
 func (sc *ScoreConfig) CreateOneMatch() {
-	matchID := ""
+	sonID := ""
 	if sc.CurrentIDIndex < len(sc.OfficalIDs) {
-		matchID = sc.OfficalIDs[sc.CurrentIDIndex]
+		sonID = sc.OfficalIDs[sc.CurrentIDIndex]
 	} else {
-		matchID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
+		sonID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
 	}
-	// log.Debug("check:%v", matchID)
 	nSconfig := &ScoreConfig{}
 	utils.StructCopy(nSconfig, sc)
-	nSconfig.MatchID = matchID
+	nSconfig.SonMatchID = sonID
 	newMatch := NewScoreMatch(nSconfig)
-	newMatch.NormalCofig = sc.GetNormalConfig()
 	newMatch.Manager = sc
 	sc.LastMatch = newMatch
 	sc.UseMatch++

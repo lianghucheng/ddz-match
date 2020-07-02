@@ -26,25 +26,29 @@ import (
 // ScoreConfig 配置文件
 type ScoreConfig struct {
 	// base配置
-	MatchID       string   `bson:"matchid"`       // 赛事id号（与赛事管理的matchid不是同一个，共用一个字段）
+	MatchID       string   `bson:"matchid"`       // 赛事管理id号
+	SonMatchID    string   `bson:"sonmatchid"`    // 子赛事id
 	State         int      `bson:"state"`         // 赛事状态
 	MaxPlayer     int      `bson:"maxplayer"`     // 最大参赛玩家
 	SignInPlayers []int    `bson:"signinplayers"` // 比赛报名的所有玩家
 	AwardDesc     string   `bson:"awarddesc"`     // 奖励描述
 	AwardList     string   `bson:"awardlist"`     // 奖励列表
 	CreateTime    int64    `bson:"createtime"`    // 比赛创建时间
+	MoneyAward    float64  `bson:"moneyaward"`    // 赛事金钱总奖励
+	CouponAward   float64  `bson:"couponaward"`   // 赛事点券总奖励
 	Award         []string // 具体的赛事奖励
 
 	// score配置
-	BaseScore   int64  `bson:"basescore"`   // 基础分数
-	StartTime   int64  `bson:"starttime"`   // 比赛开始时间
-	LimitPlayer int    `bson:"limitplayer"` // 比赛开始的最少人数
-	TablePlayer int    `bson:"tableplayer"` // 一桌的游戏人数
-	Round       int    `bson:"round"`       // 几局制
-	RoundNum    string `bson:"roundnum"`    // 赛制制(2局1副)
-	StartType   int    `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示倒计时多久开赛判断,3表示比赛到点开赛)
-	Eliminate   []int  `bson:"eliminate"`   // 每轮淘汰人数
-	Rank        []Rank `bson:"rank"`        // 整个比赛的总排行
+	BaseScore   int64           `bson:"basescore"`   // 基础分数
+	StartTime   int64           `bson:"starttime"`   // 比赛开始时间
+	LimitPlayer int             `bson:"limitplayer"` // 比赛开始的最少人数
+	TablePlayer int             `bson:"tableplayer"` // 一桌的游戏人数
+	Round       int             `bson:"round"`       // 几局制
+	RoundNum    string          `bson:"roundnum"`    // 赛制制(2局1副)
+	StartType   int             `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示倒计时多久开赛判断,3表示比赛到点开赛)
+	Eliminate   []int           `bson:"eliminate"`   // 每轮淘汰人数
+	Rank        []Rank          `bson:"rank"`        // 整个比赛的总排行
+	Record      [][]MatchRecord `bson:"matchrecord"` // 整个比赛的总记录
 
 	// 赛事管理配置
 	MatchName        string     `bson:"matchname"`  // 赛事名称
@@ -57,7 +61,9 @@ type ScoreConfig struct {
 	UseMatch         int        `bson:"usematch"`   // 已使用次数
 	OfficalIDs       []string   `bson:"officalIDs"` // 后台配置的可用比赛id号
 	ShelfTime        int64      `bson:"shelftime"`  // 上架时间
-	Sort             int        `bso:"sort"`        // 赛事排序
+	Sort             int        `bson:"sort"`       // 赛事排序
+	ShowHall         bool       `bson:"showhall"`   // 是否首页展示
+	MatchIcon        string     `bson:"matchicon"`  // 赛事图标
 	AllSignInPlayers []int      `bson:"-"`          // 已报名玩家该种赛事的所有玩家
 	CurrentIDIndex   int        `bson:"-"`          // 当前赛事取id的序号
 	LastMatch        *BaseMatch `bson:"-"`          // 最新分配的一个赛事
@@ -65,15 +71,18 @@ type ScoreConfig struct {
 }
 
 type sConfig struct {
-	BaseScore   int    // 基础分数
-	StartTime   int64  // 比赛开始时间
-	LimitPlayer int    // 比赛开始的最少人数
-	TablePlayer int    // 一桌的游戏人数
-	Round       int    // 几局制
-	RoundNum    string // 赛制制(2局1副)
-	StartType   int    // 开赛条件（满三人开赛）
-	Eliminate   []int  // 每轮淘汰人数
-	Rank        []Rank // 整个比赛的总排行
+	BaseScore   int             // 基础分数
+	StartTime   int64           // 比赛开始时间
+	LimitPlayer int             // 比赛开始的最少人数
+	TablePlayer int             // 一桌的游戏人数
+	Round       int             // 几局制
+	RoundNum    string          // 赛制制(2局1副)
+	StartType   int             // 开赛条件（满三人开赛）
+	Eliminate   []int           // 每轮淘汰人数
+	Rank        []Rank          // 整个比赛的总排行
+	Record      [][]MatchRecord // 整个比赛的总记录
+	MoneyAward  float64         // 赛事金钱总奖励
+	CouponAward float64         // 赛事点券总奖励
 }
 
 type scoreMatch struct {
@@ -103,19 +112,19 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	score.checkConfig()
 
 	base := &BaseMatch{}
-	base.MatchID = c.MatchID
+	base.SonMatchID = c.SonMatchID
 	base.MaxPlayer = c.MaxPlayer
 	base.State = c.State
 	base.AwardList = c.AwardList
 	base.Award = c.Award
 	base.Round = c.Round
 	base.AllPlayers = make(map[int]*User)
-	// base.NormalCofig = c.GetNormalConfig()
+	base.NormalCofig = c.GetNormalConfig()
 	base.CreateTime = time.Now().Unix()
 
 	score.base = base
 	base.myMatch = score
-	MatchList[base.MatchID] = base
+	MatchList[base.SonMatchID] = base
 	if score.myConfig.StartType == 2 && score.myConfig.StartTime > 0 {
 		game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime)*time.Second, func() {
 			base.CheckStart()
@@ -177,7 +186,7 @@ func (sc *scoreMatch) CheckStart() {
 			// log.Debug("check,%v", base.SignInPlayers)
 			// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
 			for _, uid := range base.SignInPlayers {
-				base.Manager.SignOut(uid, base.MatchID)
+				base.Manager.SignOut(uid, base.SonMatchID)
 			}
 		} else {
 			base.Start()
@@ -191,7 +200,7 @@ func (sc *scoreMatch) Start() {
 	base := sc.base.(*BaseMatch)
 
 	base.broadcast(&msg.S2C_MatchPrepare{
-		MatchId: base.MatchID,
+		MatchId: base.SonMatchID,
 	})
 
 	// 初始化比赛玩家对象
@@ -231,13 +240,13 @@ func (sc *scoreMatch) End() {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
 		if p.rank <= len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], base.Manager.GetNormalConfig().MatchType)
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], base.NormalCofig.MatchType)
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
 	}
 
-	// 提出所有玩家
+	// 踢出所有玩家
 	for _, p := range base.AllPlayers {
 		sc.eliminateOnePlayer(p.BaseData.UserData.UserID)
 	}
@@ -245,6 +254,7 @@ func (sc *scoreMatch) End() {
 	// 保存赛事记录
 	// 先排序rank
 	sc.sortRank()
+	sc.sortRecord()
 	record := &ScoreConfig{}
 	utils.StructCopy(record, base.NormalCofig)
 	utils.StructCopy(record, base)
@@ -268,7 +278,7 @@ func (sc *scoreMatch) SplitTable() {
 			MaxPlayers: sc.myConfig.TablePlayer,
 			BaseScore:  sc.myConfig.BaseScore,
 			Round:      sc.myConfig.Round,
-			MatchId:    base.MatchID,
+			MatchId:    base.SonMatchID,
 			MatchName:  base.NormalCofig.MatchName,
 			Tickets:    c.EnterFee,
 			RoundNum:   sc.myConfig.RoundNum,
@@ -322,7 +332,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 	base := sc.base.(*BaseMatch)
 	sc.OverRoomCount++
 	// 比赛未结束
-	for _, r := range base.Rooms {
+	for n, r := range base.Rooms {
 		if r.Number == roomID {
 			game := r.Game.(*ddz.LandlordMatchRoom)
 			results := []poker.LandlordPlayerRoundResult{}
@@ -349,6 +359,21 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 				}
 				results = append(results, one)
 				sc.AllResults = append(sc.AllResults, one)
+
+				// 写入比赛记录
+				sc.myConfig.Record[base.CurrentRound-1] = append(sc.myConfig.Record[base.CurrentRound-1], MatchRecord{
+					RoundCount: base.CurrentRound,
+					CardCount:  base.CurrentCardCount,
+					RoomCount:  n + 1,
+					UID:        playerData.User.BaseData.UserData.UserID,
+					Identity:   player.Result[base.CurrentRound-1].Identity,
+					Name:       playerData.User.BaseData.UserData.RealName,
+					HandCards:  player.Result[base.CurrentRound-1].HandCards,
+					ThreeCards: player.Result[base.CurrentRound-1].ThreeCards,
+					Event:      player.Result[base.CurrentRound-1].Event,
+					Score:      player.Result[base.CurrentRound-1].Score,
+					Multiples:  player.Multiples,
+				})
 			}
 			sort.Sort(poker.LstPoker(results))
 			// 发送单局结算信息
@@ -362,6 +387,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 					CurrCount:    base.CurrentRound,
 					Process:      sc.GetProcess(),
 					Tables:       len(base.Rooms) - sc.OverRoomCount,
+					MatchName:    base.NormalCofig.MatchName,
 				}
 				playerData.User.WriteMsg(tempMsg)
 			}
@@ -454,6 +480,20 @@ func (sc *scoreMatch) sortRank() {
 	}
 }
 
+func (sc *scoreMatch) sortRecord() {
+	r := sc.myConfig.Record
+	for n := range r {
+		for i := 0; i < len(r[n]); i++ {
+			for j := i + 1; j < len(r[n]); j++ {
+				// 从小到大排序
+				if r[n][i].RoomCount > r[n][j].RoomCount {
+					r[n][i], r[n][j] = r[n][j], r[n][i]
+				}
+			}
+		}
+	}
+}
+
 // 检查一些配置是否有问题
 func (sc *scoreMatch) checkConfig() {
 	// 防止配置错误
@@ -461,6 +501,7 @@ func (sc *scoreMatch) checkConfig() {
 		log.Error("error config:%+v", sc.myConfig.TablePlayer)
 		sc.myConfig.TablePlayer = 3
 	}
+	sc.myConfig.Record = make([][]MatchRecord, sc.myConfig.Round)
 }
 
 // 淘汰玩家
@@ -540,7 +581,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	// 写入战绩
 	record := values.DDZGameRecord{
 		UserId:    uid,
-		MatchId:   base.MatchID,
+		MatchId:   base.SonMatchID,
 		MatchType: base.NormalCofig.MatchType,
 		Desc:      base.NormalCofig.MatchName,
 		Level:     player.Rank,
@@ -726,7 +767,7 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 	user.WriteMsg(tempMsg)
 }
 
-// SendFinalResult 给玩家发送单局结算
+// SendFinalResult 给玩家发送总结算
 func (sc *scoreMatch) SendFinalResult(uid int) {
 	base := sc.base.(*BaseMatch)
 	user := base.AllPlayers[uid]

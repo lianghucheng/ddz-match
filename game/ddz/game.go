@@ -175,6 +175,7 @@ func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
 	}
 }
 func (game *LandlordMatchRoom) StartGame() {
+	log.Debug("game %v start", game.Room.Number)
 	game.State = RoomGame
 	game.prepare()
 	game.count++
