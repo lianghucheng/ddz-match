@@ -184,7 +184,7 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 		StartType:     sc.StartType,
 		ConDes:        sc.MatchDesc,
 		SignNumDetail: signNumDetail,
-		EnterFee:      float64(sc.EnterFee) / 10,
+		EnterFee:      float64(sc.EnterFee),
 		SignNum:       len(sc.AllSignInPlayers),
 		IsSign:        isSign,
 	}

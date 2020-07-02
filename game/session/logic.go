@@ -83,6 +83,13 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
+
+	firstLogin = userData.FirstLogin
+	if !userData.FirstLogin {
+		userData.FirstLogin = !userData.FirstLogin
+		go func() {SaveUserData(userData)}()
+	}
+
 	if err != nil {//&& err != mgo.ErrNotFound {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
@@ -137,6 +144,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	user.BaseData.UserData.Online = true
 	if firstLogin {
 		user.BaseData.UserData.Nickname = "用户" + strconv.Itoa(user.BaseData.UserData.AccountID)
+		user.BaseData.UserData.Coupon += 500
 		SaveUserData(user.BaseData.UserData)
 	} else {
 		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
@@ -175,6 +183,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	hall.SendRaceInfo(user.BaseData.UserData.UserID)
+	hall.SendAwardInfo(user)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {

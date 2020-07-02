@@ -13,3 +13,7 @@ func BandBankCardAPI(accountid int, bankNo, BankName, BankAccount string) error 
 	bindBankCard := internal.NewBindBankCardReq(accountid, bankNo, BankName, BankAccount)
 	return bindBankCard.BindBankCard()
 }
+
+func WithDrawAPI(userid int, amount float64) error {
+	return nil
+}

@@ -78,6 +78,7 @@ func init() {
 	Processor.Register(&S2C_GetGameResultRecord{})
 	Processor.Register(&S2C_PayOK{})
 	Processor.Register(&S2C_LandlordRoundFinalResult{})
+	Processor.Register(&Test_WriteFlowData{})
 }
 
 type C2S_Heartbeat struct{}
@@ -241,19 +242,14 @@ type C2S_AwardInfo struct {
 const (
 	FlowTypeAward    = 1
 	FlowTypeWithDraw = 2
-)
-
-const (
-	FlowDataStatusNormal = 0
-	FlowDataStatusAction = 1
-	FlowDataStatusOver   = 2
+	FlowTypeGift     = 3
 )
 
 type WithDrawData struct {
 	FlowType  int
-	MatchType string
+	MatchID string
 	Amount    float64
-	Status    int
+	Status    string
 	CreatedAt int64
 }
 
@@ -263,17 +259,18 @@ type S2C_AwardInfo struct {
 }
 
 type C2S_WithDraw struct {
-	Amount float64
 }
 
 const (
 	ErrWithDrawSuccess = 0
 	ErrWithDrawFail    = 1
+	ErrWithDrawLack    = 2
 )
 
 type S2C_WithDraw struct {
 	Amount float64
 	Error  int
+	ErrMsg string
 }
 
 const (
@@ -285,4 +282,8 @@ const (
 type S2C_PayOK struct {
 	Error     int
 	AddCoupon int
+}
+
+type Test_WriteFlowData struct {
+	UID       int
 }

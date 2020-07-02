@@ -14,18 +14,24 @@ func sendAwardInfo(user *player.User) {
 	flowData.Userid = user.BaseData.UserData.UserID
 	user.WriteMsg(&msg.S2C_AwardInfo{
 		Amount:       user.Fee(), //todo:尚未开发
-		WithDrawList: *withDrawList(flowData.readAllByID()),
+		WithDrawList: *withDrawList(flowData.readAllByUserID()),
 	})
 }
 
 func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 	rt := new([]msg.WithDrawData)
 	for _, v := range *flowDatas {
+		status := ""
+		if v.FlowType == FlowTypeAward {
+			status = FlowDataStatusMsg[FlowDataStatusNormal]
+		} else {
+			status = FlowDataStatusMsg[v.Status]
+		}
 		*rt = append(*rt, msg.WithDrawData{
 			FlowType:  v.FlowType,
-			MatchType: v.MatchType,
-			Amount:    v.Amount,
-			Status:    v.Status,
+			MatchID: v.MatchID,
+			Amount:    v.ChangeAmount,
+			Status:    status,
 			CreatedAt: v.CreatedAt,
 		})
 	}

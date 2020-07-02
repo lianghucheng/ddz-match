@@ -90,3 +90,4 @@ RegisterTemplate="218592"
     RankTypeWinNum	  = "胜局"
     RankTypeFailNum	  = "衰神"
     RankTypeAward	  = "奖励"
+    WithDrawMin       = 10.0
