@@ -231,7 +231,9 @@ func (sc *scoreMatch) End() {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
 		if p.rank <= len(base.Award) {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], base.Manager.GetNormalConfig().MatchType)
+			cfg := base.Manager.GetNormalConfig()
+			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
+			hall.WriteFlowData(p.uid, values.ParseAward(base.Award[p.rank-1]), hall.FlowTypeAward, cfg.MatchType, cfg.MatchID, []int{})
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

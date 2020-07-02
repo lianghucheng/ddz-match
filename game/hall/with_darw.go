@@ -23,7 +23,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
-	flowIDs, changeAmount := flowIDAndAmount()
+	flowIDs, changeAmount := flowIDAndAmount(user.UID())
 
 	if changeAmount < conf.GetCfgHall().WithDrawMin {
 		user.WriteMsg(&msg.S2C_WithDraw{
@@ -43,7 +43,6 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
-	ud.TakenFee += changeAmount
 	go func() {
 		player.SaveUserData(ud)
 	}()
@@ -53,14 +52,15 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		ErrMsg: "成功",
 	})
 	game.GetSkeleton().Go(func() {
-		WriteFlowData(user.GetUserData(), changeAmount, FlowTypeWithDraw, "", flowIDs)
+		WriteFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
 	}, func() {
 		sendAwardInfo(user)
 	})
 }
 
-func flowIDAndAmount() (flowIDs []int, changeAmount float64) {
+func flowIDAndAmount(id int) (flowIDs []int, changeAmount float64) {
 	fd:= new(FlowData)
+	fd.Userid = id
 	flowdatas := fd.readAllNormal()
 	for _, v := range *flowdatas {
 		flowIDs = append(flowIDs, v.ID)

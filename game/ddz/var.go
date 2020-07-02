@@ -8,7 +8,6 @@ import (
 	"ddz/game/poker"
 	. "ddz/game/room"
 	"ddz/game/values"
-	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"fmt"
@@ -469,7 +468,6 @@ func FlushRank(gametype int, uid int, rankType string, award string, matchType s
 		if len(award) == 0 || values.GetAwardType(award) != values.Money {
 			return
 		}
-		hall.WriteFlowData(uid, values.ParseAward(award), hall.FlowTypeAward, matchType, []int{})
 		hall.FlushRank(gametype, rankType, uid, values.ParseAward(award))
 	}
 }

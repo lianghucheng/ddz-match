@@ -8,6 +8,7 @@ func init() {
 	Processor.Register(&RPC_SendMatchEndMail{})
 	Processor.Register(&RPC_SendInterruptMail{})
 	Processor.Register(&RPC_TempPayOK{})
+	Processor.Register(&RPC_AddFee{})
 }
 
 type C2S_EndMatch struct {
@@ -45,4 +46,10 @@ type RPC_WriteAwardFlowData struct {
 type RPC_TempPayOK struct {
 	TotalFee  int
 	AccountID int
+}
+
+type RPC_AddFee struct {
+	FeeType   string  `json:"fee_type"`
+	Userid 		int `json:"userid"`
+	Amount      float64`json:"amount"`
 }

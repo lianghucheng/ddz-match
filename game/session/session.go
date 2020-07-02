@@ -28,6 +28,7 @@ func init() {
 	// skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
 	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
+	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -131,8 +132,8 @@ func rpcWriteAwardFlowData(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_WriteAwardFlowData)
-
-	hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].NormalCofig.MatchType,[]int{})
+	_ = m
+	//hall.WriteFlowData(m.Userid, m.Amount, hall.FlowTypeAward, MatchList[m.Matchid].NormalCofig.MatchType,[]int{})
 }
 
 // func rpcSendMatchEndMail(args []interface{}) {
@@ -202,4 +203,32 @@ func rpcAccountLogin(args []interface{}) {
 	newUser := newUser(a)
 	a.UserData().(*AgentInfo).User = newUser
 	AccountLogin(newUser, m.Account, m.Code)
+}
+
+func rpcAddFee(args []interface{}) {
+	if len(args) != 1 {
+		return
+	}
+	m := args[0].(*msg.RPC_AddFee)
+	if user, ok := UserIDUsers[m.Userid]; ok {
+		ud := user.GetUserData()
+		if m.FeeType == "fee" {
+			ud.Fee += m.Amount
+		} else if m.FeeType == "takenfee" {
+			ud.TakenFee += m.Amount
+		}
+		SaveUserData(ud)
+		user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
+			AfterTaxAward:user.Fee(),
+		})
+	} else {
+		ud := ReadUserDataByID(m.Userid)
+		log.Debug("!!!!!!!!!!!!!!!!!%v", m.Userid)
+		if m.FeeType == "fee" {
+			ud.Fee += m.Amount
+		} else if m.FeeType == "takenfee" {
+			ud.TakenFee += m.Amount
+		}
+		SaveUserData(ud)
+	}
 }

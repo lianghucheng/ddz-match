@@ -32,6 +32,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/temppay", HandleTempPay)
 	mux.HandleFunc("/register", handleRegister)
 	mux.HandleFunc("/findpwd", handleFindPwd)
+	mux.HandleFunc("/edyht-add-fee", handleEdyhtAddFee)
 
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -204,4 +205,15 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 	player.SaveUserData(userData)
 	w.Write(strbyte(NewError(msg.ErrFindPasswordSuccess, "成功")))
 	return
+}
+
+func handleEdyhtAddFee(w http.ResponseWriter, r *http.Request) {
+	data := r.FormValue("data")
+	m := new(msg.RPC_AddFee)
+	if err := json.Unmarshal([]byte(data),m); err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	game.GetSkeleton().ChanRPCServer.Go("AddFee", m)
 }

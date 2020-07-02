@@ -510,5 +510,10 @@ func handleChangePassword(args []interface{}) {
 
 func handleTest(args []interface{}) {
 	log.Debug("【写入成功】")
-	hall.WriteFlowData(10003, 10, hall.FlowTypeAward, "AAAATest", []int{})
+
+	uid := 10009
+	ud := ReadUserDataByID(uid)
+	ud.Fee += 10
+	SaveUserData(ud)
+	hall.WriteFlowData(uid, 10, hall.FlowTypeAward, "AAAATest","xxxx!!!", []int{})
 }

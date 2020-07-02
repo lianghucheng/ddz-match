@@ -62,4 +62,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_TempPayOK{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_ChangePassword{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.Test_WriteFlowData{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_AddFee{}, game.ChanRPC)
 }
