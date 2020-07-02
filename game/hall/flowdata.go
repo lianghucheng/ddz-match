@@ -22,6 +22,13 @@ const (
 	FlowDataStatusBack   = 3
 )
 
+var FlowDataStatusMsg = map[int]string  {
+	FlowDataStatusNormal: "比赛获得",
+	FlowDataStatusAction: "提奖中",
+	FlowDataStatusOver: "已提奖",
+	FlowDataStatusBack: "已退奖",
+}
+
 type FlowData struct {
 	ID    					int `bson:"_id"`
 	Userid    				int

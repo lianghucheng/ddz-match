@@ -510,8 +510,9 @@ func handleChangePassword(args []interface{}) {
 
 func handleTest(args []interface{}) {
 	log.Debug("【写入成功】")
+	m := args[0].(*msg.Test_WriteFlowData)
 
-	uid := 10009
+	uid := m.UID
 	ud := ReadUserDataByID(uid)
 	ud.Fee += 10
 	SaveUserData(ud)

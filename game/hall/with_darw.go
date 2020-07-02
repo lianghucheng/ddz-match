@@ -37,7 +37,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		log.Error(err.Error())
 		user.WriteMsg(&msg.S2C_WithDraw{
 			Error: msg.ErrWithDrawFail,
-			ErrMsg:"失败",
+			ErrMsg:"三方接口失败",
 		})
 		return
 	}

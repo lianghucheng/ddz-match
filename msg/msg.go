@@ -242,19 +242,14 @@ type C2S_AwardInfo struct {
 const (
 	FlowTypeAward    = 1
 	FlowTypeWithDraw = 2
-)
-
-const (
-	FlowDataStatusNormal = 0
-	FlowDataStatusAction = 1
-	FlowDataStatusOver   = 2
+	FlowTypeGift     = 3
 )
 
 type WithDrawData struct {
 	FlowType  int
-	MatchType string
+	MatchID string
 	Amount    float64
-	Status    int
+	Status    string
 	CreatedAt int64
 }
 
@@ -290,5 +285,5 @@ type S2C_PayOK struct {
 }
 
 type Test_WriteFlowData struct {
-
+	UID       int
 }

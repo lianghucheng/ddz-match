@@ -21,11 +21,17 @@ func sendAwardInfo(user *player.User) {
 func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 	rt := new([]msg.WithDrawData)
 	for _, v := range *flowDatas {
+		status := ""
+		if v.FlowType == FlowTypeAward {
+			status = FlowDataStatusMsg[FlowDataStatusNormal]
+		} else {
+			status = FlowDataStatusMsg[v.Status]
+		}
 		*rt = append(*rt, msg.WithDrawData{
 			FlowType:  v.FlowType,
-			MatchType: v.MatchType,
+			MatchID: v.MatchID,
 			Amount:    v.ChangeAmount,
-			Status:    v.Status,
+			Status:    status,
 			CreatedAt: v.CreatedAt,
 		})
 	}
