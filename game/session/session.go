@@ -167,7 +167,7 @@ func rpcTempPayOK(args []interface{}) {
 		return
 	}
 
-	addCoupon := m.TotalFee / 10
+	addCoupon := m.TotalFee
 
 	if user, ok := UserIDUsers[ud.UserID]; ok {
 		user.GetUserData().Coupon += int64(addCoupon)
