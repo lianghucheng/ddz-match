@@ -60,6 +60,10 @@ func initCollection() {
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)
 	}
+	err = db.EnsureUniqueIndex(DB, "matchmanager", []string{"matchid"})
+	if err != nil {
+		log.Fatal("ensure index error: %v", err)
+	}
 }
 
 func MongoDBDestroy() {

@@ -11,11 +11,12 @@ import (
 	. "ddz/game/room"
 	"ddz/msg"
 	"ddz/utils"
-	"github.com/garyburd/redigo/redis"
-	"gopkg.in/mgo.v2"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/garyburd/redigo/redis"
+	"gopkg.in/mgo.v2"
 
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
@@ -68,16 +69,16 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	// load userData
 	err := db.DB(DB).C("users").Find(bson.M{"username": account}).One(userData)
 	if err == mgo.ErrNotFound {
-	//	firstLogin = true
-	//	err = userData.InitValue(0)
-	//	userData.Username = account
-	//	userData.Headimgurl = DefaultAvatar
-	//	if err != nil {
-	//		userData = nil
-	//		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
-	//		user.Close()
-	//		return
-	//	}
+		//	firstLogin = true
+		//	err = userData.InitValue(0)
+		//	userData.Username = account
+		//	userData.Headimgurl = DefaultAvatar
+		//	if err != nil {
+		//		userData = nil
+		//		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+		//		user.Close()
+		//		return
+		//	}
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Usrn_Nil})
 		user.Close()
@@ -87,10 +88,10 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	firstLogin = userData.FirstLogin
 	if !userData.FirstLogin {
 		userData.FirstLogin = !userData.FirstLogin
-		go func() {SaveUserData(userData)}()
+		go func() { SaveUserData(userData) }()
 	}
 
-	if err != nil {//&& err != mgo.ErrNotFound {
+	if err != nil { //&& err != mgo.ErrNotFound {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
 		user.Close()
@@ -182,7 +183,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendMail(user)
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
-	hall.SendRaceInfo(user.BaseData.UserData.UserID)
+	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {

@@ -1,6 +1,7 @@
 package msg
 
 func init() {
+	Processor.Register(&C2S_RaceInfo{})
 	Processor.Register(&S2C_RaceInfo{})
 	Processor.Register(&C2S_RaceDetail{})
 	Processor.Register(&S2C_RaceDetail{})
@@ -15,6 +16,10 @@ type RaceInfo struct {
 	JoinNum   int     //赛事报名人数
 	StartTime int64   // 比赛开始时间
 	StartType int     // 比赛开赛方式
+	IsSign    bool    // 是否报名
+}
+
+type C2S_RaceInfo struct {
 }
 
 type S2C_RaceInfo struct {

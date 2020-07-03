@@ -34,6 +34,12 @@ func startHTTPServer() {
 	mux.HandleFunc("/findpwd", handleFindPwd)
 	mux.HandleFunc("/edyht-add-fee", handleEdyhtAddFee)
 
+	// 后台比赛接口
+	mux.HandleFunc("/addMatch", addMatch)
+	mux.HandleFunc("/showHall", showHall)
+	mux.HandleFunc("/editMatch", editMatch)
+	mux.HandleFunc("/optMatch", optMatch)
+
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -183,7 +189,7 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	account, code, password := m.Account, m.Code, m.Password
-	_ = code 
+	_ = code
 	if status := CheckSms(account, code); status != 0 {
 		w.Write(strbyte(NewError(int64(status), "数据格式错误")))
 		return
@@ -210,7 +216,7 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 func handleEdyhtAddFee(w http.ResponseWriter, r *http.Request) {
 	data := r.FormValue("data")
 	m := new(msg.RPC_AddFee)
-	if err := json.Unmarshal([]byte(data),m); err != nil {
+	if err := json.Unmarshal([]byte(data), m); err != nil {
 		log.Error(err.Error())
 		return
 	}

@@ -36,6 +36,7 @@ func init() {
 	handler(&msg.C2S_Apply{}, handleApply)
 	handler(&msg.C2S_GetCoupon{}, handleCoupon)
 	handler(&msg.C2S_DailySign{}, handleDailySign)
+	handler(&msg.C2S_RaceInfo{}, handleRaceInfoHall)
 	handler(&msg.C2S_RaceDetail{}, handleRaceDetail)
 	handler(&msg.C2S_FeedBack{}, handleFeedBack)
 	handler(&msg.C2S_ReadMail{}, handleReadMail)
@@ -463,6 +464,30 @@ func handleWithDraw(args []interface{}) {
 	hall.WithDraw(user)
 }
 
+func handleRaceInfoHall(args []interface{}) {
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
+		myMatchID := ma.NormalCofig.MatchID
+		for i, v := range RaceInfo {
+			if v.ID == myMatchID {
+				RaceInfo[i].IsSign = true
+				break
+			}
+		}
+	}
+	user.WriteMsg(&msg.S2C_RaceInfo{
+		Races: RaceInfo,
+	})
+}
+
 func handleGetMatchList(args []interface{}) {
 	// m := args[0].(*msg.C2S_GetMatchList)
 	a := args[1].(gate.Agent)
@@ -516,5 +541,5 @@ func handleTest(args []interface{}) {
 	ud := ReadUserDataByID(uid)
 	ud.Fee += 10
 	SaveUserData(ud)
-	hall.WriteFlowData(uid, 10, hall.FlowTypeAward, "AAAATest","xxxx!!!", []int{})
+	hall.WriteFlowData(uid, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
 }

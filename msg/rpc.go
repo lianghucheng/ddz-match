@@ -30,7 +30,7 @@ type RPC_SendMatchEndMail struct {
 type RPC_SendInterruptMail struct {
 	Userid    int
 	MatchName string
-	Coupon    int
+	Coupon    int64
 }
 
 type RPC_SendRaceInfo struct {
@@ -49,7 +49,7 @@ type RPC_TempPayOK struct {
 }
 
 type RPC_AddFee struct {
-	FeeType   string  `json:"fee_type"`
-	Userid 		int `json:"userid"`
-	Amount      float64`json:"amount"`
+	FeeType string  `json:"fee_type"`
+	Userid  int     `json:"userid"`
+	Amount  float64 `json:"amount"`
 }

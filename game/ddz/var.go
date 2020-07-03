@@ -41,7 +41,7 @@ type LandlordMatchRule struct {
 	Awards     []string // 数组下标对应名次，值对应该名次的奖励
 	AwardList  string   // 发送给客户端的奖励列表
 	GameType   int      //todo:奖金赛还是金币，待开发
-	Coupon     int
+	Coupon     int64
 }
 
 // 玩家状态

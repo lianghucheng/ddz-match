@@ -3,6 +3,7 @@ package match
 import (
 	"ddz/game"
 	"ddz/game/db"
+	"ddz/game/player"
 	"ddz/game/values"
 	"ddz/msg"
 	"encoding/json"
@@ -17,6 +18,7 @@ var (
 	MatchList        = map[string]*BaseMatch{}
 	UserIDMatch      = map[int]*BaseMatch{}
 	MatchManagerList = map[string]values.MatchManager{}
+	MatchConfigQueue = map[string]*values.NormalCofig{} // 后台修改赛事的队列，在比赛开始后下一场生效
 )
 
 func init() {
@@ -31,7 +33,7 @@ func initMatchConfig() error {
 	defer db.MongoDB.UnRef(s)
 	one := map[string]interface{}{}
 	log.Debug("init MatchConfig........")
-	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$eq": Signing}}).Iter()
+	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$lt": Delete}}).Iter()
 	for iter.Next(&one) {
 		if one["matchtype"] == nil || one["matchid"] == nil {
 			log.Error("unknow match:%v", one)
@@ -49,6 +51,9 @@ func initMatchConfig() error {
 			if err := json.Unmarshal(c, &sConfig); err != nil {
 				log.Error("get config error:%v", err)
 				return nil
+			}
+			if err := sConfig.CheckConfig(); err != nil {
+				continue
 			}
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
@@ -79,6 +84,10 @@ func GetMatchManagerInfo(opt int) interface{} {
 		for _, v := range matchManager {
 			var award float64
 			info := v.GetNormalConfig()
+			// 不在大厅展示
+			if !info.ShowHall || info.State != Signing {
+				continue
+			}
 			if len(info.Award) > 0 {
 				award = values.ParseAward(info.Award[0])
 			}
@@ -90,7 +99,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				ID:        info.MatchID,
 				Desc:      info.MatchName,
 				Award:     award,
-				EnterFee:  float64(info.EnterFee) / 10,
+				EnterFee:  float64(info.EnterFee),
 				ConDes:    info.MatchDesc,
 				JoinNum:   len(info.AllSignInPlayers),
 				StartTime: sTime,
@@ -102,6 +111,9 @@ func GetMatchManagerInfo(opt int) interface{} {
 		list := []msg.OneMatch{}
 		for _, m := range matchManager {
 			m := m.GetNormalConfig()
+			if m.State != Signing {
+				continue
+			}
 			sTime := m.StartTime
 			if m.StartType == 2 {
 				sTime = m.ReadyTime - time.Now().Unix()
@@ -131,5 +143,24 @@ func sortMatch(list []values.MatchManager) {
 				list[i], list[j] = list[j], list[i]
 			}
 		}
+	}
+}
+
+// BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
+func BroadcastMatchInfo() {
+	for uid, user := range player.UserIDUsers {
+		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+		if ma, ok := UserIDMatch[uid]; ok {
+			myMatchID := ma.NormalCofig.MatchID
+			for i, v := range RaceInfo {
+				if v.ID == myMatchID {
+					RaceInfo[i].IsSign = true
+					break
+				}
+			}
+		}
+		user.WriteMsg(&msg.S2C_RaceInfo{
+			Races: RaceInfo,
+		})
 	}
 }

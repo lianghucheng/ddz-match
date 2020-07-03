@@ -168,7 +168,7 @@ func MatchEndPushMail(userid int, matchName string, order int, award string) {
 	mailBox.pushMailBox()
 }
 
-func MatchInterruptPushMail(userid int, matchName string, coupon int) {
+func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)

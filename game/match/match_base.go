@@ -30,7 +30,7 @@ type BaseMatch struct {
 
 	// MatchID       string // 赛事id号
 	SonMatchID    string // 子赛事id
-	State         int    // 赛事状态
+	State         int    // 子赛事状态
 	MaxPlayer     int    // 最大参赛人数
 	SignInPlayers []int  // 比赛报名的所有玩家
 	AwardList     string // 赛事奖励列表
@@ -110,6 +110,7 @@ func (base *BaseMatch) SignOut(uid int) error {
 	delete(base.AllPlayers, uid)
 	// 清理赛事
 	if len(base.SignInPlayers) == 0 && base.IsClosing {
+		base.Manager.ClearLastMatch()
 		delete(MatchList, base.SonMatchID)
 	}
 	return nil
@@ -128,6 +129,7 @@ func (base *BaseMatch) Start() {
 	if base.myMatch != nil {
 		base.myMatch.Start()
 	}
+	base.Manager.CheckNewConfig()
 }
 
 func (base *BaseMatch) End() {
@@ -203,5 +205,15 @@ func (base *BaseMatch) SendRoundResult(uid int) {
 func (base *BaseMatch) SendFinalResult(uid int) {
 	if base.myMatch != nil {
 		base.myMatch.SendFinalResult(uid)
+	}
+}
+
+// CloseMatch 关闭当前赛事
+func (base *BaseMatch) CloseMatch() {
+	base.IsClosing = true
+	// log.Debug("check,%v", base.SignInPlayers)
+	// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
+	for _, uid := range base.SignInPlayers {
+		base.Manager.SignOut(uid, base.SonMatchID)
 	}
 }

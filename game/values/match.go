@@ -24,10 +24,14 @@ type MatchManager interface {
 	SignIn(uid int)
 	SignOut(uid int, matchID string)
 	GetNormalConfig() *NormalCofig
+	SetNormalConfig(config *NormalCofig)
 	SendMatchDetail(uid int)
 	End(matchID string)
 	RemoveSignPlayer(uid int)
 	CreateOneMatch()
+	Save()
+	CheckNewConfig()
+	ClearLastMatch()
 }
 
 // MatchPlayer 比赛玩家对象
@@ -42,7 +46,7 @@ type MatchPlayer struct {
 	OpTime     int64
 	SignSort   int
 	Result     []Result //牌局详细
-	Multiples  string   // 当局所有加倍详情
+	Multiples  string   // 当局所有加倍详z
 }
 
 // NormalCofig 需要返回给客户端的通用配置
@@ -52,6 +56,7 @@ type NormalCofig struct {
 	MatchType        string // 赛事类型
 	MatchDesc        string
 	EnterFee         int64
+	State            int
 	Award            []string
 	AwardDesc        string // 奖励描述
 	Recommend        string // 赛事推荐文字信息
@@ -63,6 +68,7 @@ type NormalCofig struct {
 	Sort             int    // 赛事排序
 	ShowHall         bool   // 首页展示
 	MatchIcon        string // 赛事图标
+	SonMatchID       string // 自赛事id
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等

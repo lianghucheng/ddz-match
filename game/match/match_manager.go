@@ -3,11 +3,14 @@ package match
 import (
 	"ddz/game"
 	"ddz/game/db"
+	"ddz/game/hall"
 	. "ddz/game/player"
 	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -24,9 +27,7 @@ func NewScoreManager(sc *ScoreConfig) {
 	if sc.StartType >= 2 {
 		sc.CreateOneMatch()
 	} else {
-		Broadcast(&msg.S2C_RaceInfo{
-			Races: GetMatchManagerInfo(1).([]msg.RaceInfo),
-		})
+		BroadcastMatchInfo()
 	}
 }
 
@@ -39,7 +40,6 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	}
 	// 当前没有空闲赛事，则创建一个赛事
 	if sc.LastMatch == nil || sc.LastMatch.State != Signing {
-		log.Debug("check")
 		sc.CreateOneMatch()
 	}
 
@@ -70,10 +70,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	if sc.UseMatch >= sc.TotalMatch {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
-		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-		Broadcast(&msg.S2C_RaceInfo{
-			Races: RaceInfo,
-		})
+		BroadcastMatchInfo()
 		sc.EndMatchManager()
 	}
 }
@@ -109,11 +106,16 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		Action: 2,
 		Count:  len(sc.AllSignInPlayers),
 	})
+	hall.MatchInterruptPushMail(user.BaseData.UserData.UserID, sc.MatchName, sc.EnterFee)
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId: sc.MatchID,
 		Count:   len(sc.AllSignInPlayers),
 	})
 
+	// 如果当前赛事玩家全部退出，那么检查一次是否有新赛事配置更新
+	if len(sc.AllSignInPlayers) == 0 {
+		sc.CheckNewConfig()
+	}
 }
 
 // GetNormalConfig 获取通用配置
@@ -122,6 +124,22 @@ func (sc *ScoreConfig) GetNormalConfig() *NormalCofig {
 	utils.StructCopy(c, sc)
 	// log.Debug("check sc:%+v", c)
 	return c
+}
+
+// SetNormalConfig 获取通用配置
+func (sc *ScoreConfig) SetNormalConfig(config *NormalCofig) {
+	utils.StructCopy(sc, config)
+}
+
+// CheckNewConfig 检查是否有新的配置需要更新
+func (sc *ScoreConfig) CheckNewConfig() {
+	if c, ok := MatchConfigQueue[sc.MatchID]; ok {
+		sc.SetNormalConfig(c)
+		sc.Save()
+		// 通知客户端
+		BroadcastMatchInfo()
+		delete(MatchConfigQueue, sc.MatchID)
+	}
 }
 
 // GetAwardItem 根据list，解析出具体的奖励物品
@@ -227,9 +245,10 @@ func (sc *ScoreConfig) CreateOneMatch() {
 	} else {
 		sonID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
 	}
+	sc.SonMatchID = sonID
 	nSconfig := &ScoreConfig{}
 	utils.StructCopy(nSconfig, sc)
-	nSconfig.SonMatchID = sonID
+	// nSconfig.SonMatchID = sonID
 	newMatch := NewScoreMatch(nSconfig)
 	newMatch.Manager = sc
 	sc.LastMatch = newMatch
@@ -238,9 +257,13 @@ func (sc *ScoreConfig) CreateOneMatch() {
 	if sc.StartType == 2 {
 		sc.ReadyTime = time.Now().Unix() + sc.StartTime
 	}
-	Broadcast(&msg.S2C_RaceInfo{
-		Races: GetMatchManagerInfo(1).([]msg.RaceInfo),
-	})
+	BroadcastMatchInfo()
+}
+
+// Save 保存赛事
+func (sc *ScoreConfig) Save() {
+	log.Debug("check config:%+v", sc)
+	db.UpdateMatchManager(sc.MatchID, sc)
 }
 
 // EndMatchManager 该类赛事结束
@@ -249,4 +272,50 @@ func (sc *ScoreConfig) EndMatchManager() {
 	game.GetSkeleton().Go(func() {
 		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Ending}})
 	}, nil)
+}
+
+// CheckConfig 检查后台传输的配置文件，查漏补缺
+func (sc *ScoreConfig) CheckConfig() error {
+	if sc.StartType == 0 || sc.Round == 0 || len(sc.AwardList) == 0 || len(sc.MatchID) == 0 || sc.LimitPlayer == 0 ||
+		len(sc.Recommend) == 0 || sc.TotalMatch == 0 || len(sc.MatchName) == 0 || len(sc.MatchType) == 0 ||
+		(sc.StartType == 3 && sc.StartTime < time.Now().Unix()) || (sc.StartType == 2 && sc.StartTime <= 0) {
+		log.Error("invalid config:%+v", sc)
+		return errors.New("config error")
+	}
+	if sc.MaxPlayer == 0 && sc.StartType == 1 {
+		sc.MaxPlayer = sc.LimitPlayer
+	}
+	if sc.TablePlayer == 0 {
+		sc.TablePlayer = 3
+	}
+	if len(sc.RoundNum) == 0 {
+		sc.RoundNum = fmt.Sprintf("%v局%v副", sc.Round, sc.Card)
+	}
+	if len(sc.AwardDesc) == 0 {
+		sc.GetAwardItem()
+		sc.AwardDesc = fmt.Sprintf("前%v名有奖励", len(sc.Award))
+	}
+	if sc.StartType == 1 {
+		sc.MaxPlayer = sc.LimitPlayer
+	}
+	if sc.Card == 0 {
+		sc.Card = 1
+	}
+	if len(sc.MatchDesc) == 0 {
+		if sc.StartType == 1 {
+			sc.MatchDesc = fmt.Sprintf("满%v人开赛", sc.LimitPlayer)
+		} else {
+			sc.MatchDesc = "到时间开赛"
+		}
+	}
+	if sc.BaseScore == 0 {
+		sc.BaseScore = 1
+	}
+	return nil
+}
+
+// ClearLastMatch 清理最近一场比赛
+func (sc *ScoreConfig) ClearLastMatch() {
+	sc.LastMatch = nil
+	sc.SonMatchID = ""
 }

@@ -26,13 +26,13 @@ import (
 // ScoreConfig 配置文件
 type ScoreConfig struct {
 	// base配置
-	MatchID       string   `bson:"matchid"`       // 赛事管理id号
+	MatchID       string   `bson:"matchid"`       // 赛事管理id号 '添加赛事时的必填字段'
 	SonMatchID    string   `bson:"sonmatchid"`    // 子赛事id
 	State         int      `bson:"state"`         // 赛事状态
 	MaxPlayer     int      `bson:"maxplayer"`     // 最大参赛玩家
 	SignInPlayers []int    `bson:"signinplayers"` // 比赛报名的所有玩家
 	AwardDesc     string   `bson:"awarddesc"`     // 奖励描述
-	AwardList     string   `bson:"awardlist"`     // 奖励列表
+	AwardList     string   `bson:"awardlist"`     // 奖励列表 '添加赛事时的必填字段'
 	CreateTime    int64    `bson:"createtime"`    // 比赛创建时间
 	MoneyAward    float64  `bson:"moneyaward"`    // 赛事金钱总奖励
 	CouponAward   float64  `bson:"couponaward"`   // 赛事点券总奖励
@@ -41,33 +41,34 @@ type ScoreConfig struct {
 	// score配置
 	BaseScore   int64           `bson:"basescore"`   // 基础分数
 	StartTime   int64           `bson:"starttime"`   // 比赛开始时间
-	LimitPlayer int             `bson:"limitplayer"` // 比赛开始的最少人数
+	LimitPlayer int             `bson:"limitplayer"` // 比赛开始的最少人数 '添加赛事时的必填字段'
 	TablePlayer int             `bson:"tableplayer"` // 一桌的游戏人数
-	Round       int             `bson:"round"`       // 几局制
+	Round       int             `bson:"round"`       // 几局制 '添加赛事时的必填字段'
+	Card        int             `bson:"card"`        // 几副制 '添加赛事时的必填字段'
 	RoundNum    string          `bson:"roundnum"`    // 赛制制(2局1副)
-	StartType   int             `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示倒计时多久开赛判断,3表示比赛到点开赛)
+	StartType   int             `bson:"starttype"`   // 开赛条件(1表示满足三人即可开赛,2表示倒计时多久开赛判断,3表示比赛到点开赛) '添加赛事时的必填字段'
 	Eliminate   []int           `bson:"eliminate"`   // 每轮淘汰人数
 	Rank        []Rank          `bson:"rank"`        // 整个比赛的总排行
 	Record      [][]MatchRecord `bson:"matchrecord"` // 整个比赛的总记录
 
 	// 赛事管理配置
-	MatchName        string     `bson:"matchname"`  // 赛事名称
-	MatchDesc        string     `bson:"matchdesc"`  // 赛事描述
-	MatchType        string     `bson:"matchtype"`  // 赛事类型
-	MatchRank        []int      `bson:"matchrank"`  // 比賽排序
-	EnterFee         int64      `bson:"enterfee"`   // 报名费
-	Recommend        string     `bson:"recommend"`  // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息)
-	TotalMatch       int        `bson:"totalmatch"` // 后台配置的该种比赛可创建的比赛次数
-	UseMatch         int        `bson:"usematch"`   // 已使用次数
-	OfficalIDs       []string   `bson:"officalIDs"` // 后台配置的可用比赛id号
-	ShelfTime        int64      `bson:"shelftime"`  // 上架时间
-	Sort             int        `bson:"sort"`       // 赛事排序
-	ShowHall         bool       `bson:"showhall"`   // 是否首页展示
-	MatchIcon        string     `bson:"matchicon"`  // 赛事图标
-	AllSignInPlayers []int      `bson:"-"`          // 已报名玩家该种赛事的所有玩家
-	CurrentIDIndex   int        `bson:"-"`          // 当前赛事取id的序号
-	LastMatch        *BaseMatch `bson:"-"`          // 最新分配的一个赛事
-	ReadyTime        int64      `bson:"-"`          // 比赛开始时间
+	MatchName  string   `bson:"matchname"`  // 赛事名称 '添加赛事时的必填字段'
+	MatchDesc  string   `bson:"matchdesc"`  // 赛事描述
+	MatchType  string   `bson:"matchtype"`  // 赛事类型 '添加赛事时的必填字段'
+	EnterFee   int64    `bson:"enterfee"`   // 报名费 '添加赛事时的必填字段'
+	Recommend  string   `bson:"recommend"`  // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息) '添加赛事时的必填字段'
+	TotalMatch int      `bson:"totalmatch"` // 后台配置的该种比赛可创建的比赛次数 '添加赛事时的必填字段'
+	UseMatch   int      `bson:"usematch"`   // 已使用次数
+	OfficalIDs []string `bson:"officalIDs"` // 后台配置的可用比赛id号
+	ShelfTime  int64    `bson:"shelftime"`  // 上架时间
+	Sort       int      `bson:"sort"`       // 赛事排序 '添加赛事时的必填字段'
+	ShowHall   bool     `bson:"showhall"`   // 是否首页展示
+	MatchIcon  string   `bson:"matchicon"`  // 赛事图标
+
+	AllSignInPlayers []int      `bson:"-"` // 已报名玩家该种赛事的所有玩家
+	CurrentIDIndex   int        `bson:"-"` // 当前赛事取id的序号
+	LastMatch        *BaseMatch `bson:"-"` // 最新分配的一个赛事
+	ReadyTime        int64      `bson:"-"` // 比赛开始时间
 }
 
 type sConfig struct {
@@ -114,7 +115,7 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	base := &BaseMatch{}
 	base.SonMatchID = c.SonMatchID
 	base.MaxPlayer = c.MaxPlayer
-	base.State = c.State
+	base.State = Signing
 	base.AwardList = c.AwardList
 	base.Award = c.Award
 	base.Round = c.Round
@@ -182,12 +183,7 @@ func (sc *scoreMatch) CheckStart() {
 	} else if sc.myConfig.StartType == 2 {
 		//赛事开赛人数未达到指定的最小人数(赛事作废,重新开赛)
 		if len(base.SignInPlayers) < sc.myConfig.LimitPlayer {
-			base.IsClosing = true
-			// log.Debug("check,%v", base.SignInPlayers)
-			// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
-			for _, uid := range base.SignInPlayers {
-				base.Manager.SignOut(uid, base.SonMatchID)
-			}
+			base.CloseMatch()
 		} else {
 			base.Start()
 		}
@@ -289,7 +285,7 @@ func (sc *scoreMatch) SplitTable() {
 			GameType:   hall.RankGameTypeAward,
 			Awards:     base.Award,
 			AwardList:  base.AwardList,
-			Coupon:     int(base.NormalCofig.EnterFee),
+			Coupon:     base.NormalCofig.EnterFee,
 		}
 		for i := 0; i < num; i++ {
 			room := InitRoom()
@@ -638,10 +634,10 @@ func rankWay(p1, p2 *matchPlayer) bool {
 	if p1.wins < p2.wins {
 		return false
 	}
-	if p1.opTime < p2.opTime {
+	if p1.opTime/100 < p2.opTime/100 { // 只比较到秒的小数点后一位
 		return true
 	}
-	if p2.opTime > p2.opTime {
+	if p1.opTime/100 > p2.opTime/100 { // 只比较到秒的小数点后一位
 		return false
 	}
 	if p1.signSort < p2.signSort {
