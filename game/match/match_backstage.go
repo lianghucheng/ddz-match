@@ -2,7 +2,6 @@ package match
 
 import (
 	"ddz/game"
-	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"encoding/json"
@@ -37,7 +36,7 @@ func addMatch(args []interface{}) {
 		data.WG.Done()
 	}()
 	switch data.MatchType {
-	case Score:
+	case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
 		sConfig := &ScoreConfig{}
 		utils.StructCopy(sConfig, data)
 		if err := sConfig.CheckConfig(); err != nil {
@@ -45,8 +44,17 @@ func addMatch(args []interface{}) {
 			desc = "创建赛事参数有误！"
 			return
 		}
+		if _, ok := MatchManagerList[sConfig.MatchID]; ok {
+			code = 1
+			desc = "赛事ID重复！"
+			return
+		}
 		// 将赛事保存进数据库
-		sConfig.Save()
+		if err := sConfig.Save(); err != nil {
+			code = 1
+			desc = "创建赛事失败！"
+			return
+		}
 		// 上架时间
 		if sConfig.ShelfTime > time.Now().Unix() {
 			game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
@@ -88,7 +96,6 @@ func showHall(args []interface{}) {
 		return
 	}
 	c := m.GetNormalConfig()
-	log.Debug("check showhall:%v,%v", c.ShowHall, data.ShowHall)
 	if c.ShowHall != data.ShowHall {
 		c.ShowHall = data.ShowHall
 		m.SetNormalConfig(c)
@@ -99,7 +106,6 @@ func showHall(args []interface{}) {
 }
 
 func editMatch(args []interface{}) {
-	log.Debug("editMatch:%v", args)
 	if len(args) != 1 {
 		log.Error("error req:%v", args)
 		return
@@ -109,6 +115,7 @@ func editMatch(args []interface{}) {
 		log.Error("error req:%v", args)
 		return
 	}
+	log.Debug("editMatch:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {
@@ -116,18 +123,30 @@ func editMatch(args []interface{}) {
 		data.Write.Write(resp)
 		data.WG.Done()
 	}()
-	if _, ok := MatchManagerList[data.MatchID]; !ok {
+	m, ok := MatchManagerList[data.MatchID]
+	if !ok {
 		code = 1
 		desc = "操作的赛事不存在！"
 		return
 	}
-	c := &values.NormalCofig{}
+	c := m.GetNormalConfig()
 	utils.StructCopy(c, data)
-	MatchConfigQueue[data.MatchID] = c
-	// m.SetNormalConfig(c)
-	// m.Save()
-	// // 通知客户端
-	// BroadcastMatchInfo()
+
+	if c.State > Cancel {
+		code = 1
+		desc = "当前赛事不可修改!"
+		return
+	}
+
+	// 当前赛事没人，且处于正常状态则直接修改
+	if len(c.AllSignInPlayers) == 0 {
+		m.SetNormalConfig(c)
+		m.Save()
+		// 通知客户端
+		BroadcastMatchInfo()
+	} else {
+		MatchConfigQueue[data.MatchID] = c
+	}
 }
 
 func optMatch(args []interface{}) {

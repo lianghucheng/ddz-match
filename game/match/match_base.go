@@ -12,7 +12,10 @@ import (
 
 // 赛事种类
 const (
-	Score = "海选赛"
+	ScoreMatch  = "海选赛"
+	MoneyMatch  = "奖金赛"
+	DoubleMatch = "复式赛"
+	QuickMatch  = "快速赛"
 )
 
 // 赛事状态

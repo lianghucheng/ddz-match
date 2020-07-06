@@ -2,6 +2,7 @@ package db
 
 // 定义获取物品的方式
 const (
+	InitPlayer   = "init"         // 初始化用户
 	Charge       = "charge"       // 充值
 	DailySign    = "sign"         // 签到奖励
 	MatchSignIn  = "matchSignIn"  // 赛事报名

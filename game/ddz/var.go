@@ -466,11 +466,11 @@ func FlushRank(gametype int, uid int, rankType string, award string, matchType s
 	case cfghall.RankTypeFailNum:
 		hall.FlushRank(gametype, rankType, uid, 0)
 	case cfghall.RankTypeAward:
-		log.Debug("【刷新奖金】%v %v, %v, %v, %v", award, len(award), values.GetAwardType(award), values.Money, values.ParseAward(award))
-		if len(award) == 0 || values.GetAwardType(award) != values.Money {
+		log.Debug("【刷新奖金】%v %v, %v, %v", award, len(award), values.GetMoneyAward(award), values.Money)
+		if len(award) == 0 || values.GetMoneyAward(award) == 0 {
 			return
 		}
-		hall.FlushRank(gametype, rankType, uid, values.ParseAward(award))
+		hall.FlushRank(gametype, rankType, uid, values.GetMoneyAward(award))
 	}
 }
 

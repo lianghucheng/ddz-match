@@ -29,7 +29,7 @@ type MatchManager interface {
 	End(matchID string)
 	RemoveSignPlayer(uid int)
 	CreateOneMatch()
-	Save()
+	Save() error
 	CheckNewConfig()
 	ClearLastMatch()
 }
@@ -69,6 +69,9 @@ type NormalCofig struct {
 	ShowHall         bool   // 首页展示
 	MatchIcon        string // 赛事图标
 	SonMatchID       string // 自赛事id
+	TotalMatch       int    // 总赛事场次
+	Eliminate        []int  // 淘汰人数
+	AwardList        string // 奖励
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
@@ -108,4 +111,16 @@ func ParseAward(award string) float64 {
 	}
 	b, _ := strconv.ParseFloat(string(num), 64)
 	return b
+}
+
+// GetMoneyAward 获取奖励字段中的奖金之和
+func GetMoneyAward(award string) float64 {
+	var amount float64
+	s := strings.Split(award, ",")
+	for _, one := range s {
+		if GetAwardType(one) == Money {
+			amount += ParseAward(one)
+		}
+	}
+	return amount
 }

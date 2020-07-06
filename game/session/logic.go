@@ -11,7 +11,6 @@ import (
 	. "ddz/game/room"
 	"ddz/msg"
 	"ddz/utils"
-	"strconv"
 	"strings"
 	"time"
 
@@ -85,11 +84,11 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		return
 	}
 
-	firstLogin = userData.FirstLogin
-	if !userData.FirstLogin {
-		userData.FirstLogin = !userData.FirstLogin
-		go func() { SaveUserData(userData) }()
-	}
+	// firstLogin = userData.FirstLogin
+	// if !userData.FirstLogin {
+	// 	userData.FirstLogin = !userData.FirstLogin
+	// 	go func() { SaveUserData(userData) }()
+	// }
 
 	if err != nil { //&& err != mgo.ErrNotFound {
 		userData = nil
@@ -103,6 +102,17 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
+
+	// ok
+	uid := user.BaseData.UserData.UserID
+	firstLogin = userData.FirstLogin
+	if !userData.FirstLogin {
+		userData.FirstLogin = !userData.FirstLogin
+		skeleton.Go(func() {
+			UpdateUserData(uid, bson.M{"firstlogin": true})
+		}, nil)
+	}
+
 	anotherLogin := false
 	log.Debug("player %v login", userData.UserID)
 	if oldUser, ok := UserIDUsers[userData.UserID]; ok {
@@ -143,13 +153,13 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	user.BaseData.UserData.ExpireAt = time.Now().Add(2 * time.Hour).Unix()
 
 	user.BaseData.UserData.Online = true
-	if firstLogin {
-		user.BaseData.UserData.Nickname = "用户" + strconv.Itoa(user.BaseData.UserData.AccountID)
-		user.BaseData.UserData.Coupon += 500
-		SaveUserData(user.BaseData.UserData)
-	} else {
-		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
-	}
+	// if firstLogin {
+	// 	user.BaseData.UserData.Nickname = "用户" + strconv.Itoa(user.BaseData.UserData.AccountID)
+	// 	user.BaseData.UserData.Coupon += 500
+	// 	SaveUserData(user.BaseData.UserData)
+	// } else {
+	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
+	// }
 	autoHeartbeat(user)
 	bankCard := new(hall.BankCard)
 	bankCard.Userid = user.UID()

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -161,12 +162,19 @@ func (sc *scoreMatch) SignIn(uid int) error {
 func (sc *scoreMatch) SignOut(uid int) error {
 	base := sc.base.(*BaseMatch)
 	c := base.NormalCofig
-	user, ok := UserIDUsers[uid]
+	user, ok := base.AllPlayers[uid]
+	// 玩家不在线
 	if !ok {
 		log.Error("unknow user:%v", uid)
 		return errors.New("unknown user")
 	}
+	_, ok = UserIDUsers[uid]
 	user.BaseData.UserData.Coupon += c.EnterFee
+	// 玩家不在线
+	if !ok {
+		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"Coupon": user.BaseData.UserData.Coupon}})
+		return nil
+	}
 	hall.UpdateUserCoupon(user, c.EnterFee, db.MatchSignOut)
 	return nil
 }
@@ -238,7 +246,7 @@ func (sc *scoreMatch) End() {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			hall.WriteFlowData(p.uid, values.ParseAward(base.Award[p.rank-1]), hall.FlowTypeAward, cfg.MatchType, cfg.MatchID, []int{})
+			hall.WriteFlowData(p.uid, values.GetMoneyAward(base.Award[p.rank-1]), hall.FlowTypeAward, cfg.MatchType, cfg.MatchID, []int{})
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
@@ -564,16 +572,22 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	var award string
 	if player.Rank-1 < len(base.Award) {
 		award = base.Award[player.Rank-1]
-		// 现金奖励
-		if values.GetAwardType(base.Award[player.Rank-1]) == values.Money {
-			awardAmount := values.ParseAward(base.Award[player.Rank-1])
-			user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
-			UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
-			user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-				AfterTaxAward: utils.Decimal(user.BaseData.UserData.Fee),
-			})
-		} else if values.GetAwardType(base.Award[player.Rank-1]) == values.Coupon { // 点券奖励 todo
-			hall.UpdateUserCoupon(user, int64(values.ParseAward(base.Award[player.Rank-1])), db.MatchAward)
+		one := strings.Split(award, ",")
+		for _, oneAward := range one {
+			// 现金奖励
+			if values.GetAwardType(oneAward) == values.Money {
+				awardAmount := values.ParseAward(oneAward)
+				user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
+				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
+				user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
+					AfterTaxAward: utils.Decimal(user.BaseData.UserData.Fee),
+				})
+			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
+				awardAmount := values.ParseAward(oneAward)
+				user.BaseData.UserData.Coupon += int64(awardAmount)
+				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Coupon}})
+				hall.UpdateUserCoupon(user, int64(values.ParseAward(oneAward)), db.MatchAward)
+			}
 		}
 	}
 	// 写入战绩
@@ -771,9 +785,11 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 	user := base.AllPlayers[uid]
 	player := user.BaseData.MatchPlayer
 
-	var award string
+	var award []string
 	if player.Rank-1 < len(base.Award) {
-		award = base.Award[player.Rank-1]
+		for _, one := range strings.Split(base.Award[player.Rank-1], ",") {
+			award = append(award, one)
+		}
 	}
 	user.WriteMsg(&msg.S2C_MineRoundRank{
 		RankOrder: player.Rank,

@@ -28,7 +28,7 @@ const (
 	ACCOUNTREGISTERD     = 1008
 	ACCOUNT_INVALID      = 1009
 	PASSWORD_INVALID     = 1010
-	FORMAT_FAIL 		 = 1011 //数据格式错误
+	FORMAT_FAIL          = 1011 //数据格式错误
 
 )
 

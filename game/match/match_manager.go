@@ -5,14 +5,13 @@ import (
 	"ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/player"
-	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -97,6 +96,7 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		if err := match.SignOut(uid); err != nil {
 			return
 		}
+		hall.MatchInterruptPushMail(user.BaseData.UserData.UserID, sc.MatchName, sc.EnterFee)
 	}
 	// ok
 	sc.RemoveSignPlayer(uid)
@@ -106,7 +106,6 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		Action: 2,
 		Count:  len(sc.AllSignInPlayers),
 	})
-	hall.MatchInterruptPushMail(user.BaseData.UserData.UserID, sc.MatchName, sc.EnterFee)
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId: sc.MatchID,
 		Count:   len(sc.AllSignInPlayers),
@@ -129,6 +128,11 @@ func (sc *ScoreConfig) GetNormalConfig() *NormalCofig {
 // SetNormalConfig 获取通用配置
 func (sc *ScoreConfig) SetNormalConfig(config *NormalCofig) {
 	utils.StructCopy(sc, config)
+	sc.CheckConfig()
+	if len(config.AwardList) > 0 {
+		// 重新解析award
+		sc.GetAwardItem()
+	}
 }
 
 // CheckNewConfig 检查是否有新的配置需要更新
@@ -145,29 +149,57 @@ func (sc *ScoreConfig) CheckNewConfig() {
 // GetAwardItem 根据list，解析出具体的奖励物品
 func (sc *ScoreConfig) GetAwardItem() {
 	list := sc.AwardList
-	items := strings.Split(list, ",")
-	awards := []string{}
+	// items := strings.Split(list, ",")
 	// log.Debug("check items:%v", items)
-	for _, s := range items {
-		item := strings.Split(s, ":")
-		if len(item) < 2 {
+	// for _, s := range items {
+	// 	item := strings.Split(s, ":")
+	// 	if len(item) < 2 {
+	// 		continue
+	// 	}
+	// 	one := strings.Split(item[1][:len(item[1])-1], `"`)
+	// 	if len(one) < 2 {
+	// 		continue
+	// 	}
+	// 	awards = append(awards, one[1])
+	// 	count := ParseAward(one[1])
+	// 	if GetAwardType(one[1]) == values.Money {
+	// 		sc.MoneyAward += count
+	// 	} else if GetAwardType(one[1]) == values.Coupon {z
+	// 		sc.CouponAward += count
+	// 	}
+	// 	// awards = append(awards, item[1][:len(item[1])-1])
+	// }
+	tmp := map[string]interface{}{}
+	err := json.Unmarshal([]byte(list), &tmp)
+	if err != nil {
+		log.Error("unmarshal fail %v", err)
+		return
+	}
+	awards := make([]string, len(tmp))
+	for i, v := range tmp {
+		num := []byte{}
+		for _, s := range []byte(i) {
+			if s <= 57 && s >= 46 {
+				num = append(num, s)
+			}
+		}
+		rank, err := strconv.Atoi(string(num))
+		if err != nil {
 			continue
 		}
-		one := strings.Split(item[1][:len(item[1])-1], `"`)
-		if len(one) < 2 {
+		// log.Debug("check:%v", rank)
+		award, ok := v.(string)
+		if !ok {
 			continue
 		}
-		awards = append(awards, one[1])
-		count := ParseAward(one[1])
-		if GetAwardType(one[1]) == values.Money {
-			sc.MoneyAward += count
-		} else if GetAwardType(one[1]) == values.Coupon {
-			sc.CouponAward += count
+		if rank-1 < 0 || rank > len(awards) {
+			continue
 		}
-		// awards = append(awards, item[1][:len(item[1])-1])
+		// log.Debug("award:%v", award)
+		awards[rank-1] = award
 	}
 	sc.Award = awards
-	// log.Debug("check award:%v", sc.Award)
+	log.Debug("match award:%v", sc.Award)
 }
 
 // SendMatchDetail 发送赛事详情
@@ -261,9 +293,10 @@ func (sc *ScoreConfig) CreateOneMatch() {
 }
 
 // Save 保存赛事
-func (sc *ScoreConfig) Save() {
+func (sc *ScoreConfig) Save() error {
 	log.Debug("check config:%+v", sc)
-	db.UpdateMatchManager(sc.MatchID, sc)
+	err := db.UpdateMatchManager(sc.MatchID, sc)
+	return err
 }
 
 // EndMatchManager 该类赛事结束
@@ -301,13 +334,13 @@ func (sc *ScoreConfig) CheckConfig() error {
 	if sc.Card == 0 {
 		sc.Card = 1
 	}
-	if len(sc.MatchDesc) == 0 {
-		if sc.StartType == 1 {
-			sc.MatchDesc = fmt.Sprintf("满%v人开赛", sc.LimitPlayer)
-		} else {
-			sc.MatchDesc = "到时间开赛"
-		}
+	// if len(sc.MatchDesc) == 0 {
+	if sc.StartType == 1 {
+		sc.MatchDesc = fmt.Sprintf("满%v人开赛", sc.LimitPlayer)
+	} else {
+		sc.MatchDesc = fmt.Sprintf("%v人", sc.LimitPlayer)
 	}
+	// }
 	if sc.BaseScore == 0 {
 		sc.BaseScore = 1
 	}

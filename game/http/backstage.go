@@ -147,6 +147,7 @@ func editMatch(w http.ResponseWriter, req *http.Request) {
 		w.Write(resp)
 		return
 	}
+	log.Debug("check:%+v", edit)
 	// 等待主协程处理完成后返回
 	wg := sync.WaitGroup{}
 	wg.Add(1)

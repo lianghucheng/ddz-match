@@ -45,7 +45,7 @@ func initMatchConfig() error {
 			continue
 		}
 		switch mType {
-		case Score:
+		case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
 			sConfig := &ScoreConfig{}
 			c, _ := json.Marshal(one)
 			if err := json.Unmarshal(c, &sConfig); err != nil {
@@ -89,7 +89,9 @@ func GetMatchManagerInfo(opt int) interface{} {
 				continue
 			}
 			if len(info.Award) > 0 {
-				award = values.ParseAward(info.Award[0])
+				for _, v := range info.Award {
+					award += values.GetMoneyAward(v)
+				}
 			}
 			sTime := info.StartTime
 			if info.StartType == 2 {

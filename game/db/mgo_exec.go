@@ -48,11 +48,13 @@ func InsertMatchRecord(record values.DDZGameRecord) {
 }
 
 // UpdateMatchManager 修改比赛赛事配置数据
-func UpdateMatchManager(matchID string, update interface{}) {
+func UpdateMatchManager(matchID string, update interface{}) error {
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
 	_, err := db.DB(DB).C("matchmanager").Upsert(bson.M{"matchid": matchID}, update)
 	if err != nil {
 		log.Error("update match manager %v update: %v error: %v", matchID, update, err)
+		return err
 	}
+	return nil
 }

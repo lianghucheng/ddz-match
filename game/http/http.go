@@ -137,7 +137,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	m := new(msg.C2S_Register)
 	err := json.Unmarshal([]byte(data), m)
 	if err != nil {
-		log.Debug("数据格式错误, %v", string(data))
+		log.Debug("数据格式错误, %v,err:%v", string(data), err)
 		errMsg := NewError(FORMAT_FAIL, "数据格式错误")
 		w.Write(strbyte(errMsg))
 		return
@@ -146,7 +146,8 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	account, code, password := m.Account, m.Code, m.Password
 	_ = code
 	if status := CheckSms(account, code); status != 0 {
-		w.Write(strbyte(NewError(int64(status), "数据格式错误")))
+		log.Debug("status:%v", status)
+		w.Write(strbyte(NewError(int64(status), "验证码错误")))
 		return
 	}
 	userData := new(player.UserData)
