@@ -136,7 +136,14 @@ type C2S_GetMatchList struct {
 
 // S2C_GetMatchList 返回赛事列表
 type S2C_GetMatchList struct {
+	All  []OneMatchType
 	List []OneMatch
+}
+
+type OneMatchType struct {
+	MatchTypeID   int    `bson:"MatchTypeID"`
+	MatchType     string `bson:"MatchType"`
+	MatchTypeIcon string `bson:"MatchTypeIcon"`
 }
 
 type OneMatch struct {
@@ -149,4 +156,6 @@ type OneMatch struct {
 	StartTime int64
 	StartType int
 	IsSign    bool
+	MatchType string
+	MatchIcon string
 }

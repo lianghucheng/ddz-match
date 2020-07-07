@@ -47,13 +47,24 @@ type S2C_MineRoundRank struct {
 
 // 获取战绩记录
 type C2S_GetGameRecord struct {
-	PageNumber int // 页码数
-	PageSize   int // 一页显示的条数
+	PageNumber int    // 页码数
+	PageSize   int    // 一页显示的条数
+	MatchType  string // 赛事类型
+}
+
+// 获取总的战绩数据
+type C2S_GetGameRecordAll struct {
+}
+
+// 返回总的战绩数据
+type S2C_GetGameRecordAll struct {
+	All []OneMatchType
 }
 
 // 战绩记录
 type S2C_GetGameRecord struct {
 	Record     []GameRecord //记录数据
+	MatchType  string       // 赛事类型
 	Total      int          //记录数量
 	PageNumber int          //当前页
 	PageSize   int          //一页显示的条数

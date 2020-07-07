@@ -5,6 +5,7 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
+	"ddz/game/values"
 	"ddz/msg"
 	"reflect"
 
@@ -26,6 +27,7 @@ func init() {
 
 	handler(&msg.C2S_LandlordMatchRound{}, handleGetRank)
 
+	handler(&msg.C2S_GetGameRecordAll{}, handleGetGameRecordAll)
 	handler(&msg.C2S_GetGameRecord{}, handleGetGameRecord)
 	handler(&msg.C2S_GetGameRankRecord{}, handleGetGameRankRecord)
 	handler(&msg.C2S_GetGameResultRecord{}, handleGetGameResultRecord)
@@ -78,6 +80,19 @@ func handleCoupon(args []interface{}) {
 	hall.AddCoupon(user, m.Count)
 }
 
+func handleGetGameRecordAll(args []interface{}) {
+	// m := args[0].(*msg.C2S_GetGameRecord)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	user.SendMatchRecordAll()
+}
+
 func handleGetGameRecord(args []interface{}) {
 	m := args[0].(*msg.C2S_GetGameRecord)
 	a := args[1].(gate.Agent)
@@ -94,7 +109,7 @@ func handleGetGameRecord(args []interface{}) {
 	if m.PageSize < 1 {
 		m.PageSize = 10
 	}
-	user.SendMatchRecord(m.PageNumber, m.PageSize)
+	user.SendMatchRecord(m.PageNumber, m.PageSize, m.MatchType)
 }
 
 func handleGetGameRankRecord(args []interface{}) {
@@ -132,7 +147,7 @@ func handleGetGameResultRecord(args []interface{}) {
 	if m.PageSize < 1 {
 		m.PageSize = 10
 	}
-	user.SendMatchResultRecord(m.MatchID, m.PageNumber, m.PageSize, m.ResultNumber, m.ResultSize)
+	user.SendMatchResultRecord(m.MatchID, m.PageNumber, m.PageSize)
 }
 
 func handleNickName(args []interface{}) {
@@ -504,15 +519,28 @@ func handleGetMatchList(args []interface{}) {
 		myMatchID = ma.NormalCofig.MatchID
 	}
 	list := GetMatchManagerInfo(2).([]msg.OneMatch)
+	sendConfig := []msg.OneMatchType{}
 	for i, v := range list {
+		if c, ok := values.MatchTypeConfig[v.MatchType]; ok {
+			tag := false
+			for _, one := range sendConfig {
+				if v.MatchType == one.MatchType {
+					tag = true
+					break
+				}
+			}
+			if !tag {
+				sendConfig = append(sendConfig, c)
+			}
+		}
 		// 已报名的比赛排序在最前面
 		if v.MatchID == myMatchID {
 			list[i].IsSign = true
 			list[i], list[0] = list[0], list[i]
-			break
 		}
 	}
 	user.WriteMsg(&msg.S2C_GetMatchList{
+		All:  sendConfig,
 		List: list,
 	})
 }

@@ -25,6 +25,9 @@ func init() {
 	if err := initMatchConfig(); err != nil {
 		log.Fatal("init match fail,err:%v", err)
 	}
+	if err := initMatchTypeConfig(); err != nil {
+		log.Fatal("init match config fail,err:%v", err)
+	}
 }
 
 // match
@@ -68,6 +71,25 @@ func initMatchConfig() error {
 		}
 	}
 	log.Debug("init match finish:match manager:%+v", MatchManagerList)
+	return nil
+}
+
+// initMatchTypeConfig 初始化赛事类型配置
+func initMatchTypeConfig() error {
+	s := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(s)
+	log.Debug("init MatchType Config........")
+	one := msg.OneMatchType{}
+	iter := s.DB(db.DB).C("matchtypeconfig").Pipe([]bson.M{
+		{"$project": bson.M{
+			"_id": 0,
+		}},
+	}).Iter()
+	for iter.Next(&one) {
+		values.MatchTypeConfig[one.MatchType] = one
+	}
+	log.Debug("finish init matchtype config %v", values.MatchTypeConfig)
+
 	return nil
 }
 
@@ -130,6 +152,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				StartTime: sTime,
 				StartType: m.StartType,
 				IsSign:    false,
+				MatchType: m.MatchType,
 			})
 		}
 		return list

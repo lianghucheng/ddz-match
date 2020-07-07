@@ -1,8 +1,14 @@
 package values
 
 import (
+	"ddz/msg"
 	"strconv"
 	"strings"
+)
+
+// 赛事配置
+var (
+	MatchTypeConfig = map[string]msg.OneMatchType{} // 赛事类型配置
 )
 
 // Match 比赛接口

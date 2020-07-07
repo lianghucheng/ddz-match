@@ -78,6 +78,8 @@ func init() {
 	Processor.Register(&S2C_GetGameResultRecord{})
 	Processor.Register(&S2C_PayOK{})
 	Processor.Register(&S2C_LandlordRoundFinalResult{})
+	Processor.Register(&C2S_GetGameRecordAll{})
+	Processor.Register(&S2C_GetGameRecordAll{})
 	Processor.Register(&Test_WriteFlowData{})
 }
 
@@ -247,7 +249,7 @@ const (
 
 type WithDrawData struct {
 	FlowType  int
-	MatchID string
+	MatchID   string
 	Amount    float64
 	Status    string
 	CreatedAt int64
@@ -285,5 +287,5 @@ type S2C_PayOK struct {
 }
 
 type Test_WriteFlowData struct {
-	UID       int
+	UID int
 }

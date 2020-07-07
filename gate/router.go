@@ -64,6 +64,7 @@ func init() {
 	msg.Processor.SetRouter(&msg.Test_WriteFlowData{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_AddFee{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_RaceInfo{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_GetGameRecordAll{}, game.ChanRPC)
 
 	// back
 	msg.Processor.SetRouter(&msg.RPC_AddManagerReq{}, game.ChanRPC)
