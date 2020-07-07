@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+	//conf2.DBCfgInit()
 	lconf.LogLevel = conf.GetCfgLeafSrv().LogLevel
 	lconf.LogPath = conf.GetCfgLeafSrv().LogPath
 	lconf.LogFlag = log.Lshortfile | log.LstdFlags

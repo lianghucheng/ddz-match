@@ -94,7 +94,7 @@ func (data *UserData) InitValue(channel int) error {
 	data.Channel = channel
 	data.Nickname = "用户" + strconv.Itoa(data.AccountID)
 	// 初始化点券
-	data.Coupon = 500
+	data.Coupon = 5
 	db.InsertItemLog(userID, data.Coupon, values.Coupon, db.InitPlayer)
 	return nil
 }

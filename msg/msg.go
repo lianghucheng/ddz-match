@@ -267,6 +267,8 @@ const (
 	ErrWithDrawSuccess = 0
 	ErrWithDrawFail    = 1
 	ErrWithDrawLack    = 2
+	ErrWithDrawNoAuth  = 3
+	ErrWithDrawNoBank  = 4
 )
 
 type S2C_WithDraw struct {

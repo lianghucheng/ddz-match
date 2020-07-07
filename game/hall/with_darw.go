@@ -33,6 +33,22 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
+	if user.RealName() == "" {
+		user.WriteMsg(&msg.S2C_WithDraw{
+			Error: msg.ErrWithDrawNoAuth,
+			ErrMsg:"未实名认证",
+		})
+		return
+	}
+
+	if user.BankCardNo() == "" {
+		user.WriteMsg(&msg.S2C_WithDraw{
+			Error: msg.ErrWithDrawNoBank,
+			ErrMsg:"未绑定银行卡",
+		})
+		return
+	}
+
 	if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
 		log.Error(err.Error())
 		user.WriteMsg(&msg.S2C_WithDraw{
