@@ -52,7 +52,7 @@ func init() {
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
-	handler(&msg.Test_WriteFlowData{}, handleTest)
+	handler(&msg.Test_WriteFlowData{}, handleAidAwardData)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -570,4 +570,15 @@ func handleTest(args []interface{}) {
 	ud.Fee += 10
 	SaveUserData(ud)
 	hall.WriteFlowData(uid, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
+}
+
+func handleAidAwardData(args []interface{}) {
+	log.Debug("【写入成功】")
+	m := args[0].(*msg.Test_WriteFlowData)
+
+	uid := m.UID
+	ud := ReadUserDataByAid(uid)
+	ud.Fee += 10
+	SaveUserData(ud)
+	hall.WriteFlowData(ud.UserID, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
 }
