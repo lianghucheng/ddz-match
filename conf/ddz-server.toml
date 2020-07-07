@@ -46,15 +46,15 @@
 [[CfgDailySign]]
     Chips=2
 [[CfgDailySign]]
+    Chips=3
+[[CfgDailySign]]
     Chips=5
 [[CfgDailySign]]
-    Chips=8
+    Chips=2
 [[CfgDailySign]]
-    Chips=12
+    Chips=2
 [[CfgDailySign]]
-    Chips=18
-[[CfgDailySign]]
-    Chips=25
+    Chips=5
 
 
 # ----------------------------redis地址端口-------------------------------

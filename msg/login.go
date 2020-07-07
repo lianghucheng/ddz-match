@@ -102,6 +102,12 @@ type S2C_Close struct {
 
 }
 
+type Customer struct {
+	WeChat 	string //微信
+	Email 	string //邮箱
+	PhoneNum 	string //电话号码
+}
+
 type S2C_Login struct {
 	AccountID         int
 	Nickname          string
@@ -117,11 +123,12 @@ type S2C_Login struct {
 	NewWelfareIcon    bool    //新人福利标签是否显示
 	FirstRechargeIcon bool    //首充标签是否显示
 	ShareIcon         bool    //分享推广标签是否显示
-	Customer          string  //客服
+	Customer          Customer  //客服
 	RealName          string
 	PhoneNum          string
 	BankName          string //银行名称
 	BankCardNoTail    string //银行卡号后四位
+	SetNickName 	  bool
 }
 
 type S2C_FirstRechage struct {

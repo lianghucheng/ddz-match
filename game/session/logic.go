@@ -87,7 +87,7 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	// firstLogin = userData.FirstLogin
 	// if !userData.FirstLogin {
 	// 	userData.FirstLogin = !userData.FirstLogin
-	// 	go func() { SaveUserData(userData) }()
+	//	go func() { SaveUserData(userData) }()
 	// }
 
 	if err != nil { //&& err != mgo.ErrNotFound {
@@ -106,10 +106,10 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	// ok
 	uid := user.BaseData.UserData.UserID
 	firstLogin = userData.FirstLogin
-	if !userData.FirstLogin {
+	if userData.FirstLogin {
 		userData.FirstLogin = !userData.FirstLogin
 		skeleton.Go(func() {
-			UpdateUserData(uid, bson.M{"firstlogin": true})
+			UpdateUserData(uid, bson.M{"firstlogin": false})
 		}, nil)
 	}
 
@@ -153,13 +153,13 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	user.BaseData.UserData.ExpireAt = time.Now().Add(2 * time.Hour).Unix()
 
 	user.BaseData.UserData.Online = true
-	// if firstLogin {
-	// 	user.BaseData.UserData.Nickname = "用户" + strconv.Itoa(user.BaseData.UserData.AccountID)
-	// 	user.BaseData.UserData.Coupon += 500
-	// 	SaveUserData(user.BaseData.UserData)
-	// } else {
-	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
-	// }
+	//if firstLogin {
+	//	user.BaseData.UserData.Nickname = "用户" + strconv.Itoa(user.BaseData.UserData.AccountID)
+	//	user.BaseData.UserData.Coupon += 5
+	//	SaveUserData(user.BaseData.UserData)
+	//} else {
+		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
+	//}
 	autoHeartbeat(user)
 	bankCard := new(hall.BankCard)
 	bankCard.Userid = user.UID()
@@ -181,11 +181,15 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		NewWelfareIcon:    conf.GetCfgHall().NewWelfareIcon,
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
-		Customer:          "yintan12345",
+		Customer:          msg.Customer{
+			WeChat:"1994327647",
+			Email:"jingjikefu@qq.com",
+		},
 		RealName:          user.RealName(),
 		PhoneNum:          user.PhoneNum(),
 		BankName:          bankCard.BankName,
 		BankCardNoTail:    tail,
+		SetNickName:   	   user.GetUserData().SetNickNameCount > 0,
 	})
 
 	hall.UpdateUserCoupon(user, 0, "")
@@ -195,6 +199,21 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendFirstRecharge(user)
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
+
+	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
+		myMatchID := ma.NormalCofig.MatchID
+		for i, v := range RaceInfo {
+			if v.ID == myMatchID {
+				RaceInfo[i].IsSign = true
+				break
+			}
+		}
+	}
+	user.WriteMsg(&msg.S2C_RaceInfo{
+		Races: RaceInfo,
+	})
+
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {
