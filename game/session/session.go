@@ -2,6 +2,7 @@ package session
 
 import (
 	"ddz/conf"
+	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/match"
@@ -29,6 +30,8 @@ func init() {
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
 	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
+	skeleton.RegisterChanRPC("TestAddAward", rpcTestAddAward)
+	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -218,17 +221,50 @@ func rpcAddFee(args []interface{}) {
 			ud.TakenFee += m.Amount
 		}
 		SaveUserData(ud)
-		user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-			AfterTaxAward:user.Fee(),
-		})
+		hall.UpdateUserAfterTaxAward(user)
+		hall.SendAwardInfo(user)
 	} else {
 		ud := ReadUserDataByID(m.Userid)
-		log.Debug("!!!!!!!!!!!!!!!!!%v", m.Userid)
 		if m.FeeType == "fee" {
 			ud.Fee += m.Amount
 		} else if m.FeeType == "takenfee" {
 			ud.TakenFee += m.Amount
 		}
 		SaveUserData(ud)
+	}
+}
+
+func rpcTestAddAward(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_TestAddAward)
+	if user, ok := UserIDUsers[m.Uid]; ok {
+		user.GetUserData().Fee += m.Amount
+		game.GetSkeleton().Go(func() {
+			SaveUserData(user.GetUserData())
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeAward, "测试比赛类型", "测试比赛id：￥@#%￥#&……￥*……￥", []int{})
+		}, func() {
+			hall.UpdateUserAfterTaxAward(user)
+		})
+	} else {
+		ud := ReadUserDataByID(m.Uid)
+		ud.Fee += 10
+		game.GetSkeleton().Go(func() {
+			SaveUserData(ud)
+		},nil)
+	}
+	log.Debug("【添加提现测试数据成功】")
+}
+
+func rpcUpdateAwardInfo(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateAwardInfo)
+	if user, ok := UserIDUsers[m.Uid]; ok {
+		hall.SendAwardInfo(user)
 	}
 }

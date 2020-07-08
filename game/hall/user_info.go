@@ -41,9 +41,9 @@ func AddCoupon(user *player.User, count int64) {
 	UpdateUserCoupon(user, count, db.Charge)
 }
 
-func UpdateUserAfterTaxAward(user *player.User, value float64) {
+func UpdateUserAfterTaxAward(user *player.User) {
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-		AfterTaxAward: utils.Decimal(value),
+		AfterTaxAward: utils.Decimal(user.Fee()),
 	})
 }
 

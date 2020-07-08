@@ -40,6 +40,8 @@ func startHTTPServer() {
 	mux.HandleFunc("/editMatch", editMatch)
 	mux.HandleFunc("/optMatch", optMatch)
 
+	mux.HandleFunc("/test/addaward", addAward)
+
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -223,4 +225,21 @@ func handleEdyhtAddFee(w http.ResponseWriter, r *http.Request) {
 	}
 
 	game.GetSkeleton().ChanRPCServer.Go("AddFee", m)
+}
+
+func addAward(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type","application/json")
+	aid := r.FormValue("aid")
+	aid_int, err := strconv.Atoi(aid)
+	if err != nil {
+		log.Error(err.Error())
+		w.Write([]byte(`{"code": 1, "msg": "`+err.Error()+`}`))
+		return
+	}
+	ud := player.ReadUserDataByAid(aid_int)
+	game.GetSkeleton().ChanRPCServer.Go("TestAddAward", &msg.RPC_TestAddAward{
+		Uid:ud.UserID,
+		Amount:10,
+	})
+	w.Write([]byte(`{"code": 0, "msg": "`+aid+`添加奖金记录成功"}`))
 }

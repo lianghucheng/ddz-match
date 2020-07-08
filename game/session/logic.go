@@ -193,7 +193,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	})
 
 	hall.UpdateUserCoupon(user, 0, "")
-	hall.UpdateUserAfterTaxAward(user, user.Fee())
+	hall.UpdateUserAfterTaxAward(user)
 	hall.SendMail(user)
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)

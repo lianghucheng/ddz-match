@@ -1,8 +1,10 @@
 package hall
 
 import (
+	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/msg"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -68,7 +70,7 @@ func (ctx *FlowData) readAllByUserID() *[]FlowData {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	rt := new([]FlowData)
-	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid": ctx.Userid}).All(rt)
+	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid": ctx.Userid}).Sort("-createdat").Limit(40).All(rt)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -92,6 +94,7 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType,matchID stri
 	ud := player.ReadUserDataByID(uid)
 	flowData := new(FlowData)
 	flowData.Userid = ud.UserID
+
 	flowData.ChangeAmount = amount
 	flowData.FlowType = flowType
 	flowData.MatchType = matchType
@@ -107,4 +110,7 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType,matchID stri
 		flowData.Status = FlowDataStatusAction
 	}
 	flowData.save()
+	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo",&msg.RPC_UpdateAwardInfo{
+		Uid:	uid,
+	})
 }

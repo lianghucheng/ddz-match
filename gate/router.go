@@ -50,7 +50,6 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_RankingList{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_RealNameAuth{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_BindBankCard{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.C2S_AwardInfo{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_WithDraw{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_WriteAwardFlowData{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_SendMatchEndMail{}, game.ChanRPC)
@@ -71,4 +70,6 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_ShowHall{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_EditMatch{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_OptMatch{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_TestAddAward{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_UpdateAwardInfo{}, game.ChanRPC)
 }

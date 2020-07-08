@@ -48,7 +48,6 @@ func init() {
 	handler(&msg.C2S_RankingList{}, handleRankingList)
 	handler(&msg.C2S_RealNameAuth{}, handleRealNameAuth)
 	handler(&msg.C2S_BindBankCard{}, handleAddBankCard)
-	handler(&msg.C2S_AwardInfo{}, handleAwardInfo)
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
@@ -448,21 +447,6 @@ func handleAddBankCard(args []interface{}) {
 	}
 
 	hall.AddBankCard(user, m)
-}
-
-func handleAwardInfo(args []interface{}) {
-	m := args[0].(*msg.C2S_AwardInfo)
-	a := args[1].(gate.Agent)
-	_ = m
-	if a.UserData() == nil {
-		return
-	}
-	user := a.UserData().(*AgentInfo).User
-	if user == nil {
-		return
-	}
-
-	hall.SendAwardInfo(user)
 }
 
 func handleWithDraw(args []interface{}) {

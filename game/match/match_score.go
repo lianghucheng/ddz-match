@@ -579,9 +579,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				awardAmount := values.ParseAward(oneAward)
 				user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
-				user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-					AfterTaxAward: utils.Decimal(user.BaseData.UserData.Fee),
-				})
+				hall.UpdateUserAfterTaxAward(user)
 			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
 				awardAmount := values.ParseAward(oneAward)
 				user.BaseData.UserData.Coupon += int64(awardAmount)

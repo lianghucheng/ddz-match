@@ -24,23 +24,23 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
-	if user.RealName() == "" {
-		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount:user.Fee(),
-			Error: msg.ErrWithDrawNoAuth,
-			ErrMsg:"未实名认证",
-		})
-		return
-	}
-
-	if user.BankCardNo() == "" {
-		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount:user.Fee(),
-			Error: msg.ErrWithDrawNoBank,
-			ErrMsg:"未绑定银行卡",
-		})
-		return
-	}
+	//if user.RealName() == "" {
+	//	user.WriteMsg(&msg.S2C_WithDraw{
+	//		Amount:user.Fee(),
+	//		Error: msg.ErrWithDrawNoAuth,
+	//		ErrMsg:"未实名认证",
+	//	})
+	//	return
+	//}
+	//
+	//if user.BankCardNo() == "" {
+	//	user.WriteMsg(&msg.S2C_WithDraw{
+	//		Amount:user.Fee(),
+	//		Error: msg.ErrWithDrawNoBank,
+	//		ErrMsg:"未绑定银行卡",
+	//	})
+	//	return
+	//}
 
 	flowIDs, changeAmount := flowIDAndAmount(user.UID())
 	if changeAmount < conf.GetCfgHall().WithDrawMin {
@@ -63,18 +63,17 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
-	go func() {
-		player.SaveUserData(ud)
-	}()
 	user.WriteMsg(&msg.S2C_WithDraw{
 		Amount:user.Fee(),
 		Error:  msg.ErrWithDrawSuccess,
 		ErrMsg: "成功",
 	})
 	game.GetSkeleton().Go(func() {
+		player.SaveUserData(ud)
 		WriteFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
 	}, func() {
 		sendAwardInfo(user)
+		UpdateUserAfterTaxAward(user)
 	})
 }
 

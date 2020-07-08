@@ -63,7 +63,6 @@ func init() {
 	Processor.Register(&S2C_RealNameAuth{})
 	Processor.Register(&C2S_BindBankCard{})
 	Processor.Register(&S2C_BindBankCard{})
-	Processor.Register(&C2S_AwardInfo{})
 	Processor.Register(&S2C_AwardInfo{})
 	Processor.Register(&C2S_WithDraw{})
 	Processor.Register(&S2C_WithDraw{})
@@ -236,9 +235,6 @@ type S2C_BindBankCard struct {
 type BankCardInfo struct {
 	BankName       string //银行名称
 	BankCardNoTail string //银行卡号后四位
-}
-
-type C2S_AwardInfo struct {
 }
 
 const (
