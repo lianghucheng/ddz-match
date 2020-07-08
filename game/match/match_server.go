@@ -80,11 +80,12 @@ func initMatchTypeConfig() error {
 	defer db.MongoDB.UnRef(s)
 	log.Debug("init MatchType Config........")
 	one := msg.OneMatchType{}
-	iter := s.DB(db.DB).C("matchtypeconfig").Pipe([]bson.M{
-		{"$project": bson.M{
-			"_id": 0,
-		}},
-	}).Iter()
+	// iter := s.DB(db.DB).C("matchtypeconfig").Pipe([]bson.M{
+	// 	{"$project": bson.M{
+	// 		"_id": 0,
+	// 	}},
+	// }).Iter()
+	iter := s.DB(db.DB).C("matchtypeconfig").Find(bson.M{}).Iter()
 	for iter.Next(&one) {
 		values.MatchTypeConfig[one.MatchType] = one
 	}
