@@ -176,6 +176,9 @@ func sortMatch(list []values.MatchManager) {
 func BroadcastMatchInfo() {
 	for uid, user := range player.UserIDUsers {
 		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+		if len(RaceInfo) == 0 {
+			return
+		}
 		if ma, ok := UserIDMatch[uid]; ok {
 			myMatchID := ma.NormalCofig.MatchID
 			for i, v := range RaceInfo {

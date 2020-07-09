@@ -303,7 +303,7 @@ func (sc *ScoreConfig) Save() error {
 func (sc *ScoreConfig) EndMatchManager() {
 	// 修改赛事配置数据
 	game.GetSkeleton().Go(func() {
-		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Ending}})
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Delete}})
 	}, nil)
 }
 

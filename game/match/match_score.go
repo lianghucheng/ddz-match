@@ -408,6 +408,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 
 func (sc *scoreMatch) NextRound() {
 	base := sc.base.(*BaseMatch)
+	log.Debug("start next round:%v", base.CurrentRound)
 	if sc.OverRoomCount < len(base.Rooms) {
 		return
 	}
@@ -514,6 +515,7 @@ func (sc *scoreMatch) checkConfig() {
 func (sc *scoreMatch) eliminatePlayers() {
 	base := sc.base.(*BaseMatch)
 	eliminate := 0 // 淘汰后剩余的玩家数
+	log.Debug("start eliminate players:%v,round:%v", sc.myConfig.Eliminate, base.CurrentRound)
 	if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
 		eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
 	}
@@ -531,7 +533,7 @@ func (sc *scoreMatch) eliminatePlayers() {
 		eliminate -= last
 	}
 	// 按照排名顺序淘汰玩家
-	for n := len(sc.matchPlayers) - 1; n > eliminate-1; n-- {
+	for n := len(base.AllPlayers) - 1; n > eliminate-1; n-- {
 		uid := sc.matchPlayers[n].uid
 		sc.eliminateOnePlayer(uid)
 	}
@@ -545,6 +547,7 @@ func (sc *scoreMatch) eliminatePlayers() {
 
 // 淘汰指定玩家
 func (sc *scoreMatch) eliminateOnePlayer(uid int) {
+	log.Debug("eliminate player:%v", uid)
 	base := sc.base.(*BaseMatch)
 	// 给玩家发送比赛结算总界面
 	sc.SendFinalResult(uid)
