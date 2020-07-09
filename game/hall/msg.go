@@ -25,7 +25,7 @@ func UpdateRealName(user *player.User, status int, errmsg string) {
 	user.WriteMsg(&msg.S2C_RealNameAuth{
 		RealName: user.RealName(),
 		Error:    status,
-		ErrMsg:errmsg,
+		ErrMsg:   errmsg,
 	})
 }
 
@@ -42,7 +42,7 @@ func SendAddBankCard(user *player.User, code int, errmsg string) {
 			BankName:       bankCard.BankName,
 			BankCardNoTail: tail,
 		},
-		Error: code,
-		ErrMsg:errmsg,
+		Error:  code,
+		ErrMsg: errmsg,
 	})
 }

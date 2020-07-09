@@ -104,7 +104,7 @@ type CfgHall struct {
 	RankTypeWinNum    string   //胜局
 	RankTypeFailNum   string   //衰神
 	RankTypeAward     string   //奖励
-	WithDrawMin       float64      //最低提奖
+	WithDrawMin       float64  //最低提奖
 }
 
 var ServerConfig Config

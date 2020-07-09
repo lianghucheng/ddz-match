@@ -29,7 +29,7 @@ func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 		}
 		*rt = append(*rt, msg.WithDrawData{
 			FlowType:  v.FlowType,
-			MatchID: v.MatchID,
+			MatchID:   v.MatchID,
 			Amount:    v.ChangeAmount,
 			Status:    status,
 			CreatedAt: v.CreatedAt,

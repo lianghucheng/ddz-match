@@ -228,18 +228,18 @@ func handleEdyhtAddFee(w http.ResponseWriter, r *http.Request) {
 }
 
 func addAward(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 	aid := r.FormValue("aid")
 	aid_int, err := strconv.Atoi(aid)
 	if err != nil {
 		log.Error(err.Error())
-		w.Write([]byte(`{"code": 1, "msg": "`+err.Error()+`}`))
+		w.Write([]byte(`{"code": 1, "msg": "` + err.Error() + `}`))
 		return
 	}
 	ud := player.ReadUserDataByAid(aid_int)
 	game.GetSkeleton().ChanRPCServer.Go("TestAddAward", &msg.RPC_TestAddAward{
-		Uid:ud.UserID,
-		Amount:10,
+		Uid:    ud.UserID,
+		Amount: 10,
 	})
-	w.Write([]byte(`{"code": 0, "msg": "`+aid+`添加奖金记录成功"}`))
+	w.Write([]byte(`{"code": 0, "msg": "` + aid + `添加奖金记录成功"}`))
 }

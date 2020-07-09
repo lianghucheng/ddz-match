@@ -47,7 +47,7 @@ func UpdateUserAfterTaxAward(user *player.User) {
 	})
 }
 
-func ChangePassword(user *player.User, m *msg.C2S_ChangePassword){
+func ChangePassword(user *player.User, m *msg.C2S_ChangePassword) {
 	ud := user.GetUserData()
 	if ud.Password != m.OldPassword {
 		user.WriteMsg(&msg.S2C_ChangePassword{
@@ -63,5 +63,5 @@ func ChangePassword(user *player.User, m *msg.C2S_ChangePassword){
 		user.WriteMsg(&msg.S2C_ChangePassword{
 			Error: msg.ErrChangePasswordSuccess,
 		})
-	},nil)
+	}, nil)
 }

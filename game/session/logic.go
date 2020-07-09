@@ -158,7 +158,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	//	user.BaseData.UserData.Coupon += 5
 	//	SaveUserData(user.BaseData.UserData)
 	//} else {
-		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
+	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
 	//}
 	autoHeartbeat(user)
 	bankCard := new(hall.BankCard)
@@ -181,15 +181,15 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		NewWelfareIcon:    conf.GetCfgHall().NewWelfareIcon,
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
-		Customer:          msg.Customer{
-			WeChat:"1994327647",
-			Email:"jingjikefu@qq.com",
+		Customer: msg.Customer{
+			WeChat: "1994327647",
+			Email:  "jingjikefu@qq.com",
 		},
-		RealName:          user.RealName(),
-		PhoneNum:          user.PhoneNum(),
-		BankName:          bankCard.BankName,
-		BankCardNoTail:    tail,
-		SetNickName:   	   user.GetUserData().SetNickNameCount > 0,
+		RealName:       user.RealName(),
+		PhoneNum:       user.PhoneNum(),
+		BankName:       bankCard.BankName,
+		BankCardNoTail: tail,
+		SetNickName:    user.GetUserData().SetNickNameCount > 0,
 	})
 
 	hall.UpdateUserCoupon(user, 0, "")

@@ -253,7 +253,7 @@ func rpcTestAddAward(args []interface{}) {
 		ud.Fee += 10
 		game.GetSkeleton().Go(func() {
 			SaveUserData(ud)
-		},nil)
+		}, nil)
 	}
 	log.Debug("【添加提现测试数据成功】")
 }

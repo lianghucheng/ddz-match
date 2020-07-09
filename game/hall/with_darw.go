@@ -18,36 +18,36 @@ func WithDraw(user *player.User) {
 func withDraw(user *player.User, callWithDraw func(userid int, amount float64) error) {
 	if callWithDraw == nil {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount:user.Fee(),
-			Error: msg.ErrWithDrawFail,
+			Amount: user.Fee(),
+			Error:  msg.ErrWithDrawFail,
 		})
 		return
 	}
 
-	//if user.RealName() == "" {
-	//	user.WriteMsg(&msg.S2C_WithDraw{
-	//		Amount:user.Fee(),
-	//		Error: msg.ErrWithDrawNoAuth,
-	//		ErrMsg:"未实名认证",
-	//	})
-	//	return
-	//}
-	//
-	//if user.BankCardNo() == "" {
-	//	user.WriteMsg(&msg.S2C_WithDraw{
-	//		Amount:user.Fee(),
-	//		Error: msg.ErrWithDrawNoBank,
-	//		ErrMsg:"未绑定银行卡",
-	//	})
-	//	return
-	//}
+	if user.RealName() == "" {
+		user.WriteMsg(&msg.S2C_WithDraw{
+			Amount: user.Fee(),
+			Error:  msg.ErrWithDrawNoAuth,
+			ErrMsg: "未实名认证",
+		})
+		return
+	}
+
+	if user.BankCardNo() == "" {
+		user.WriteMsg(&msg.S2C_WithDraw{
+			Amount: user.Fee(),
+			Error:  msg.ErrWithDrawNoBank,
+			ErrMsg: "未绑定银行卡",
+		})
+		return
+	}
 
 	flowIDs, changeAmount := flowIDAndAmount(user.UID())
 	if changeAmount < conf.GetCfgHall().WithDrawMin {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount:user.Fee(),
-			Error: msg.ErrWithDrawLack,
-			ErrMsg:fmt.Sprintln("最低提奖",conf.GetCfgHall().WithDrawMin,"元"),
+			Amount: user.Fee(),
+			Error:  msg.ErrWithDrawLack,
+			ErrMsg: fmt.Sprintln("最低提奖", conf.GetCfgHall().WithDrawMin, "元"),
 		})
 		return
 	}
@@ -55,16 +55,16 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
 		log.Error(err.Error())
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount:user.Fee(),
-			Error: msg.ErrWithDrawFail,
-			ErrMsg:"三方接口失败",
+			Amount: user.Fee(),
+			Error:  msg.ErrWithDrawFail,
+			ErrMsg: "三方接口失败",
 		})
 		return
 	}
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
 	user.WriteMsg(&msg.S2C_WithDraw{
-		Amount:user.Fee(),
+		Amount: user.Fee(),
 		Error:  msg.ErrWithDrawSuccess,
 		ErrMsg: "成功",
 	})
@@ -78,7 +78,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 }
 
 func flowIDAndAmount(id int) (flowIDs []int, changeAmount float64) {
-	fd:= new(FlowData)
+	fd := new(FlowData)
 	fd.Userid = id
 	flowdatas := fd.readAllNormal()
 	for _, v := range *flowdatas {

@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	bind_id_uri   = "/player/identity_number/bind"
+	bind_id_uri = "/player/identity_number/bind"
 )
 
 type BindBankCardReq struct {

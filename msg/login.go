@@ -25,8 +25,8 @@ type C2S_TokenLogin struct {
 }
 
 type C2S_AccountLogin struct {
-	Account string //手机号
-	Code    string //验证码
+	Account  string //手机号
+	Code     string //验证码
 	Password string //密码
 }
 
@@ -36,8 +36,8 @@ type C2S_UsrnPwdLogin struct {
 }
 
 type C2S_Register struct {
-	Account string //手机号
-	Code    string //验证码
+	Account  string //手机号
+	Code     string //验证码
 	Password string //密码
 }
 
@@ -46,13 +46,13 @@ const (
 )
 
 type S2C_Register struct {
-	Error int
+	Error  int
 	ErrMsg string
 }
 
 type C2S_FindPassword struct {
-	Account string //手机号
-	Code    string //验证码
+	Account  string //手机号
+	Code     string //验证码
 	Password string //密码
 }
 
@@ -61,23 +61,23 @@ const (
 )
 
 type S2C_FindPassword struct {
-	Error int
+	Error  int
 	ErrMsg string
 }
 
 type C2S_ChangePassword struct {
-	OldPassword  string
-	NewPassword  string
+	OldPassword string
+	NewPassword string
 }
 
 const (
 	ErrChangePasswordSuccess = 0
-	ErrChangePasswordFail = 1
-	ErrChangePasswordOldNo = 2
+	ErrChangePasswordFail    = 1
+	ErrChangePasswordOldNo   = 2
 )
 
 type S2C_ChangePassword struct {
-	Error  int
+	Error int
 }
 
 // Close
@@ -92,20 +92,19 @@ const (
 	S2C_Close_Code_Valid      = 9  // 验证码错误
 	S2C_Close_Code_Error      = 10 // 验证码过期了
 	S2C_Close_Pwd_Error       = 11 // 密码错误
-	S2C_Close_Usrn_Nil  	  = 12 // 用户名不存在
-	S2C_Close_Usrn_Exist  	  = 13 // 用户名不存在
+	S2C_Close_Usrn_Nil        = 12 // 用户名不存在
+	S2C_Close_Usrn_Exist      = 13 // 用户名不存在
 )
 
 type S2C_Close struct {
 	Error        int
 	WeChatNumber string
-
 }
 
 type Customer struct {
-	WeChat 	string //微信
-	Email 	string //邮箱
-	PhoneNum 	string //电话号码
+	WeChat   string //微信
+	Email    string //邮箱
+	PhoneNum string //电话号码
 }
 
 type S2C_Login struct {
@@ -115,20 +114,20 @@ type S2C_Login struct {
 	Sex               int // 1 男、2 女
 	Role              int // 1 玩家、2 代理、3 管理员、4 超管
 	Token             string
-	AnotherLogin      bool    // 其他设备登录
-	FirstLogin        bool    // 首次登录
-	AfterTaxAward     float64 // 税后奖金
-	Coupon            int     // 点劵数量
-	SignIcon          bool    //签到标签是否显示
-	NewWelfareIcon    bool    //新人福利标签是否显示
-	FirstRechargeIcon bool    //首充标签是否显示
-	ShareIcon         bool    //分享推广标签是否显示
-	Customer          Customer  //客服
+	AnotherLogin      bool     // 其他设备登录
+	FirstLogin        bool     // 首次登录
+	AfterTaxAward     float64  // 税后奖金
+	Coupon            int      // 点劵数量
+	SignIcon          bool     //签到标签是否显示
+	NewWelfareIcon    bool     //新人福利标签是否显示
+	FirstRechargeIcon bool     //首充标签是否显示
+	ShareIcon         bool     //分享推广标签是否显示
+	Customer          Customer //客服
 	RealName          string
 	PhoneNum          string
 	BankName          string //银行名称
 	BankCardNoTail    string //银行卡号后四位
-	SetNickName 	  bool
+	SetNickName       bool
 }
 
 type S2C_FirstRechage struct {

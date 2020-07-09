@@ -24,28 +24,28 @@ const (
 	FlowDataStatusBack   = 3
 )
 
-var FlowDataStatusMsg = map[int]string  {
+var FlowDataStatusMsg = map[int]string{
 	FlowDataStatusNormal: "比赛获得",
 	FlowDataStatusAction: "提奖中",
-	FlowDataStatusOver: "已提奖",
-	FlowDataStatusBack: "已退奖",
+	FlowDataStatusOver:   "已提奖",
+	FlowDataStatusBack:   "已退奖",
 }
 
 type FlowData struct {
-	ID    					int `bson:"_id"`
-	Userid    				int
-	Accountid      			int
-	ChangeAmount    		float64
-	FlowType  				int
-	MatchType 				string
-	MatchID 				string
-	Status    				int
-	CreatedAt 				int64
-	FlowIDs 				[]int
-	Realname 				string
-	TakenFee 			float64
-	AtferTaxFee 				float64
-	Desc 					string
+	ID           int `bson:"_id"`
+	Userid       int
+	Accountid    int
+	ChangeAmount float64
+	FlowType     int
+	MatchType    string
+	MatchID      string
+	Status       int
+	CreatedAt    int64
+	FlowIDs      []int
+	Realname     string
+	TakenFee     float64
+	AtferTaxFee  float64
+	Desc         string
 }
 
 func (ctx *FlowData) save() {
@@ -82,7 +82,7 @@ func (ctx *FlowData) readAllNormal() *[]FlowData {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	rt := new([]FlowData)
-	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid":ctx.Userid ,"status": FlowDataStatusNormal}).All(rt)
+	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid": ctx.Userid, "status": FlowDataStatusNormal}).All(rt)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -90,7 +90,7 @@ func (ctx *FlowData) readAllNormal() *[]FlowData {
 	return rt
 }
 
-func WriteFlowData(uid int, amount float64, flowType int, matchType,matchID string, flows []int) {
+func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int) {
 	ud := player.ReadUserDataByID(uid)
 	flowData := new(FlowData)
 	flowData.Userid = ud.UserID
@@ -110,7 +110,7 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType,matchID stri
 		flowData.Status = FlowDataStatusAction
 	}
 	flowData.save()
-	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo",&msg.RPC_UpdateAwardInfo{
-		Uid:	uid,
+	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo", &msg.RPC_UpdateAwardInfo{
+		Uid: uid,
 	})
 }

@@ -57,10 +57,10 @@ type RPC_AddFee struct {
 }
 
 type RPC_TestAddAward struct {
-	Uid 	int
-	Amount  float64
+	Uid    int
+	Amount float64
 }
 
 type RPC_UpdateAwardInfo struct {
-	Uid 	int
+	Uid int
 }
