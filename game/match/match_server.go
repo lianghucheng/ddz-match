@@ -174,17 +174,18 @@ func sortMatch(list []values.MatchManager) {
 
 // BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
 func BroadcastMatchInfo() {
+	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	if len(RaceInfo) == 0 {
+		return
+	}
 	for uid, user := range player.UserIDUsers {
-		RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-		if len(RaceInfo) == 0 {
-			return
-		}
 		if ma, ok := UserIDMatch[uid]; ok {
 			myMatchID := ma.NormalCofig.MatchID
 			for i, v := range RaceInfo {
 				if v.ID == myMatchID {
 					RaceInfo[i].IsSign = true
-					break
+				} else {
+					RaceInfo[i].IsSign = false
 				}
 			}
 		}
