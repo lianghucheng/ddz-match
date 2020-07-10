@@ -6,7 +6,6 @@ import (
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
-
 	"gopkg.in/mgo.v2/bson"
 )
 

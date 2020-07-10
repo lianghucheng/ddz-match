@@ -576,7 +576,7 @@ func handleTakenFirstCoupon(args []interface{}) {
 		return
 	}
 	user := a.UserData().(*AgentInfo).User
-	if user != nil {
+	if user == nil {
 		return
 	}
 	hall.TakenFirstCoupon(user)
