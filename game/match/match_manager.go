@@ -49,9 +49,9 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	// ok
 	sc.AllSignInPlayers = append(sc.AllSignInPlayers, uid)
 	// 报名满人则清零
-	if len(sc.AllSignInPlayers) >= sc.MaxPlayer && sc.StartType == 1 {
-		sc.AllSignInPlayers = []int{}
-	}
+	// if len(sc.AllSignInPlayers) >= sc.MaxPlayer && sc.StartType == 1 {
+	// 	sc.AllSignInPlayers = []int{}
+	// }
 
 	user.WriteMsg(&msg.S2C_Apply{
 		Error:  0,
@@ -303,7 +303,7 @@ func (sc *ScoreConfig) Save() error {
 func (sc *ScoreConfig) EndMatchManager() {
 	// 修改赛事配置数据
 	game.GetSkeleton().Go(func() {
-		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Ending}})
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Delete}})
 	}, nil)
 }
 

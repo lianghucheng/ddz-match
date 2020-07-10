@@ -132,6 +132,14 @@ func (base *BaseMatch) Start() {
 	if base.myMatch != nil {
 		base.myMatch.Start()
 	}
+	// 开赛后清除报名人数
+	// c := base.Manager.GetNormalConfig()
+	// c.AllSignInPlayers = []int{}
+	// base.Manager.SetNormalConfig(c)
+	for uid := range base.AllPlayers {
+		base.Manager.RemoveSignPlayer(uid)
+	}
+	BroadcastMatchInfo()
 	base.Manager.CheckNewConfig()
 }
 
