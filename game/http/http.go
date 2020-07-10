@@ -2,6 +2,7 @@ package http
 
 import (
 	"ddz/conf"
+	"ddz/edy_api"
 	"ddz/game"
 	. "ddz/game/db"
 	"ddz/game/hall"
@@ -41,6 +42,9 @@ func startHTTPServer() {
 	mux.HandleFunc("/optMatch", optMatch)
 
 	mux.HandleFunc("/test/addaward", addAward)
+
+	//电竞二打一支付回调
+	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -135,7 +139,6 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 func handleRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	data := r.FormValue("data")
-	log.Debug("！！！！！！！！！！！！！！%v", string(data))
 	m := new(msg.C2S_Register)
 	err := json.Unmarshal([]byte(data), m)
 	if err != nil {
@@ -242,4 +245,9 @@ func addAward(w http.ResponseWriter, r *http.Request) {
 		Amount: 10,
 	})
 	w.Write([]byte(`{"code": 0, "msg": "` + aid + `添加奖金记录成功"}`))
+}
+
+func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
+
+	//todo:解析到
 }

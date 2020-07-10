@@ -61,7 +61,6 @@ func tokenLogin(user *User, token string) {
 }
 
 func usernamePasswordLogin(user *User, account string, password string) {
-	firstLogin := false
 	userData := new(UserData)
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
@@ -103,16 +102,6 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		return
 	}
 
-	// ok
-	uid := user.BaseData.UserData.UserID
-	firstLogin = userData.FirstLogin
-	if userData.FirstLogin {
-		userData.FirstLogin = !userData.FirstLogin
-		skeleton.Go(func() {
-			UpdateUserData(uid, bson.M{"firstlogin": false})
-		}, nil)
-	}
-
 	anotherLogin := false
 	log.Debug("player %v login", userData.UserID)
 	if oldUser, ok := UserIDUsers[userData.UserID]; ok {
@@ -127,7 +116,7 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	}
 	UserIDUsers[userData.UserID] = user
 	user.BaseData.UserData = userData
-	onLogin(user, firstLogin, anotherLogin)
+	onLogin(user, userData.FirstLogin, anotherLogin)
 }
 
 func logout(user *User) {

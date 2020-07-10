@@ -51,6 +51,7 @@ func init() {
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
+	handler(&msg.C2S_TakenFirstCoupon{}, handleTakenFirstCoupon)
 	handler(&msg.Test_WriteFlowData{}, handleAidAwardData)
 }
 
@@ -565,4 +566,18 @@ func handleAidAwardData(args []interface{}) {
 	ud.Fee += 10
 	SaveUserData(ud)
 	hall.WriteFlowData(ud.UserID, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
+}
+
+func handleTakenFirstCoupon(args []interface{}) {
+	m := args[0].(*msg.C2S_TakenFirstCoupon)
+	a := args[1].(gate.Agent)
+	_ = m
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user != nil {
+		return
+	}
+	hall.TakenFirstCoupon(user)
 }
