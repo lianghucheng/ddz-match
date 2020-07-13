@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/name5566/leaf/timer"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -66,10 +67,11 @@ type ScoreConfig struct {
 	ShowHall   bool     `bson:"showhall"`   // 是否首页展示
 	MatchIcon  string   `bson:"matchicon"`  // 赛事图标
 
-	AllSignInPlayers []int      `bson:"-"` // 已报名玩家该种赛事的所有玩家
-	CurrentIDIndex   int        `bson:"-"` // 当前赛事取id的序号
-	LastMatch        *BaseMatch `bson:"-"` // 最新分配的一个赛事
-	ReadyTime        int64      `bson:"-"` // 比赛开始时间
+	AllSignInPlayers []int        `bson:"-"` // 已报名玩家该种赛事的所有玩家
+	CurrentIDIndex   int          `bson:"-"` // 当前赛事取id的序号
+	LastMatch        *BaseMatch   `bson:"-"` // 最新分配的一个赛事
+	ReadyTime        int64        `bson:"-"` // 比赛开始时间
+	StartTimer       *timer.Timer `bson:"-"` // 上架倒计时
 }
 
 type sConfig struct {

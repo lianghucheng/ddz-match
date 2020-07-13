@@ -19,7 +19,19 @@ import (
 )
 
 // NewScoreManager 创建一个新的比赛类型
-func NewScoreManager(sc *ScoreConfig) {
+// func NewScoreManager(sc *ScoreConfig) {
+// 	sc.GetAwardItem()
+// 	MatchManagerList[sc.MatchID] = sc
+// 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
+// 	if sc.StartType >= 2 {
+// 		sc.CreateOneMatch()
+// 	} else {
+// 		BroadcastMatchInfo()
+// 	}
+// }
+
+// NewManager 创建一个新的比赛类型
+func (sc *ScoreConfig) NewManager() {
 	sc.GetAwardItem()
 	MatchManagerList[sc.MatchID] = sc
 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
