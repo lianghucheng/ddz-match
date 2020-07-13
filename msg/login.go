@@ -36,9 +36,10 @@ type C2S_UsrnPwdLogin struct {
 }
 
 type C2S_Register struct {
-	Account  string //手机号
-	Code     string //验证码
-	Password string //密码
+	Account   string //手机号
+	Code      string //验证码
+	Password  string //密码
+	ShareCode string // 邀请码
 }
 
 const (
