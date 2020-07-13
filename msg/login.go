@@ -18,6 +18,8 @@ func init() {
 	Processor.Register(&S2C_FindPassword{})
 	Processor.Register(&C2S_ChangePassword{})
 	Processor.Register(&S2C_ChangePassword{})
+	Processor.Register(&C2S_TakenFirstCoupon{})
+	Processor.Register(&S2C_TakenFirstCoupon{})
 }
 
 type C2S_TokenLogin struct {
@@ -173,4 +175,16 @@ const (
 type S2C_UpdateNickName struct {
 	Error    int    // 0:表示成功
 	NickName string //
+}
+
+type C2S_TakenFirstCoupon struct {
+
+}
+
+const (
+	ErrS2CTakenFirstCouponSuccess = 0
+	ErrS2CTakenFirstCouponFail = 1
+)
+type S2C_TakenFirstCoupon struct {
+	Error	int
 }

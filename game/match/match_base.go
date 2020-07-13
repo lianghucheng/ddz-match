@@ -113,6 +113,7 @@ func (base *BaseMatch) SignOut(uid int) error {
 	delete(base.AllPlayers, uid)
 	// 清理赛事
 	if len(base.SignInPlayers) == 0 && base.IsClosing {
+		base.Manager.End(base.SonMatchID)
 		base.Manager.ClearLastMatch()
 		delete(MatchList, base.SonMatchID)
 	}

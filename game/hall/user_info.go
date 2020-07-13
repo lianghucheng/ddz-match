@@ -6,7 +6,6 @@ import (
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
-
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -64,4 +63,16 @@ func ChangePassword(user *player.User, m *msg.C2S_ChangePassword) {
 			Error: msg.ErrChangePasswordSuccess,
 		})
 	}, nil)
+}
+
+func TakenFirstCoupon(user *player.User) {
+	ud := user.GetUserData()
+	ud.FirstLogin = false
+	ud.Coupon += 5
+	game.GetSkeleton().Go(func(){
+		player.SaveUserData(ud)
+	},func(){
+		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
+		UpdateUserCoupon(user, 5, db.InitPlayer)
+	})
 }
