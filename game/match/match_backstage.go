@@ -49,6 +49,9 @@ func addMatch(args []interface{}) {
 			desc = "赛事ID重复！"
 			return
 		}
+		if sConfig.ShelfTime > time.Now().Unix() {
+			sConfig.State = Cancel
+		}
 		// 将赛事保存进数据库
 		if err := sConfig.Save(); err != nil {
 			code = 1
@@ -57,7 +60,6 @@ func addMatch(args []interface{}) {
 		}
 		// 上架时间
 		if sConfig.ShelfTime > time.Now().Unix() {
-			sConfig.State = Cancel
 			sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
 				// NewScoreManager(sConfig)
 				sConfig.NewManager()

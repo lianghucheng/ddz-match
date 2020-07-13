@@ -190,7 +190,7 @@ func (sc *scoreMatch) CheckStart() {
 			return
 		}
 		base.Start()
-	} else if sc.myConfig.StartType == 2 {
+	} else if sc.myConfig.StartType >= 2 {
 		//赛事开赛人数未达到指定的最小人数(赛事作废,重新开赛)
 		if len(base.SignInPlayers) < sc.myConfig.LimitPlayer {
 			base.CloseMatch()
