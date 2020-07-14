@@ -11,6 +11,7 @@ import (
 	"ddz/utils"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,6 +35,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/register", handleRegister)
 	mux.HandleFunc("/findpwd", handleFindPwd)
 	mux.HandleFunc("/edyht-add-fee", handleEdyhtAddFee)
+	mux.HandleFunc("/update-coupon", handleUpdateCoupon)
 
 	// 后台比赛接口
 	mux.HandleFunc("/addMatch", addMatch)
@@ -41,8 +43,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/editMatch", editMatch)
 	mux.HandleFunc("/optMatch", optMatch)
 
-	mux.HandleFunc("/test/addaward", addAward)
-
+	mux.HandleFunc("/addaward", addAward)
 	//电竞二打一支付回调
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 
@@ -197,7 +198,7 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 	account, code, password := m.Account, m.Code, m.Password
 	_ = code
 	if status := CheckSms(account, code); status != 0 {
-		w.Write(strbyte(NewError(int64(status), "数据格式错误")))
+		w.Write(strbyte(NewError(int64(status), "验证码错误")))
 		return
 	}
 
@@ -232,22 +233,74 @@ func handleEdyhtAddFee(w http.ResponseWriter, r *http.Request) {
 
 func addAward(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	aid := r.FormValue("aid")
-	aid_int, err := strconv.Atoi(aid)
+	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Error(err.Error())
-		w.Write([]byte(`{"code": 1, "msg": "` + err.Error() + `}`))
 		return
 	}
-	ud := player.ReadUserDataByAid(aid_int)
-	game.GetSkeleton().ChanRPCServer.Go("TestAddAward", &msg.RPC_TestAddAward{
+	m := new(msg.RPC_AddAward)
+	err = json.Unmarshal(b, m)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	if m.Secret != "123456" {
+		log.Error("非法调用")
+		return
+	}
+
+	ud := player.ReadUserDataByAid(m.Uid)
+	game.GetSkeleton().ChanRPCServer.Go("AddAward", &msg.RPC_AddAward{
 		Uid:    ud.UserID,
-		Amount: 10,
+		Amount: m.Amount,
 	})
-	w.Write([]byte(`{"code": 0, "msg": "` + aid + `添加奖金记录成功"}`))
+	w.Write([]byte(fmt.Sprintf(`{"code": 0, "msg": "%v添加奖金记录成功"}`, m.Uid)))
 }
 
 func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
+	edyPayNotifyReq := new(edy_api.EdyPayNotifyReq)
+	//todo:解析到CreateOrderReq
+	param, err := edy_api.GetUrlKeyValStr(edyPayNotifyReq)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	sign := edy_api.GenerateSign(param)
 
-	//todo:解析到
+	if sign != edyPayNotifyReq.Sign {
+		log.Debug("sign error. ")
+		return
+	}
+
+	//todo:存订单，发货
+	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
+	//todo:封装响应数据
+	b, err := json.Marshal(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+}
+
+func handleUpdateCoupon(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	m := new(msg.RPC_UpdateCoupon)
+	if err := json.Unmarshal(b, m); err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	if m.Secret != "123456" {
+		log.Error("非法调用")
+		return
+	}
+	game.GetSkeleton().ChanRPCServer.Go("UpdateCoupon", m)
 }

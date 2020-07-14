@@ -189,20 +189,6 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
 
-	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		myMatchID := ma.NormalCofig.MatchID
-		for i, v := range RaceInfo {
-			if v.ID == myMatchID {
-				RaceInfo[i].IsSign = true
-				break
-			}
-		}
-	}
-	user.WriteMsg(&msg.S2C_RaceInfo{
-		Races: RaceInfo,
-	})
-
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {

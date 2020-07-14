@@ -136,3 +136,32 @@ type EdyPayNotifyResp struct {
 	Ts          int    `json:"ts"`          //是	处理完成时的时间戳
 	Sign        string `json:"sign"`        //是	签名，此处签名需要开发者按照返回值来计算
 }
+
+func GetUrlKeyValStr(data interface{}) (string, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Error(err.Error())
+		return "", err
+	}
+	m := map[string]interface{}{}
+	err = json.Unmarshal(b, &m)
+	if err != nil {
+		log.Error(err.Error())
+		return "", err
+	}
+	rt := ""
+	cnt := 0
+	for k, v := range m {
+		if cnt == 0 {
+			cnt++
+			rt += fmt.Sprintf("%v=%v", k, v)
+		} else {
+			rt += fmt.Sprintf("&%v=%v", k, v)
+		}
+	}
+	strs := strings.Split(rt, "&")
+	sort.Strings(strs)
+	rt = strings.Join(strs, "&")
+	return rt, nil
+}
+

@@ -8,6 +8,7 @@ const (
 	MatchSignIn  = "matchSignIn"  // 赛事报名
 	MatchSignOut = "matchSignOut" // 赛事签出
 	MatchAward   = "matchAward"   // 赛事奖励
+	Backstage	 = "backstage"    // 后台操作
 )
 
 // ItemLog 物品日志
