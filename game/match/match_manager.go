@@ -19,7 +19,19 @@ import (
 )
 
 // NewScoreManager 创建一个新的比赛类型
-func NewScoreManager(sc *ScoreConfig) {
+// func NewScoreManager(sc *ScoreConfig) {
+// 	sc.GetAwardItem()
+// 	MatchManagerList[sc.MatchID] = sc
+// 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
+// 	if sc.StartType >= 2 {
+// 		sc.CreateOneMatch()
+// 	} else {
+// 		BroadcastMatchInfo()
+// 	}
+// }
+
+// NewManager 创建一个新的比赛类型
+func (sc *ScoreConfig) NewManager() {
 	sc.GetAwardItem()
 	MatchManagerList[sc.MatchID] = sc
 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
@@ -35,6 +47,15 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
+		return
+	}
+	if sc.State != Signing {
+		user.WriteMsg(&msg.S2C_Apply{
+			Error:  msg.S2C_Error_MatchId,
+			RaceID: sc.MatchID,
+			Action: 1,
+			Count:  len(sc.AllSignInPlayers),
+		})
 		return
 	}
 	// 当前没有空闲赛事，则创建一个赛事
@@ -278,17 +299,32 @@ func (sc *ScoreConfig) CreateOneMatch() {
 		sonID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
 	}
 	sc.SonMatchID = sonID
+	if sc.StartType == 2 {
+		sc.ReadyTime = time.Now().Unix() + sc.StartTime
+	} else if sc.StartType == 3 {
+		if sc.UseMatch >= sc.TotalMatch {
+			return
+		}
+		// 第三种赛事为每天固定时间开一次赛
+		if sc.StartTime < time.Now().Unix()+1 {
+			var oneDay int64 = 24 * 60 * 60
+			for start := sc.StartTime; start > 0; start += oneDay {
+				if start > time.Now().Unix() {
+					sc.StartTime = start
+					break
+				}
+			}
+		}
+		sc.Save()
+	}
 	nSconfig := &ScoreConfig{}
 	utils.StructCopy(nSconfig, sc)
-	// nSconfig.SonMatchID = sonID
 	newMatch := NewScoreMatch(nSconfig)
 	newMatch.Manager = sc
 	sc.LastMatch = newMatch
 	sc.UseMatch++
 	sc.CurrentIDIndex++
-	if sc.StartType == 2 {
-		sc.ReadyTime = time.Now().Unix() + sc.StartTime
-	}
+
 	BroadcastMatchInfo()
 }
 
@@ -311,7 +347,8 @@ func (sc *ScoreConfig) EndMatchManager() {
 func (sc *ScoreConfig) CheckConfig() error {
 	if sc.StartType == 0 || sc.Round == 0 || len(sc.AwardList) == 0 || len(sc.MatchID) == 0 || sc.LimitPlayer == 0 ||
 		len(sc.Recommend) == 0 || sc.TotalMatch == 0 || len(sc.MatchName) == 0 || len(sc.MatchType) == 0 ||
-		(sc.StartType == 3 && sc.StartTime < time.Now().Unix()) || (sc.StartType == 2 && sc.StartTime <= 0) {
+		// (sc.StartType == 3 && sc.StartTime < time.Now().Unix()) ||
+		(sc.StartType == 2 && sc.StartTime <= 0) {
 		log.Error("invalid config:%+v", sc)
 		return errors.New("config error")
 	}

@@ -4,6 +4,8 @@ import (
 	"ddz/msg"
 	"strconv"
 	"strings"
+
+	"github.com/name5566/leaf/timer"
 )
 
 // 赛事配置
@@ -27,6 +29,7 @@ type Match interface {
 
 // MatchManager 比赛配置接口
 type MatchManager interface {
+	NewManager()
 	SignIn(uid int)
 	SignOut(uid int, matchID string)
 	GetNormalConfig() *NormalCofig
@@ -67,17 +70,18 @@ type NormalCofig struct {
 	AwardDesc        string // 奖励描述
 	Recommend        string // 赛事推荐文字信息
 	MaxPlayer        int
-	AllSignInPlayers []int  // 所有已报名该赛事的玩家
-	StartTime        int64  // 比赛开始时间或者比赛倒计时
-	StartType        int    // 比赛开赛种类
-	ReadyTime        int64  // 剩余时间
-	Sort             int    // 赛事排序
-	ShowHall         bool   // 首页展示
-	MatchIcon        string // 赛事图标
-	SonMatchID       string // 自赛事id
-	TotalMatch       int    // 总赛事场次
-	Eliminate        []int  // 淘汰人数
-	AwardList        string // 奖励
+	AllSignInPlayers []int        // 所有已报名该赛事的玩家
+	StartTime        int64        // 比赛开始时间或者比赛倒计时
+	StartType        int          // 比赛开赛种类
+	ReadyTime        int64        // 剩余时间
+	Sort             int          // 赛事排序
+	ShowHall         bool         // 首页展示
+	MatchIcon        string       // 赛事图标
+	SonMatchID       string       // 自赛事id
+	TotalMatch       int          // 总赛事场次
+	Eliminate        []int        // 淘汰人数
+	AwardList        string       // 奖励
+	StartTimer       *timer.Timer // 上架倒计时
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等

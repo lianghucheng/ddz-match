@@ -49,6 +49,9 @@ func addMatch(args []interface{}) {
 			desc = "赛事ID重复！"
 			return
 		}
+		if sConfig.ShelfTime > time.Now().Unix() {
+			sConfig.State = Cancel
+		}
 		// 将赛事保存进数据库
 		if err := sConfig.Save(); err != nil {
 			code = 1
@@ -57,11 +60,14 @@ func addMatch(args []interface{}) {
 		}
 		// 上架时间
 		if sConfig.ShelfTime > time.Now().Unix() {
-			game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-				NewScoreManager(sConfig)
+			sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+				// NewScoreManager(sConfig)
+				sConfig.NewManager()
 			})
+			MatchManagerList[sConfig.MatchID] = sConfig
 		} else {
-			NewScoreManager(sConfig)
+			// NewScoreManager(sConfig)
+			sConfig.NewManager()
 		}
 	default:
 		code = 1
@@ -183,6 +189,15 @@ func optMatch(args []interface{}) {
 			return
 		}
 		c.State = Signing
+		if c.StartTimer != nil {
+			c.StartTimer.Stop()
+			switch c.MatchType {
+			case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
+				m.NewManager()
+			default:
+				log.Error("unknown match:%+v", c)
+			}
+		}
 	case 2: // 下架
 		if c.State != Signing {
 			code = 1
@@ -201,6 +216,9 @@ func optMatch(args []interface{}) {
 			code = 1
 			desc = "赛事未下架!"
 			return
+		}
+		if c.StartTimer != nil {
+			c.StartTimer.Stop()
 		}
 		c.State = Delete
 		delete(MatchManagerList, c.MatchID)

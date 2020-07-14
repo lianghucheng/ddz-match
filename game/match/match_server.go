@@ -60,11 +60,15 @@ func initMatchConfig() error {
 			}
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
-				game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-					NewScoreManager(sConfig)
+				sConfig.State = Cancel
+				sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+					// NewScoreManager(sConfig)
+					sConfig.NewManager()
 				})
+				MatchManagerList[sConfig.MatchID] = sConfig
 			} else {
-				NewScoreManager(sConfig)
+				// NewScoreManager(sConfig)
+				sConfig.NewManager()
 			}
 		default:
 			log.Error("unknown match:%v", one)
@@ -155,6 +159,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				StartType: m.StartType,
 				IsSign:    false,
 				MatchType: m.MatchType,
+				MatchIcon: m.MatchIcon,
 			})
 		}
 		return list
