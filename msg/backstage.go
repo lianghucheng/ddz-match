@@ -10,6 +10,8 @@ func init() {
 	Processor.Register(&RPC_ShowHall{})
 	Processor.Register(&RPC_EditMatch{})
 	Processor.Register(&RPC_OptMatch{})
+	Processor.Register(&RPC_OptUser{})
+	Processor.Register(&RPC_ClearInfo{})
 }
 
 // RPC_AddManagerReq 后台调用游戏服新增赛事
@@ -65,6 +67,24 @@ type RPC_EditMatch struct {
 type RPC_OptMatch struct {
 	MatchID string // 赛事id号
 	Opt     int    // 操作符，1上架，2下架，3删除
+
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_OptUser 后台控制玩家封号
+type RPC_OptUser struct {
+	UID int
+	Opt int
+
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_ClearInfo 后台清除玩家绑定信息
+type RPC_ClearInfo struct {
+	UID int
+	Opt int
 
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter

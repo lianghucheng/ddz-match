@@ -99,6 +99,22 @@ type MatchRecord struct {
 	Multiples  string //倍数
 }
 
+// UserMatchReview 用户后台的赛事列表总览
+type UserMatchReview struct {
+	UID            int
+	AccountID      int
+	MatchID        string
+	MatchType      string
+	MatchName      string
+	MatchTotal     int
+	MatchWins      int
+	MatchFails     int
+	AverageBatting int
+	Coupon         int64
+	AwardMoney     int64
+	PersonalProfit int64
+}
+
 // GetAwardType 获取奖励类型
 func GetAwardType(award string) string {
 	if strings.Index(award, Money) != -1 {

@@ -1,11 +1,14 @@
 package match
 
 import (
+	"ddz/game/db"
 	. "ddz/game/player"
 	. "ddz/game/room"
+	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
 	"errors"
+	"time"
 
 	"github.com/szxby/tools/log"
 )
@@ -137,8 +140,23 @@ func (base *BaseMatch) Start() {
 	// c := base.Manager.GetNormalConfig()
 	// c.AllSignInPlayers = []int{}
 	// base.Manager.SetNormalConfig(c)
-	for uid := range base.AllPlayers {
+	for uid, user := range base.AllPlayers {
+		log.Debug("remove uid:%v", uid)
 		base.Manager.RemoveSignPlayer(uid)
+		// 统计报名费
+		// hall.UpdateUserCoupon(user, -base.NormalCofig.EnterFee, user.BaseData.UserData.Coupon+base.NormalCofig.EnterFee,
+		// 	user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchSignIn)
+		db.InsertItemLog(db.ItemLog{
+			UID:        user.BaseData.UserData.AccountID,
+			Item:       values.Coupon,
+			Amount:     -base.NormalCofig.EnterFee,
+			Way:        db.MatchSignIn,
+			CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+			Before:     user.BaseData.UserData.Coupon + base.NormalCofig.EnterFee,
+			After:      user.BaseData.UserData.Coupon,
+			OptType:    db.MatchOpt,
+			MatchID:    base.SonMatchID,
+		})
 	}
 	BroadcastMatchInfo()
 	base.Manager.CheckNewConfig()
@@ -227,5 +245,21 @@ func (base *BaseMatch) CloseMatch() {
 	// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
 	for _, uid := range base.SignInPlayers {
 		base.Manager.SignOut(uid, base.SonMatchID)
+	}
+}
+
+// GetMatchTypeField 根据赛事类型，返回相应的field name
+func (base *BaseMatch) GetMatchTypeField() string {
+	switch base.NormalCofig.MatchType {
+	case ScoreMatch:
+		return "socrematch"
+	case MoneyMatch:
+		return "moneymatch"
+	case DoubleMatch:
+		return "doublematch"
+	case QuickMatch:
+		return "quickmatch"
+	default:
+		return ""
 	}
 }

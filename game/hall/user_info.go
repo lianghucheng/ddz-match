@@ -6,6 +6,7 @@ import (
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -37,7 +38,7 @@ func AddCoupon(user *player.User, count int64) {
 	user.WriteMsg(&msg.S2C_GetCoupon{
 		Error: msg.S2C_GetCouponSuccess,
 	})
-	UpdateUserCoupon(user, count, db.Charge)
+	UpdateUserCoupon(user, count, user.BaseData.UserData.Coupon-count, user.BaseData.UserData.Coupon, db.NormalOpt, db.Charge)
 }
 
 func UpdateUserAfterTaxAward(user *player.User) {
@@ -69,10 +70,10 @@ func TakenFirstCoupon(user *player.User) {
 	ud := user.GetUserData()
 	ud.FirstLogin = false
 	ud.Coupon += 5
-	game.GetSkeleton().Go(func(){
+	game.GetSkeleton().Go(func() {
 		player.SaveUserData(ud)
-	},func(){
+	}, func() {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
-		UpdateUserCoupon(user, 5, db.InitPlayer)
+		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
 	})
 }

@@ -2,7 +2,8 @@ package db
 
 import (
 	"ddz/game/values"
-	"time"
+
+	"gopkg.in/mgo.v2"
 
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
@@ -21,16 +22,9 @@ import (
 // }
 
 // InsertItemLog 插入变动日志
-func InsertItemLog(uid int, amount int64, item string, way string) {
+func InsertItemLog(data ItemLog) {
 	s := MongoDB.Ref()
 	defer MongoDB.UnRef(s)
-	data := ItemLog{
-		UID:        uid,
-		Item:       item,
-		Way:        way,
-		Amount:     amount,
-		CreateTime: time.Now().Format("2006-01-02 15:04:05"),
-	}
 	err := s.DB(DB).C("itemlog").Insert(data)
 	if err != nil {
 		log.Error("insert fail:%v", err)
@@ -54,6 +48,42 @@ func UpdateMatchManager(matchID string, update interface{}) error {
 	_, err := db.DB(DB).C("matchmanager").Upsert(bson.M{"matchid": matchID}, update)
 	if err != nil {
 		log.Error("update match manager %v update: %v error: %v", matchID, update, err)
+		return err
+	}
+	return nil
+}
+
+// GetUserMatchReview 获取玩家赛事总览数据
+func GetUserMatchReview(uid int, matchType, matchID string) (values.UserMatchReview, error) {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	one := values.UserMatchReview{}
+	err := db.DB(DB).C("matchreview").Find(bson.M{"uid": uid, "matchtype": matchType, "matchid": matchID}).One(&one)
+	if err != nil && err != mgo.ErrNotFound {
+		log.Error("err:%v", err)
+		return one, err
+	}
+	return one, nil
+}
+
+// UpsertUserMatchReview 更新玩家赛事总览数据
+func UpsertUserMatchReview(selector interface{}, update interface{}) error {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	_, err := db.DB(DB).C("matchreview").Upsert(selector, update)
+	if err != nil {
+		log.Error("err:%v", err)
+		return err
+	}
+	return nil
+}
+
+// UpdateBankInfo 更新银行卡信息
+func UpdateBankInfo(uid int, update interface{}) error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	if _, err := s.DB(DB).C("bankcard").Upsert(bson.M{"userid": uid}, update); err != nil && err != mgo.ErrNotFound {
+		log.Error("err:%v", err)
 		return err
 	}
 	return nil
