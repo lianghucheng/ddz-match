@@ -67,6 +67,7 @@ func init() {
 	// back
 	msg.Processor.SetRouter(&msg.RPC_AddManagerReq{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_ShowHall{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_EditSort{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_EditMatch{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_OptMatch{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_OptUser{}, game.ChanRPC)
