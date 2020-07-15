@@ -42,6 +42,8 @@ func startHTTPServer() {
 	mux.HandleFunc("/showHall", showHall)
 	mux.HandleFunc("/editMatch", editMatch)
 	mux.HandleFunc("/optMatch", optMatch)
+	mux.HandleFunc("/optUser", optUser)
+	mux.HandleFunc("/clearRealInfo", clearRealInfo)
 
 	mux.HandleFunc("/addaward", addAward)
 	//电竞二打一支付回调

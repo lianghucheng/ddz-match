@@ -6,17 +6,28 @@ import (
 	"ddz/game/player"
 	"ddz/game/values"
 	"ddz/msg"
+	"time"
 )
 
 // UpdateUserCoupon 更新玩家点券
-func UpdateUserCoupon(user *player.User, amount int64, way string) {
+func UpdateUserCoupon(user *player.User, amount, before, after int64, opt int, way string) {
 	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
 		Coupon: user.Coupon(),
 	})
 	if amount != 0 {
 		game.GetSkeleton().Go(
 			func() {
-				db.InsertItemLog(user.BaseData.UserData.UserID, amount, values.Coupon, way)
+				data := db.ItemLog{
+					UID:        user.BaseData.UserData.AccountID,
+					Item:       values.Coupon,
+					Way:        way,
+					Amount:     amount,
+					Before:     before,
+					After:      after,
+					OptType:    opt,
+					CreateTime: time.Now().Unix(),
+				}
+				db.InsertItemLog(data)
 			}, nil)
 	}
 }

@@ -70,6 +70,8 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_ShowHall{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_EditMatch{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_OptMatch{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_OptUser{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_ClearInfo{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_AddAward{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_UpdateAwardInfo{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_TakenFirstCoupon{}, game.ChanRPC)

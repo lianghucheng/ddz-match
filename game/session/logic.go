@@ -40,6 +40,11 @@ func tokenLogin(user *User, token string) {
 		if userData == nil || user.State == UserLogout {
 			return
 		}
+		if userData.Role == RoleBlack {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_RoleBlack})
+			user.Close()
+			return
+		}
 		ip := strings.Split(user.RemoteAddr().String(), ":")[0]
 		if oldUser, ok := UserIDUsers[userData.UserID]; ok {
 			log.Debug("userID: %v 已经登录 %v %v", userData.UserID, oldUser.BaseData.UserData.LoginIP, ip)
@@ -95,6 +100,11 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
+	if userData.Role == RoleBlack {
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_RoleBlack})
+		user.Close()
+		return
+	}
 	if userData.Password != password {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Pwd_Error})
@@ -147,7 +157,9 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	//	user.BaseData.UserData.Coupon += 5
 	//	SaveUserData(user.BaseData.UserData)
 	//} else {
-	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
+	user.CheckFirstLogin()
+	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token,
+		"online": user.BaseData.UserData.Online, "logintime": time.Now().Unix()}})
 	//}
 	autoHeartbeat(user)
 	bankCard := new(hall.BankCard)
@@ -181,7 +193,10 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		SetNickName:    user.GetUserData().SetNickNameCount > 0,
 	})
 
-	hall.UpdateUserCoupon(user, 0, "")
+	// hall.UpdateUserCoupon(user, 0, "")
+	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
+		Coupon: user.Coupon(),
+	})
 	hall.UpdateUserAfterTaxAward(user)
 	hall.SendMail(user)
 	hall.SendDailySignItems(user)

@@ -8,11 +8,13 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	"ddz/msg"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/name5566/leaf/gate"
 )
@@ -32,6 +34,8 @@ func init() {
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
 	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
+	skeleton.RegisterChanRPC("optUser", optUser)     // 操作玩家
+	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 }
 
@@ -181,7 +185,7 @@ func rpcTempPayOK(args []interface{}) {
 		user.WriteMsg(&msg.S2C_GetCoupon{
 			Error: msg.ErrPaySuccess,
 		})
-		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
+		hall.UpdateUserCoupon(user, int64(addCoupon), user.GetUserData().Coupon-int64(addCoupon), user.GetUserData().Coupon, db.ChargeOpt, db.Charge)
 	} else {
 		ud.Coupon += int64(addCoupon)
 		go func() {
@@ -271,6 +275,77 @@ func rpcUpdateAwardInfo(args []interface{}) {
 	}
 }
 
+func optUser(args []interface{}) {
+	// log.Debug("optUser:%+v", args)
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_OptUser)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("optUser:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if data.Opt != -1 && data.Opt != 1 {
+		code = 1
+		desc = "无效操作!"
+		return
+	}
+	if user, ok := UserIDUsers[data.UID]; ok && data.Opt == -1 {
+		user.Close()
+	}
+	skeleton.Go(func() {
+		UpdateUserData(data.UID, bson.M{"$set": bson.M{"role": data.Opt}})
+	}, nil)
+}
+
+func clearInfo(args []interface{}) {
+	// log.Debug("optUser:%+v", args)
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_ClearInfo)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if data.Opt != 1 && data.Opt != 2 { // 1清理实名信息＋银行卡信息，２只清理银行卡
+		code = 1
+		desc = "无效操作!"
+		return
+	}
+	if user, ok := UserIDUsers[data.UID]; ok && data.Opt == 1 {
+		user.BaseData.UserData.RealName = ""
+		user.BaseData.UserData.IDCardNo = ""
+	}
+	bank := &hall.BankCard{
+		Userid: data.UID,
+	}
+	skeleton.Go(func() {
+		if data.Opt == 1 {
+			UpdateUserData(data.UID, bson.M{"$set": bson.M{"realname": "", "idcardno": ""}})
+		}
+		db.UpdateBankInfo(data.UID, bank)
+	}, nil)
+}
+
 func rpcUpdateCoupon(args []interface{}) {
 	if len(args) != 1 {
 		log.Debug("参数长度异常")
@@ -282,7 +357,7 @@ func rpcUpdateCoupon(args []interface{}) {
 		ud := user.GetUserData()
 		ud.Coupon += int64(m.Amount)
 		SaveUserData(ud)
-		hall.UpdateUserCoupon(user, int64(m.Amount), db.Backstage)
+		hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
 	} else {
 		ud.Coupon += int64(m.Amount)
 		SaveUserData(ud)

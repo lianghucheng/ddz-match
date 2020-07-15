@@ -68,7 +68,7 @@ type RPC_UpdateAwardInfo struct {
 }
 
 type RPC_UpdateCoupon struct {
-	Secret 		string
-	Accountid 	int
-	Amount 		int
+	Secret    string
+	Accountid int
+	Amount    int
 }
