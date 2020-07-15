@@ -245,7 +245,7 @@ func rpcAddAward(args []interface{}) {
 		user.GetUserData().Fee += m.Amount
 		game.GetSkeleton().Go(func() {
 			SaveUserData(user.GetUserData())
-			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeAward, "测试比赛类型", "测试比赛id：￥@#%￥#&……￥*……￥", []int{})
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		}, func() {
 			hall.UpdateUserAfterTaxAward(user)
 		})
@@ -254,7 +254,7 @@ func rpcAddAward(args []interface{}) {
 		ud.Fee += m.Amount
 		game.GetSkeleton().Go(func() {
 			SaveUserData(ud)
-			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeAward, "测试比赛类型", "测试比赛id：￥@#%￥#&……￥*……￥", []int{})
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		}, nil)
 	}
 	log.Debug("【添加提现测试数据成功】")
