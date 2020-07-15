@@ -16,6 +16,7 @@ const (
 	MatchSignIn  = "报名赛事" // 赛事报名
 	MatchSignOut = "退出赛事" // 赛事签出
 	MatchAward   = "赛事奖励" // 赛事奖励
+	Backstage    = "后台发放" // 后台发放
 )
 
 // ItemLog 物品日志

@@ -68,6 +68,12 @@ func ChangePassword(user *player.User, m *msg.C2S_ChangePassword) {
 
 func TakenFirstCoupon(user *player.User) {
 	ud := user.GetUserData()
+	if ud.FirstLogin == false {
+		user.WriteMsg(&msg.S2C_TakenFirstCoupon{
+			Error: msg.ErrS2CTakenFirstCouponFail,
+		})
+		return
+	}
 	ud.FirstLogin = false
 	ud.Coupon += 5
 	game.GetSkeleton().Go(func() {

@@ -32,10 +32,11 @@ func init() {
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
 	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
-	skeleton.RegisterChanRPC("TestAddAward", rpcTestAddAward)
+	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
 	skeleton.RegisterChanRPC("optUser", optUser)     // 操作玩家
 	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
+	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -238,12 +239,12 @@ func rpcAddFee(args []interface{}) {
 	}
 }
 
-func rpcTestAddAward(args []interface{}) {
+func rpcAddAward(args []interface{}) {
 	if len(args) != 1 {
 		log.Debug("参数长度异常")
 		return
 	}
-	m := args[0].(*msg.RPC_TestAddAward)
+	m := args[0].(*msg.RPC_AddAward)
 	if user, ok := UserIDUsers[m.Uid]; ok {
 		user.GetUserData().Fee += m.Amount
 		game.GetSkeleton().Go(func() {
@@ -254,9 +255,10 @@ func rpcTestAddAward(args []interface{}) {
 		})
 	} else {
 		ud := ReadUserDataByID(m.Uid)
-		ud.Fee += 10
+		ud.Fee += m.Amount
 		game.GetSkeleton().Go(func() {
 			SaveUserData(ud)
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeAward, "测试比赛类型", "测试比赛id：￥@#%￥#&……￥*……￥", []int{})
 		}, nil)
 	}
 	log.Debug("【添加提现测试数据成功】")
@@ -342,4 +344,22 @@ func clearInfo(args []interface{}) {
 		}
 		db.UpdateBankInfo(data.UID, bank)
 	}, nil)
+}
+
+func rpcUpdateCoupon(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateCoupon)
+	ud := ReadUserDataByAid(m.Accountid)
+	if user, ok := UserIDUsers[ud.UserID]; ok {
+		ud := user.GetUserData()
+		ud.Coupon += int64(m.Amount)
+		SaveUserData(ud)
+		hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
+	} else {
+		ud.Coupon += int64(m.Amount)
+		SaveUserData(ud)
+	}
 }
