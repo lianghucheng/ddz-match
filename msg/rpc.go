@@ -77,5 +77,5 @@ type RPC_UpdateCoupon struct {
 type RPC_UpdateHeadImg struct {
 	Secret    string
 	Accountid int
-	HeadImg    string
+	HeadImg   string
 }

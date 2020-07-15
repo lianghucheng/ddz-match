@@ -164,4 +164,3 @@ func GetUrlKeyValStr(data interface{}) (string, error) {
 	rt = strings.Join(strs, "&")
 	return rt, nil
 }
-
