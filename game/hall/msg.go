@@ -25,7 +25,7 @@ func UpdateUserCoupon(user *player.User, amount, before, after int64, opt int, w
 					Before:     before,
 					After:      after,
 					OptType:    opt,
-					CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+					CreateTime: time.Now().Unix(),
 				}
 				db.InsertItemLog(data)
 			}, nil)

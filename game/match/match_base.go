@@ -151,7 +151,7 @@ func (base *BaseMatch) Start() {
 			Item:       values.Coupon,
 			Amount:     -base.NormalCofig.EnterFee,
 			Way:        db.MatchSignIn,
-			CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+			CreateTime: time.Now().Unix(),
 			Before:     user.BaseData.UserData.Coupon + base.NormalCofig.EnterFee,
 			After:      user.BaseData.UserData.Coupon,
 			OptType:    db.MatchOpt,

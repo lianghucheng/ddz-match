@@ -193,7 +193,7 @@ func (user *User) CheckFirstLogin() {
 			Before:     user.BaseData.UserData.Coupon,
 			After:      user.BaseData.UserData.Coupon,
 			OptType:    db.NormalOpt,
-			CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+			CreateTime: time.Now().Unix(),
 		})
 	}
 }
