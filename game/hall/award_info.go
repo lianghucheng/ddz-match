@@ -13,7 +13,7 @@ func sendAwardInfo(user *player.User) {
 	flowData := new(FlowData)
 	flowData.Userid = user.BaseData.UserData.UserID
 	user.WriteMsg(&msg.S2C_AwardInfo{
-		Amount:       user.Fee(), //todo:尚未开发
+		Amount:       user.Fee(),
 		WithDrawList: *withDrawList(flowData.readAllByUserID()),
 	})
 }
