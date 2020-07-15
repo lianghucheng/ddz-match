@@ -24,6 +24,8 @@ func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 		status := ""
 		if v.FlowType == FlowTypeAward {
 			status = FlowDataStatusMsg[FlowDataStatusNormal]
+		}else if v.FlowType == FlowTypeGift {
+			status = FlowDataStatusMsg[FlowDataStatusGift]
 		} else {
 			status = FlowDataStatusMsg[v.Status]
 		}

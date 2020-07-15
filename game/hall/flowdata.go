@@ -22,6 +22,7 @@ const (
 	FlowDataStatusAction = 1
 	FlowDataStatusOver   = 2
 	FlowDataStatusBack   = 3
+	FlowDataStatusGift   = 4
 )
 
 var FlowDataStatusMsg = map[int]string{
@@ -29,6 +30,7 @@ var FlowDataStatusMsg = map[int]string{
 	FlowDataStatusAction: "提奖中",
 	FlowDataStatusOver:   "已提奖",
 	FlowDataStatusBack:   "已退奖",
+	FlowDataStatusGift:   "平台赠送",
 }
 
 type FlowData struct {
