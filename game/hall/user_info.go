@@ -11,7 +11,7 @@ import (
 )
 
 func SetNickname(user *player.User, nickname string) {
-	if len(nickname) < 3 || len(nickname) > 18 {
+	if len(nickname) < 9 || len(nickname) > 18 {
 		user.WriteMsg(&msg.S2C_UpdateNickName{
 			Error: msg.S2C_SetNickName_Length,
 		})

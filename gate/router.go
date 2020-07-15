@@ -76,4 +76,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_UpdateAwardInfo{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_TakenFirstCoupon{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_UpdateCoupon{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_UpdateHeadImg{}, game.ChanRPC)
 }
