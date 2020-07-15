@@ -60,7 +60,6 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_GetGameResultRecord{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_TempPayOK{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_ChangePassword{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.Test_WriteFlowData{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_AddFee{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_RaceInfo{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_GetGameRecordAll{}, game.ChanRPC)
@@ -77,4 +76,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_TakenFirstCoupon{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_UpdateCoupon{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_UpdateHeadImg{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_CreateEdyOrder{}, game.ChanRPC)
 }

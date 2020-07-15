@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/conf2"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
@@ -81,5 +82,11 @@ func TakenFirstCoupon(user *player.User) {
 	}, func() {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
 		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
+	})
+}
+
+func SendPriceMenu(user *player.User){
+	user.WriteMsg(&msg.S2C_PriceMenu{
+		PriceItems:conf2.GetPriceMenu(),
 	})
 }

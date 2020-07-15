@@ -133,7 +133,7 @@ type EdyPayNotifyResp struct {
 	OrderResult int    `json:"orderResult"` //是	处理结果，success为成功
 	OrderAmount string `json:"orderAmount"` //是	处理金额，百分制，100=1元
 	OrderTime   string `json:"orderTime"`   //是	处理时间
-	Ts          int    `json:"ts"`          //是	处理完成时的时间戳
+	Ts          int64    `json:"ts"`          //是	处理完成时的时间戳
 	Sign        string `json:"sign"`        //是	签名，此处签名需要开发者按照返回值来计算
 }
 
@@ -152,11 +152,13 @@ func GetUrlKeyValStr(data interface{}) (string, error) {
 	rt := ""
 	cnt := 0
 	for k, v := range m {
-		if cnt == 0 {
-			cnt++
-			rt += fmt.Sprintf("%v=%v", k, v)
-		} else {
-			rt += fmt.Sprintf("&%v=%v", k, v)
+		if k != "sign" {
+			if cnt == 0 {
+				cnt++
+				rt += fmt.Sprintf("%v=%v", k, v)
+			} else {
+				rt += fmt.Sprintf("&%v=%v", k, v)
+			}
 		}
 	}
 	strs := strings.Split(rt, "&")

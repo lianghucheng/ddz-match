@@ -7,6 +7,7 @@ import (
 	. "ddz/game/db"
 	"ddz/game/hall"
 	"ddz/game/player"
+	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"encoding/json"
@@ -264,6 +265,16 @@ func addAward(w http.ResponseWriter, r *http.Request) {
 func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	edyPayNotifyReq := new(edy_api.EdyPayNotifyReq)
 	//todo:解析到CreateOrderReq
+	edyPayNotifyReq.Amount, _ = strconv.Atoi(r.FormValue("amount"))
+	edyPayNotifyReq.AppID, _ = strconv.Atoi(r.FormValue("appID"))
+	edyPayNotifyReq.OpenExtend = r.FormValue("openExtend")
+	edyPayNotifyReq.OpenOrderID = r.FormValue("openOrderID")
+	edyPayNotifyReq.OrderID = r.FormValue("orderID")
+	edyPayNotifyReq.OrderTime = r.FormValue("openOrderID")
+	edyPayNotifyReq.PayType, _ = strconv.Atoi(r.FormValue("payType"))
+	edyPayNotifyReq.PayTime = r.FormValue("payTime")
+	edyPayNotifyReq.Ts, _ = strconv.Atoi(r.FormValue("ts"))
+	edyPayNotifyReq.Sign = r.FormValue("sign")
 	param, err := edy_api.GetUrlKeyValStr(edyPayNotifyReq)
 	if err != nil {
 		log.Error(err.Error())
@@ -277,7 +288,27 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//todo:存订单，发货
+	order := new(values.EdyOrder)
+	Read("edyorder", order, bson.M{"tradeno": edyPayNotifyReq.OpenOrderID, "status": false})
+	order.TradeNoReceive = edyPayNotifyReq.OrderID
+	order.Status = true
+	Save("edyorder", order, bson.M{"_id": order.ID})
+	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
+		TotalFee:int(order.Fee),
+		AccountID:order.Accountid,
+	})
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
+	edyPayNotifyResp.OrderResult = 0
+	edyPayNotifyResp.OrderAmount = fmt.Sprintln(order.Fee)
+	ts := time.Now().Unix()
+	edyPayNotifyResp.OrderTime = time.Unix(ts, 0).Format("2006-01-02 03:04:05")
+	edyPayNotifyResp.Ts = ts
+	param2, err := edy_api.GetUrlKeyValStr(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	edyPayNotifyResp.Sign = edy_api.GenerateSign(param2)
 	//todo:封装响应数据
 	b, err := json.Marshal(edyPayNotifyResp)
 	if err != nil {
@@ -309,6 +340,7 @@ func handleUpdateCoupon(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateHeadImg(w http.ResponseWriter, r *http.Request) {
+	log.Debug("【更新头像】")
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -320,6 +352,8 @@ func updateHeadImg(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		return
 	}
+
+	log.Debug("*********%+v", *m)
 
 	if m.Secret != "123456" {
 		log.Error("非法调用")

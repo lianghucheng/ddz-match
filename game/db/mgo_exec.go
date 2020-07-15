@@ -88,3 +88,22 @@ func UpdateBankInfo(uid int, update interface{}) error {
 	}
 	return nil
 }
+
+func Save(coll string, data interface{}, selector bson.M) {
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	_, err := se.DB(DB).C(coll).Upsert(selector, data)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+}
+
+func Read(coll string, data interface{}, query bson.M) {
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	if err := se.DB(DB).C(coll).Find(query).One(data); err != nil {
+		log.Error(err.Error())
+		return
+	}
+}

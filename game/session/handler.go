@@ -3,6 +3,7 @@ package session
 import (
 	"ddz/game/hall"
 	. "ddz/game/match"
+	"ddz/game/pay"
 	. "ddz/game/player"
 	. "ddz/game/room"
 	"ddz/game/values"
@@ -52,7 +53,7 @@ func init() {
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
 	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
 	handler(&msg.C2S_TakenFirstCoupon{}, handleTakenFirstCoupon)
-	handler(&msg.Test_WriteFlowData{}, handleAidAwardData)
+	handler(&msg.C2S_CreateEdyOrder{}, handleCreateEdyOrder)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -546,28 +547,6 @@ func handleChangePassword(args []interface{}) {
 	hall.ChangePassword(user, m)
 }
 
-func handleTest(args []interface{}) {
-	log.Debug("【写入成功】")
-	m := args[0].(*msg.Test_WriteFlowData)
-
-	uid := m.UID
-	ud := ReadUserDataByID(uid)
-	ud.Fee += 10
-	SaveUserData(ud)
-	hall.WriteFlowData(uid, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
-}
-
-func handleAidAwardData(args []interface{}) {
-	log.Debug("【写入成功】")
-	m := args[0].(*msg.Test_WriteFlowData)
-
-	uid := m.UID
-	ud := ReadUserDataByAid(uid)
-	ud.Fee += 10
-	SaveUserData(ud)
-	hall.WriteFlowData(ud.UserID, 10, hall.FlowTypeAward, "AAAATest", "xxxx!!!", []int{})
-}
-
 func handleTakenFirstCoupon(args []interface{}) {
 	m := args[0].(*msg.C2S_TakenFirstCoupon)
 	a := args[1].(gate.Agent)
@@ -580,4 +559,18 @@ func handleTakenFirstCoupon(args []interface{}) {
 		return
 	}
 	hall.TakenFirstCoupon(user)
+}
+
+func handleCreateEdyOrder(args []interface{}) {
+	m := args[0].(*msg.C2S_CreateEdyOrder)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+
+	pay.CreateOrder(user, m.PriceID)
 }
