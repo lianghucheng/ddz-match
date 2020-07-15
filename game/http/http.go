@@ -40,6 +40,7 @@ func startHTTPServer() {
 	// 后台比赛接口
 	mux.HandleFunc("/addMatch", addMatch)
 	mux.HandleFunc("/showHall", showHall)
+	mux.HandleFunc("/editSort", editSort)
 	mux.HandleFunc("/editMatch", editMatch)
 	mux.HandleFunc("/optMatch", optMatch)
 	mux.HandleFunc("/optUser", optUser)

@@ -8,6 +8,7 @@ import (
 	. "ddz/game/values"
 	"ddz/msg"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -150,7 +151,7 @@ func (base *BaseMatch) Start() {
 			UID:        user.BaseData.UserData.AccountID,
 			Item:       values.Coupon,
 			Amount:     -base.NormalCofig.EnterFee,
-			Way:        db.MatchSignIn,
+			Way:        db.MatchSignIn + fmt.Sprintf(":%v,%v", base.NormalCofig.MatchType, base.NormalCofig.MatchName),
 			CreateTime: time.Now().Unix(),
 			Before:     user.BaseData.UserData.Coupon + base.NormalCofig.EnterFee,
 			After:      user.BaseData.UserData.Coupon,

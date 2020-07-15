@@ -15,6 +15,7 @@ func init() {
 	game.GetSkeleton().RegisterChanRPC("showHall", showHall)   // 控制某一赛事是否在大厅显示
 	game.GetSkeleton().RegisterChanRPC("editMatch", editMatch) // 配置赛事
 	game.GetSkeleton().RegisterChanRPC("optMatch", optMatch)   // 操作赛事，1上架，2下架，3删除
+	game.GetSkeleton().RegisterChanRPC("editSort", editSort)   // 修改赛事排序
 }
 
 func addMatch(args []interface{}) {
@@ -104,6 +105,40 @@ func showHall(args []interface{}) {
 	c := m.GetNormalConfig()
 	if c.ShowHall != data.ShowHall {
 		c.ShowHall = data.ShowHall
+		m.SetNormalConfig(c)
+		m.Save()
+		// 通知客户端
+		BroadcastMatchInfo()
+	}
+}
+
+func editSort(args []interface{}) {
+	log.Debug("showhall:%v", args)
+	if len(args) != 1 {
+		log.Error("error req:%v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_EditSort)
+	if !ok {
+		log.Error("error req:%v", args)
+		return
+	}
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	m, ok := MatchManagerList[data.MatchID]
+	if !ok {
+		code = 1
+		desc = "操作的赛事不存在！"
+		return
+	}
+	c := m.GetNormalConfig()
+	if c.Sort != data.Sort {
+		c.Sort = data.Sort
 		m.SetNormalConfig(c)
 		m.Save()
 		// 通知客户端

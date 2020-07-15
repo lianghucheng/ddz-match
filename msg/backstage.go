@@ -8,6 +8,7 @@ import (
 func init() {
 	Processor.Register(&RPC_AddManagerReq{})
 	Processor.Register(&RPC_ShowHall{})
+	Processor.Register(&RPC_EditSort{})
 	Processor.Register(&RPC_EditMatch{})
 	Processor.Register(&RPC_OptMatch{})
 	Processor.Register(&RPC_OptUser{})
@@ -45,6 +46,15 @@ type RPC_AddManagerReq struct {
 type RPC_ShowHall struct {
 	MatchID  string
 	ShowHall bool
+
+	WG    *sync.WaitGroup     // 用于等待协程返回
+	Write http.ResponseWriter // 在协程中返回请求
+}
+
+// RPC_EditSort 后台控制赛事是否在大厅显示
+type RPC_EditSort struct {
+	MatchID string
+	Sort    int
 
 	WG    *sync.WaitGroup     // 用于等待协程返回
 	Write http.ResponseWriter // 在协程中返回请求
