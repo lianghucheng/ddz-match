@@ -47,6 +47,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/clearRealInfo", clearRealInfo)
 
 	mux.HandleFunc("/addaward", addAward)
+	mux.HandleFunc("/update-headimg", updateHeadImg)
 	//电竞二打一支付回调
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 
@@ -306,4 +307,24 @@ func handleUpdateCoupon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	game.GetSkeleton().ChanRPCServer.Go("UpdateCoupon", m)
+}
+
+func updateHeadImg(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	m := new(msg.RPC_UpdateHeadImg)
+	if err := json.Unmarshal(b, m); err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	if m.Secret != "123456" {
+		log.Error("非法调用")
+		return
+	}
+	game.GetSkeleton().ChanRPCServer.Go("UpdateHeadImg", m)
 }

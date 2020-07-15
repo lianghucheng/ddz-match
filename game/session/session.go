@@ -37,6 +37,7 @@ func init() {
 	skeleton.RegisterChanRPC("optUser", optUser)     // 操作玩家
 	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
+	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -360,6 +361,23 @@ func rpcUpdateCoupon(args []interface{}) {
 		hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
 	} else {
 		ud.Coupon += int64(m.Amount)
+		SaveUserData(ud)
+	}
+}
+
+func rpcUpdateHeadImg(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateHeadImg)
+	ud := ReadUserDataByAid(m.Accountid)
+	if user, ok := UserIDUsers[ud.UserID]; ok {
+		ud := user.GetUserData()
+		ud.Headimgurl = m.HeadImg
+		SaveUserData(ud)
+	} else {
+		ud.Headimgurl = m.HeadImg
 		SaveUserData(ud)
 	}
 }

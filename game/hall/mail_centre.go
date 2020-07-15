@@ -181,7 +181,6 @@ func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 	mailBox.pushMailBox()
 }
 
-//todo：卡住原因，产品还没出发邮件的时机规则
 func (ctx *MailBox) pushMailBox() {
 	id, err := db.MongoDBNextSeq("mailbox")
 	if err != nil {

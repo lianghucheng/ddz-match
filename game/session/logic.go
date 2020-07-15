@@ -87,7 +87,7 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
-
+	log.Debug("*************%+v", userData)
 	// firstLogin = userData.FirstLogin
 	// if !userData.FirstLogin {
 	// 	userData.FirstLogin = !userData.FirstLogin
