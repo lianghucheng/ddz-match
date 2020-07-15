@@ -158,6 +158,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	//	SaveUserData(user.BaseData.UserData)
 	//} else {
 	user.CheckFirstLogin()
+	user.BaseData.UserData.Logintime = time.Now().Unix()
 	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token,
 		"online": user.BaseData.UserData.Online, "logintime": time.Now().Unix()}})
 	//}

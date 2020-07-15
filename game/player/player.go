@@ -38,7 +38,7 @@ type UserData struct {
 	Headimgurl        string
 	Sex               int // 1 男性，2 女性
 	LoginIP           string
-	LoginTime         int64 // 登录时间
+	Logintime         int64 // 登录时间
 	Token             string
 	ExpireAt          int64 // token 过期时间
 	Role              int   // 1 玩家、2 代理、3 管理员、4 超管
@@ -181,11 +181,12 @@ func (user *User) AcountID() int {
 
 // CheckFirstLogin 检查是否每日的首次登录
 func (user *User) CheckFirstLogin() {
-	var oneDay int64 = 24 * 60 * 60
+	// var oneDay int64 = 24 * 60 * 60
 	t := time.Now().Format("2006-01-02")
 	t1, _ := time.Parse("2006-01-02", t)
 	today := t1.Unix() - 8*60*60
-	if today+oneDay > user.BaseData.UserData.LoginTime {
+	// log.Debug("today:%v,logintime:%v", today, user.BaseData.UserData.Logintime)
+	if user.BaseData.UserData.Logintime < today {
 		// 首次登录插入日志
 		db.InsertItemLog(db.ItemLog{
 			UID:        user.BaseData.UserData.AccountID,
