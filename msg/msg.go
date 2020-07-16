@@ -277,5 +277,5 @@ type S2C_WithDraw struct {
 }
 
 type S2C_PriceMenu struct {
-	PriceItems 	*[]conf2.PriceItem
+	PriceItems *[]conf2.PriceItem
 }

@@ -85,8 +85,8 @@ func TakenFirstCoupon(user *player.User) {
 	})
 }
 
-func SendPriceMenu(user *player.User){
+func SendPriceMenu(user *player.User) {
 	user.WriteMsg(&msg.S2C_PriceMenu{
-		PriceItems:conf2.GetPriceMenu(),
+		PriceItems: conf2.GetPriceMenu(),
 	})
 }

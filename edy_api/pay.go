@@ -17,8 +17,8 @@ import (
 
 const (
 	payHost   = "https://api.test.boai1986.cn"
-	appID = 100001
-	appToken = "fddda32b4cb543babbf78a4ba955c05d"
+	appID     = 100001
+	appToken  = "fddda32b4cb543babbf78a4ba955c05d"
 	appSecret = "51b793ef1b7e49cf8060e9c083cf17e5"
 )
 
@@ -74,8 +74,8 @@ func init() {
 
 func GenerateSign(param string) string {
 	m := md5.New()
-	log.Debug("*************%v",appToken+ "&" + param + "&" + appSecret)
-	m.Write([]byte(appToken+ "&" + param + "&" + appSecret))
+	log.Debug("*************%v", appToken+"&"+param+"&"+appSecret)
+	m.Write([]byte(appToken + "&" + param + "&" + appSecret))
 
 	return strings.ToUpper(hex.EncodeToString(m.Sum(nil)))
 }
@@ -125,15 +125,15 @@ type EdyPayNotifyReq struct {
 	Amount      int    `json:"amount"`      //是	支付金额，百分制，即CNY 1为100
 	PayTime     string `json:"payTime"`     //是	支付时间，格式 yyyy-MM-dd HH:mm:ss
 	PayType     int    `json:"payType"`     //是	支付类型, 如微信、支付宝等，详细定义见附件
-	Ts          int64    `json:"ts"`          //是	通知时的时间戳
+	Ts          int64  `json:"ts"`          //是	通知时的时间戳
 	Sign        string `json:"sign"`        //是	签名，详见 4.1 签名计算方法
 }
 
 type EdyPayNotifyResp struct {
-	OrderResult string    `json:"orderResult"` //是	处理结果，success为成功
+	OrderResult string `json:"orderResult"` //是	处理结果，success为成功
 	OrderAmount string `json:"orderAmount"` //是	处理金额，百分制，100=1元
 	OrderTime   string `json:"orderTime"`   //是	处理时间
-	Ts          int64    `json:"ts"`          //是	处理完成时的时间戳
+	Ts          int64  `json:"ts"`          //是	处理完成时的时间戳
 	Sign        string `json:"sign"`        //是	签名，此处签名需要开发者按照返回值来计算
 }
 
@@ -152,7 +152,7 @@ func GetUrlKeyValStr(data interface{}) (string, error) {
 	rt := ""
 	cnt := 0
 	for k, v := range m {
-		if k != "sign" && v != ""{
+		if k != "sign" && v != "" {
 			if cnt == 0 {
 				cnt++
 				if data, ok := v.(float64); ok {

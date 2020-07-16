@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	appID = 100001
-	appToken = "fddda32b4cb543babbf78a4ba955c05d"
+	appID     = 100001
+	appToken  = "fddda32b4cb543babbf78a4ba955c05d"
 	appSecret = "fddda32b4cb543babbf78a4ba955c05d"
 )
 
@@ -36,14 +36,14 @@ func CreateOrder(user *player.User, priceID int) {
 	order.Accountid = user.AcountID()
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
-		AppID:appID,
-		AppToken:appToken,
-		Amount:int(order.Fee),
-		PayType:5,
-		Subject:pm.Name,
-		Description:strconv.Itoa(int(order.Fee/ 100))+pm.Name,
-		OpenOrderID:order.TradeNo,
-		OpenNotifyUrl:"http://123.207.12.67:9085"+edy_api.EdyBackCall,
+		AppID:         appID,
+		AppToken:      appToken,
+		Amount:        int(order.Fee),
+		PayType:       5,
+		Subject:       pm.Name,
+		Description:   strconv.Itoa(int(order.Fee/100)) + pm.Name,
+		OpenOrderID:   order.TradeNo,
+		OpenNotifyUrl: "http://123.207.12.67:9085" + edy_api.EdyBackCall,
 	})
 }
 

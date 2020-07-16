@@ -296,8 +296,8 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	order.Status = true
 	Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
-		TotalFee:int(order.Fee),
-		AccountID:order.Accountid,
+		TotalFee:  int(order.Fee),
+		AccountID: order.Accountid,
 	})
 	log.Debug("【发货成功】")
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)

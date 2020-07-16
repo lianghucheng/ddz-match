@@ -6,10 +6,10 @@ type Config2 struct {
 }
 
 type PriceItem struct {
-	PriceID 	int
-	Fee 		int64
-	Name 		string
-	Amount 		int
+	PriceID int
+	Fee     int64
+	Name    string
+	Amount  int
 }
 
 var dbcfg Config2
@@ -34,40 +34,40 @@ func GetGiftCoupon() int {
 func GetPriceMenu() *[]PriceItem {
 	rt := new([]PriceItem)
 	*rt = append(*rt, PriceItem{
-		PriceID 	:1,
-		Fee 		:20000,
-		Name 		:"点券",
-		Amount 		:200,
+		PriceID: 1,
+		Fee:     20000,
+		Name:    "点券",
+		Amount:  200,
 	})
 	*rt = append(*rt, PriceItem{
-		PriceID 	:2,
-		Fee 		:10000,
-		Name 		:"点券",
-		Amount 		:100,
+		PriceID: 2,
+		Fee:     10000,
+		Name:    "点券",
+		Amount:  100,
 	})
 	*rt = append(*rt, PriceItem{
-		PriceID 	:3,
-		Fee 		:5000,
-		Name 		:"点券",
-		Amount 		:50,
+		PriceID: 3,
+		Fee:     5000,
+		Name:    "点券",
+		Amount:  50,
 	})
 	*rt = append(*rt, PriceItem{
-		PriceID 	:4,
-		Fee 		:2000,
-		Name 		:"点券",
-		Amount 		:20,
+		PriceID: 4,
+		Fee:     2000,
+		Name:    "点券",
+		Amount:  20,
 	})
 	*rt = append(*rt, PriceItem{
-		PriceID 	:5,
-		Fee 		:1000,
-		Name 		:"点券",
-		Amount 		:10,
+		PriceID: 5,
+		Fee:     1000,
+		Name:    "点券",
+		Amount:  10,
 	})
 	*rt = append(*rt, PriceItem{
-		PriceID 	:6,
-		Fee 		:500,
-		Name 		:"点券",
-		Amount 		:5,
+		PriceID: 6,
+		Fee:     500,
+		Name:    "点券",
+		Amount:  5,
 	})
 
 	return rt
