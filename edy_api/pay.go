@@ -17,9 +17,9 @@ import (
 
 const (
 	payHost   = "https://api.test.boai1986.cn"
-	appID     = 100001
-	appToken  = "fddda32b4cb543babbf78a4ba955c05d"
-	appSecret = "51b793ef1b7e49cf8060e9c083cf17e5"
+	AppID     = 100001
+	AppToken  = "fddda32b4cb543babbf78a4ba955c05d"
+	AppSecret = "51b793ef1b7e49cf8060e9c083cf17e5"
 )
 
 type PayCommon struct {
@@ -74,8 +74,8 @@ func init() {
 
 func GenerateSign(param string) string {
 	m := md5.New()
-	log.Debug("*************%v", appToken+"&"+param+"&"+appSecret)
-	m.Write([]byte(appToken + "&" + param + "&" + appSecret))
+	log.Debug("*************%v", AppToken+"&"+param+"&"+AppSecret)
+	m.Write([]byte(AppToken + "&" + param + "&" + AppSecret))
 
 	return strings.ToUpper(hex.EncodeToString(m.Sum(nil)))
 }

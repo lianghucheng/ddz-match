@@ -14,12 +14,6 @@ import (
 	"time"
 )
 
-const (
-	appID     = 100001
-	appToken  = "fddda32b4cb543babbf78a4ba955c05d"
-	appSecret = "fddda32b4cb543babbf78a4ba955c05d"
-)
-
 func CreateOrder(user *player.User, priceID int) {
 	order := new(values.EdyOrder)
 	order.TradeNo = utils.GetOutTradeNo()
@@ -36,8 +30,8 @@ func CreateOrder(user *player.User, priceID int) {
 	order.Accountid = user.AcountID()
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
-		AppID:         appID,
-		AppToken:      appToken,
+		AppID:         edy_api.AppID,
+		AppToken:      edy_api.AppToken,
 		Amount:        int(order.Fee),
 		PayType:       5,
 		Subject:       pm.Name,
