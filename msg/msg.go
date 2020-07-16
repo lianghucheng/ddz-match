@@ -276,27 +276,6 @@ type S2C_WithDraw struct {
 	ErrMsg string
 }
 
-const (
-	ErrPaySuccess  = 0 //成功
-	ErrPayFail     = 1 //我们的错
-	ErrPayBusiness = 2 //他们的错
-)
-
-type S2C_PayOK struct {
-	Error     int
-	AddCoupon int
-}
-
-type C2S_CreateEdyOrder struct {
-	PriceID 	int
-}
-
-type S2C_CreateEdyOrder struct {
-	Error int
-	TradeNo string
-	NotifyUrl 	string
-}
-
 type S2C_PriceMenu struct {
 	PriceItems 	*[]conf2.PriceItem
 }

@@ -271,18 +271,19 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	edyPayNotifyReq.OpenExtend = r.FormValue("openExtend")
 	edyPayNotifyReq.OpenOrderID = r.FormValue("openOrderID")
 	edyPayNotifyReq.OrderID = r.FormValue("orderID")
-	edyPayNotifyReq.OrderTime = r.FormValue("openOrderID")
+	edyPayNotifyReq.OrderTime = r.FormValue("orderTime")
 	edyPayNotifyReq.PayType, _ = strconv.Atoi(r.FormValue("payType"))
 	edyPayNotifyReq.PayTime = r.FormValue("payTime")
-	edyPayNotifyReq.Ts, _ = strconv.Atoi(r.FormValue("ts"))
+	edyPayNotifyReq.Ts, _ = strconv.ParseInt(r.FormValue("ts"), 10, 64)
 	edyPayNotifyReq.Sign = r.FormValue("sign")
+	log.Debug("【请求参数】%+v", *edyPayNotifyReq)
 	param, err := edy_api.GetUrlKeyValStr(edyPayNotifyReq)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
 	sign := edy_api.GenerateSign(param)
-
+	log.Debug("【生成的签名】%v", sign)
 	if sign != edyPayNotifyReq.Sign {
 		log.Debug("sign error. ")
 		return
@@ -298,8 +299,9 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 		TotalFee:int(order.Fee),
 		AccountID:order.Accountid,
 	})
+	log.Debug("【发货成功】")
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
-	edyPayNotifyResp.OrderResult = 0
+	edyPayNotifyResp.OrderResult = "success"
 	edyPayNotifyResp.OrderAmount = fmt.Sprintln(order.Fee)
 	ts := time.Now().Unix()
 	edyPayNotifyResp.OrderTime = time.Unix(ts, 0).Format("2006-01-02 03:04:05")
