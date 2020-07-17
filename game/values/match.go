@@ -115,6 +115,13 @@ type UserMatchReview struct {
 	PersonalProfit int64
 }
 
+// 统计一些玩家的赛事数据
+type MatchData struct {
+	WeekCount  int   // 周局数
+	MonthCount int   // 月局数
+	RecordTime int64 // 记录时间
+}
+
 // GetAwardType 获取奖励类型
 func GetAwardType(award string) string {
 	if strings.Index(award, Money) != -1 {
