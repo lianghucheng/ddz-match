@@ -154,6 +154,11 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//todo:没问题之后再加密
+	if len(m.Password) < 8 {
+		log.Debug("密码不够8位")
+		w.Write(strbyte(NewError(PASSWORD_LACK, "密码不能少于8位")))
+		return
+	}
 	account, code, password := m.Account, m.Code, m.Password
 	_ = code
 	if status := CheckSms(account, code); status != 0 {
