@@ -183,11 +183,15 @@ func (game *LandlordMatchRoom) StartGame() {
 	for _, userID := range game.PositionUserIDs {
 		playerData := game.UserIDPlayerDatas[userID]
 		info := msg.S2C_MatchInfo{
-			RoundNum:    game.rule.RoundNum,
-			Process:     fmt.Sprintf("第%v局 第1副", game.count),
-			Level:       fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
-			Competition: "前3晋级",
-			AwardList:   game.rule.AwardList,
+			RoundNum:       game.rule.RoundNum,
+			Process:        fmt.Sprintf("第%v局 第1副", game.count),
+			Level:          fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
+			Competition:    "前3晋级",
+			AwardList:      game.rule.AwardList,
+			MatchName:      game.rule.MatchName,
+			Duration:       playerData.User.BaseData.MatchPlayer.OpTime,
+			WinCnt:         playerData.User.BaseData.MatchPlayer.Wins,
+			AwardPersonCnt: len(game.rule.Awards),
 		}
 		playerData.User.WriteMsg(&info)
 	}
@@ -259,7 +263,6 @@ func (game *LandlordMatchRoom) EndGame() {
 		// game.gameRecords[userID].Period += playerData.costTimeBydiscard
 		playerData.User.BaseData.MatchPlayer.OpTime += playerData.costTimeBydiscard
 		playerData.User.BaseData.MatchPlayer.OneOpTime = playerData.costTimeBydiscard
-
 	}
 	game.EndTimestamp = time.Now().Unix()
 	// game.rank()

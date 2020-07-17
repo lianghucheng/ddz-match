@@ -219,6 +219,7 @@ func rpcAddFee(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_AddFee)
+	ud := ReadUserDataByID(m.Userid)
 	if user, ok := UserIDUsers[m.Userid]; ok {
 		ud := user.GetUserData()
 		if m.FeeType == "fee" {
@@ -230,13 +231,20 @@ func rpcAddFee(args []interface{}) {
 		hall.UpdateUserAfterTaxAward(user)
 		hall.SendAwardInfo(user)
 	} else {
-		ud := ReadUserDataByID(m.Userid)
 		if m.FeeType == "fee" {
 			ud.Fee += m.Amount
 		} else if m.FeeType == "takenfee" {
 			ud.TakenFee += m.Amount
 		}
 		SaveUserData(ud)
+	}
+	bankCard := new(hall.BankCard)
+	bankCard.Userid = ud.UserID
+	bankCard.Read()
+	if m.FeeType == "fee" {
+		hall.RefundPushMail(ud.UserID, m.Amount)
+	} else if m.FeeType == "takenfee" {
+		hall.PrizePresentationPushMail(ud.UserID, bankCard.BankName, m.Amount)
 	}
 }
 

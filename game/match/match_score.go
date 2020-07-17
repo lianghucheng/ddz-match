@@ -363,6 +363,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 				}
 				one := poker.LandlordPlayerRoundResult{
 					Uid:      playerData.User.BaseData.UserData.UserID,
+					Aid:      playerData.User.BaseData.UserData.AccountID,
 					Nickname: playerData.User.BaseData.UserData.Nickname,
 					Total:    player.TotalScore,
 					Last:     player.LastScore,
@@ -810,6 +811,7 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 		player := playerData.User.BaseData.MatchPlayer
 		one := poker.LandlordPlayerRoundResult{
 			Uid:      playerData.User.BaseData.UserData.UserID,
+			Aid:      playerData.User.AcountID(),
 			Nickname: playerData.User.BaseData.UserData.Nickname,
 			Total:    player.TotalScore,
 			Last:     player.LastScore,

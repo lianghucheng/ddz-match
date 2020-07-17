@@ -54,10 +54,10 @@ func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bank
 		SendAddBankCard(user, msg.ErrAddBankCardFail, "绑定失败")
 		return
 	}
-	if user.BankCardNo() != "" {
-		SendAddBankCard(user, msg.ErrAddBankCardAlready, "重复绑定")
-		return
-	}
+	//if user.BankCardNo() != "" {
+	//	SendAddBankCard(user, msg.ErrAddBankCardAlready, "重复绑定")
+	//	return
+	//}
 	var err error
 	game.GetSkeleton().Go(func() {
 		err = api(ctx.Userid, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)

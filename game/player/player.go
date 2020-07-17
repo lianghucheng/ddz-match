@@ -198,3 +198,10 @@ func (user *User) CheckFirstLogin() {
 		})
 	}
 }
+
+func (user *User) IsTest() bool {
+	if user.GetUserData().Username[:4] == "test" {
+		return true
+	}
+	return false
+}
