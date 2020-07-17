@@ -20,15 +20,16 @@ type C2S_CreateEdyOrder struct {
 }
 
 type S2C_CreateEdyOrder struct {
-	Error         int
-	AppID         int
-	AppToken      string
-	Amount        int
-	PayType       int
-	Subject       string
-	Description   string
-	OpenOrderID   string
-	OpenNotifyUrl string
+	Error            int
+	AppID            int
+	AppToken         string
+	Amount           int
+	PayType          int
+	Subject          string
+	Description      string
+	OpenOrderID      string
+	OpenNotifyUrl    string
+	CreatePaymentUrl string
 }
 
 type C2S_CreateOrderSuccess struct {

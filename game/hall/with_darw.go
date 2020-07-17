@@ -24,7 +24,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
-	if user.RealName() == "" {
+	if user.RealName() == "" && !user.IsTest() {
 		user.WriteMsg(&msg.S2C_WithDraw{
 			Amount: user.Fee(),
 			Error:  msg.ErrWithDrawNoAuth,
@@ -33,7 +33,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
-	if user.BankCardNo() == "" {
+	if user.BankCardNo() == "" && user.IsTest() {
 		user.WriteMsg(&msg.S2C_WithDraw{
 			Amount: user.Fee(),
 			Error:  msg.ErrWithDrawNoBank,

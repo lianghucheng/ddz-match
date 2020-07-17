@@ -67,6 +67,13 @@ func (base *BaseMatch) SignIn(uid int) error {
 		})
 		return errors.New("already signUp")
 	}
+	if user.RealName() == "" && !user.IsTest() {
+		log.Debug("no real name. ")
+		user.WriteMsg(&msg.S2C_Apply{
+			Error: msg.S2C_Error_Realname,
+		})
+		return errors.New("no real name. ")
+	}
 	if base.myMatch != nil {
 		if err := base.myMatch.SignIn(uid); err != nil {
 			return err
