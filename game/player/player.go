@@ -38,6 +38,7 @@ type UserData struct {
 	Headimgurl        string
 	Sex               int // 1 男性，2 女性
 	LoginIP           string
+	Logintime         int64 // 登录时间
 	Token             string
 	ExpireAt          int64 // token 过期时间
 	Role              int   // 1 玩家、2 代理、3 管理员、4 超管
@@ -94,8 +95,8 @@ func (data *UserData) InitValue(channel int) error {
 	data.Channel = channel
 	data.Nickname = "用户" + strconv.Itoa(data.AccountID)
 	// 初始化点券
-	data.Coupon = 5
-	db.InsertItemLog(userID, data.Coupon, values.Coupon, db.InitPlayer)
+	// data.Coupon = 5
+	// db.InsertItemLog(userID, data.Coupon, values.Coupon, db.InitPlayer)
 	return nil
 }
 
@@ -176,4 +177,31 @@ func (user *User) BankCardNo() string {
 
 func (user *User) AcountID() int {
 	return user.BaseData.UserData.AccountID
+}
+
+// CheckFirstLogin 检查是否每日的首次登录
+func (user *User) CheckFirstLogin() {
+	// var oneDay int64 = 24 * 60 * 60
+	t := time.Now().Format("2006-01-02")
+	t1, _ := time.Parse("2006-01-02", t)
+	today := t1.Unix() - 8*60*60
+	// log.Debug("today:%v,logintime:%v", today, user.BaseData.UserData.Logintime)
+	if user.BaseData.UserData.Logintime < today {
+		// 首次登录插入日志
+		db.InsertItemLog(db.ItemLog{
+			UID:        user.BaseData.UserData.AccountID,
+			Way:        db.FirstLogin,
+			Before:     user.BaseData.UserData.Coupon,
+			After:      user.BaseData.UserData.Coupon,
+			OptType:    db.NormalOpt,
+			CreateTime: time.Now().Unix(),
+		})
+	}
+}
+
+func (user *User) IsTest() bool {
+	if user.GetUserData().Username[:4] == "test" {
+		return true
+	}
+	return false
 }

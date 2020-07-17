@@ -8,11 +8,13 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	"ddz/msg"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/szxby/tools/log"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/name5566/leaf/gate"
 )
@@ -30,8 +32,12 @@ func init() {
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
 	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
-	skeleton.RegisterChanRPC("TestAddAward", rpcTestAddAward)
+	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
+	skeleton.RegisterChanRPC("optUser", optUser)     // 操作玩家
+	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
+	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
+	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -180,7 +186,7 @@ func rpcTempPayOK(args []interface{}) {
 		user.WriteMsg(&msg.S2C_GetCoupon{
 			Error: msg.ErrPaySuccess,
 		})
-		hall.UpdateUserCoupon(user, int64(addCoupon), db.Charge)
+		hall.UpdateUserCoupon(user, int64(addCoupon), user.GetUserData().Coupon-int64(addCoupon), user.GetUserData().Coupon, db.ChargeOpt, db.Charge)
 	} else {
 		ud.Coupon += int64(addCoupon)
 		go func() {
@@ -213,6 +219,7 @@ func rpcAddFee(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_AddFee)
+	ud := ReadUserDataByID(m.Userid)
 	if user, ok := UserIDUsers[m.Userid]; ok {
 		ud := user.GetUserData()
 		if m.FeeType == "fee" {
@@ -224,7 +231,6 @@ func rpcAddFee(args []interface{}) {
 		hall.UpdateUserAfterTaxAward(user)
 		hall.SendAwardInfo(user)
 	} else {
-		ud := ReadUserDataByID(m.Userid)
 		if m.FeeType == "fee" {
 			ud.Fee += m.Amount
 		} else if m.FeeType == "takenfee" {
@@ -232,27 +238,36 @@ func rpcAddFee(args []interface{}) {
 		}
 		SaveUserData(ud)
 	}
+	bankCard := new(hall.BankCard)
+	bankCard.Userid = ud.UserID
+	bankCard.Read()
+	if m.FeeType == "fee" {
+		hall.RefundPushMail(ud.UserID, m.Amount)
+	} else if m.FeeType == "takenfee" {
+		hall.PrizePresentationPushMail(ud.UserID, bankCard.BankName, m.Amount)
+	}
 }
 
-func rpcTestAddAward(args []interface{}) {
+func rpcAddAward(args []interface{}) {
 	if len(args) != 1 {
 		log.Debug("参数长度异常")
 		return
 	}
-	m := args[0].(*msg.RPC_TestAddAward)
+	m := args[0].(*msg.RPC_AddAward)
 	if user, ok := UserIDUsers[m.Uid]; ok {
 		user.GetUserData().Fee += m.Amount
 		game.GetSkeleton().Go(func() {
 			SaveUserData(user.GetUserData())
-			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeAward, "测试比赛类型", "测试比赛id：￥@#%￥#&……￥*……￥", []int{})
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		}, func() {
 			hall.UpdateUserAfterTaxAward(user)
 		})
 	} else {
 		ud := ReadUserDataByID(m.Uid)
-		ud.Fee += 10
+		ud.Fee += m.Amount
 		game.GetSkeleton().Go(func() {
 			SaveUserData(ud)
+			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		}, nil)
 	}
 	log.Debug("【添加提现测试数据成功】")
@@ -266,5 +281,111 @@ func rpcUpdateAwardInfo(args []interface{}) {
 	m := args[0].(*msg.RPC_UpdateAwardInfo)
 	if user, ok := UserIDUsers[m.Uid]; ok {
 		hall.SendAwardInfo(user)
+	}
+}
+
+func optUser(args []interface{}) {
+	// log.Debug("optUser:%+v", args)
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_OptUser)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("optUser:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if data.Opt != -1 && data.Opt != 1 {
+		code = 1
+		desc = "无效操作!"
+		return
+	}
+	if user, ok := UserIDUsers[data.UID]; ok && data.Opt == -1 {
+		user.Close()
+	}
+	skeleton.Go(func() {
+		UpdateUserData(data.UID, bson.M{"$set": bson.M{"role": data.Opt}})
+	}, nil)
+}
+
+func clearInfo(args []interface{}) {
+	// log.Debug("optUser:%+v", args)
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_ClearInfo)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if data.Opt != 1 && data.Opt != 2 { // 1清理实名信息＋银行卡信息，２只清理银行卡
+		code = 1
+		desc = "无效操作!"
+		return
+	}
+	if user, ok := UserIDUsers[data.UID]; ok && data.Opt == 1 {
+		user.BaseData.UserData.RealName = ""
+		user.BaseData.UserData.IDCardNo = ""
+	}
+	bank := &hall.BankCard{
+		Userid: data.UID,
+	}
+	skeleton.Go(func() {
+		if data.Opt == 1 {
+			UpdateUserData(data.UID, bson.M{"$set": bson.M{"realname": "", "idcardno": ""}})
+		}
+		db.UpdateBankInfo(data.UID, bank)
+	}, nil)
+}
+
+func rpcUpdateCoupon(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateCoupon)
+	ud := ReadUserDataByAid(m.Accountid)
+	if user, ok := UserIDUsers[ud.UserID]; ok {
+		ud := user.GetUserData()
+		ud.Coupon += int64(m.Amount)
+		SaveUserData(ud)
+		hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
+	} else {
+		ud.Coupon += int64(m.Amount)
+		SaveUserData(ud)
+	}
+}
+
+func rpcUpdateHeadImg(args []interface{}) {
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateHeadImg)
+	ud := ReadUserDataByAid(m.Accountid)
+	if user, ok := UserIDUsers[ud.UserID]; ok {
+		ud := user.GetUserData()
+		ud.Headimgurl = m.HeadImg
+		SaveUserData(ud)
+	} else {
+		ud.Headimgurl = m.HeadImg
+		SaveUserData(ud)
 	}
 }

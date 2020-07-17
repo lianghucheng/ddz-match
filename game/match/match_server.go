@@ -133,6 +133,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				JoinNum:   len(info.AllSignInPlayers),
 				StartTime: sTime,
 				StartType: info.StartType,
+				MatchType: info.MatchType,
 			})
 		}
 		return raceInfo

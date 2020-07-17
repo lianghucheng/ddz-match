@@ -22,7 +22,7 @@ func DailySign(user *player.User) {
 	user.GetUserData().SignTimes++
 	player.SaveUserData(user.GetUserData())
 
-	UpdateUserCoupon(user, addCoupon, db.DailySign)
+	UpdateUserCoupon(user, addCoupon, user.GetUserData().Coupon-addCoupon, user.GetUserData().Coupon, db.NormalOpt, db.DailySign)
 	user.WriteMsg(&msg.S2C_DailySign{
 		Coupon: addCoupon,
 	})

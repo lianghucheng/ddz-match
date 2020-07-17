@@ -19,7 +19,7 @@ func (m *Module) OnInit() {
 	m.Gate = &gate.Gate{
 		MaxConnNum:      conf.GetCfgLeafSrv().MaxConnNum,
 		PendingWriteNum: 2000,
-		MaxMsgLen:       8192,
+		MaxMsgLen:       8192 * 1e4,
 		WSAddr:          conf.GetCfgLeafSrv().WSAddr,
 		HTTPTimeout:     10 * time.Second,
 		CertFile:        conf.GetCfgLeafSrv().CertFile,

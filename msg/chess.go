@@ -18,11 +18,11 @@ type C2S_Apply struct {
 }
 
 const (
-	S2C_Error_MatchId = 1 //赛事不存在
-	S2C_Error_Coupon  = 2 //点券不足
-	S2C_Error_Action  = 3 //已报名(等待开赛)
-	S2C_Error_Match   = 4 //玩家已报名了其它赛事
-
+	S2C_Error_MatchId  = 1 //赛事不存在
+	S2C_Error_Coupon   = 2 //点券不足
+	S2C_Error_Action   = 3 //已报名(等待开赛)
+	S2C_Error_Match    = 4 //玩家已报名了其它赛事
+	S2C_Error_Realname = 5 //玩家未实名
 )
 
 type S2C_Apply struct {
@@ -32,11 +32,15 @@ type S2C_Apply struct {
 	Count  int //当前赛事人数
 }
 type S2C_MatchInfo struct {
-	RoundNum    string //赛制 两局一副
-	Process     string //进程 第2局 第1幅
-	Level       string //排名 1/3
-	Competition string //晋级 前3晋级
-	AwardList   string // 奖励列表
+	RoundNum       string //赛制 两局一副
+	Process        string //进程 第2局 第1幅
+	Level          string //排名 1/3
+	Competition    string //晋级 前3晋级
+	AwardList      string // 奖励列表
+	MatchName      string //比赛名称
+	Duration       int64  //时长
+	WinCnt         int    //获胜次数
+	AwardPersonCnt int    //奖励人数
 }
 
 type S2C_MatchNum struct {

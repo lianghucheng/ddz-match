@@ -61,6 +61,7 @@ func (a LstPoker) Less(i, j int) bool { // 重写 Less() 方法， 从大到小�
 // 玩家单局成绩
 type LandlordPlayerRoundResult struct {
 	Uid int
+	Aid int
 	// Position int    // 玩家位置
 	Nickname string // 昵称(用户绑定的真实姓名)
 	Wins     int    // 获胜次数

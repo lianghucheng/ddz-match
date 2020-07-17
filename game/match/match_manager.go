@@ -63,12 +63,13 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		sc.CreateOneMatch()
 	}
 
+	// ok 先将报名玩家添加进去,比赛开始后将触发清除报名玩家的逻辑
+	sc.AllSignInPlayers = append(sc.AllSignInPlayers, uid)
 	if err := sc.LastMatch.SignIn(uid); err != nil {
+		sc.AllSignInPlayers = sc.AllSignInPlayers[:len(sc.AllSignInPlayers)-1]
 		return
 	}
 
-	// ok
-	sc.AllSignInPlayers = append(sc.AllSignInPlayers, uid)
 	// 报名满人则清零
 	// if len(sc.AllSignInPlayers) >= sc.MaxPlayer && sc.StartType == 1 {
 	// 	sc.AllSignInPlayers = []int{}
@@ -278,6 +279,7 @@ func (sc *ScoreConfig) End(matchID string) {
 
 // RemoveSignPlayer 清除签到玩家
 func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
+	// log.Debug("remove uid:%v,%+v", uid, sc.AllSignInPlayers)
 	for i, p := range sc.AllSignInPlayers {
 		if p != uid {
 			continue
@@ -287,7 +289,9 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 		} else {
 			sc.AllSignInPlayers = append(sc.AllSignInPlayers[:i], sc.AllSignInPlayers[i+1:]...)
 		}
+		break
 	}
+	log.Debug("remove uid:%v,%+v", uid, sc.AllSignInPlayers)
 }
 
 // CreateOneMatch 创建子赛事

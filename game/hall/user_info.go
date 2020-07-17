@@ -1,16 +1,18 @@
 package hall
 
 import (
+	"ddz/conf2"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
 func SetNickname(user *player.User, nickname string) {
-	if len(nickname) < 3 || len(nickname) > 18 {
+	if len(nickname) < 9 || len(nickname) > 18 {
 		user.WriteMsg(&msg.S2C_UpdateNickName{
 			Error: msg.S2C_SetNickName_Length,
 		})
@@ -37,7 +39,7 @@ func AddCoupon(user *player.User, count int64) {
 	user.WriteMsg(&msg.S2C_GetCoupon{
 		Error: msg.S2C_GetCouponSuccess,
 	})
-	UpdateUserCoupon(user, count, db.Charge)
+	UpdateUserCoupon(user, count, user.BaseData.UserData.Coupon-count, user.BaseData.UserData.Coupon, db.NormalOpt, db.Charge)
 }
 
 func UpdateUserAfterTaxAward(user *player.User) {
@@ -67,12 +69,24 @@ func ChangePassword(user *player.User, m *msg.C2S_ChangePassword) {
 
 func TakenFirstCoupon(user *player.User) {
 	ud := user.GetUserData()
+	if ud.FirstLogin == false {
+		user.WriteMsg(&msg.S2C_TakenFirstCoupon{
+			Error: msg.ErrS2CTakenFirstCouponFail,
+		})
+		return
+	}
 	ud.FirstLogin = false
 	ud.Coupon += 5
-	game.GetSkeleton().Go(func(){
+	game.GetSkeleton().Go(func() {
 		player.SaveUserData(ud)
-	},func(){
+	}, func() {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
-		UpdateUserCoupon(user, 5, db.InitPlayer)
+		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
+	})
+}
+
+func SendPriceMenu(user *player.User) {
+	user.WriteMsg(&msg.S2C_PriceMenu{
+		PriceItems: conf2.GetPriceMenu(),
 	})
 }

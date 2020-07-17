@@ -40,6 +40,11 @@ func tokenLogin(user *User, token string) {
 		if userData == nil || user.State == UserLogout {
 			return
 		}
+		if userData.Role == RoleBlack {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_RoleBlack})
+			user.Close()
+			return
+		}
 		ip := strings.Split(user.RemoteAddr().String(), ":")[0]
 		if oldUser, ok := UserIDUsers[userData.UserID]; ok {
 			log.Debug("userID: %v 已经登录 %v %v", userData.UserID, oldUser.BaseData.UserData.LoginIP, ip)
@@ -82,7 +87,7 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
-
+	log.Debug("*************%+v", userData)
 	// firstLogin = userData.FirstLogin
 	// if !userData.FirstLogin {
 	// 	userData.FirstLogin = !userData.FirstLogin
@@ -92,6 +97,11 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	if err != nil { //&& err != mgo.ErrNotFound {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+		user.Close()
+		return
+	}
+	if userData.Role == RoleBlack {
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_RoleBlack})
 		user.Close()
 		return
 	}
@@ -147,7 +157,10 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	//	user.BaseData.UserData.Coupon += 5
 	//	SaveUserData(user.BaseData.UserData)
 	//} else {
-	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token, "online": user.BaseData.UserData.Online}})
+	user.CheckFirstLogin()
+	user.BaseData.UserData.Logintime = time.Now().Unix()
+	UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"token": user.BaseData.UserData.Token,
+		"online": user.BaseData.UserData.Online, "logintime": time.Now().Unix()}})
 	//}
 	autoHeartbeat(user)
 	bankCard := new(hall.BankCard)
@@ -181,28 +194,17 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		SetNickName:    user.GetUserData().SetNickNameCount > 0,
 	})
 
-	hall.UpdateUserCoupon(user, 0, "")
+	// hall.UpdateUserCoupon(user, 0, "")
+	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
+		Coupon: user.Coupon(),
+	})
 	hall.UpdateUserAfterTaxAward(user)
 	hall.SendMail(user)
 	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
-
-	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		myMatchID := ma.NormalCofig.MatchID
-		for i, v := range RaceInfo {
-			if v.ID == myMatchID {
-				RaceInfo[i].IsSign = true
-				break
-			}
-		}
-	}
-	user.WriteMsg(&msg.S2C_RaceInfo{
-		Races: RaceInfo,
-	})
-
+	hall.SendPriceMenu(user)
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {

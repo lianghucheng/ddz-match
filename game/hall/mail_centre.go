@@ -181,7 +181,28 @@ func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 	mailBox.pushMailBox()
 }
 
-//todo：卡住原因，产品还没出发邮件的时机规则
+func PrizePresentationPushMail(userid int, bankName string, fee float64) {
+	mailBox := new(MailBox)
+	mailBox.TargetID = int64(userid)
+	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.MailType = MailTypeText
+	mailBox.Title = "提奖通知"
+	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已下发到您的【%v】，如有问题请联系客服。", fee, bankName)
+
+	mailBox.pushMailBox()
+}
+
+func RefundPushMail(userid int, fee float64) {
+	mailBox := new(MailBox)
+	mailBox.TargetID = int64(userid)
+	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.MailType = MailTypeText
+	mailBox.Title = "退款通知"
+	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已被官方退回，如若正常操作赢取奖金请联系客服进行处理。", fee)
+
+	mailBox.pushMailBox()
+}
+
 func (ctx *MailBox) pushMailBox() {
 	id, err := db.MongoDBNextSeq("mailbox")
 	if err != nil {

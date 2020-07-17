@@ -178,13 +178,13 @@ type S2C_UpdateNickName struct {
 }
 
 type C2S_TakenFirstCoupon struct {
-
 }
 
 const (
 	ErrS2CTakenFirstCouponSuccess = 0
-	ErrS2CTakenFirstCouponFail = 1
+	ErrS2CTakenFirstCouponFail    = 1
 )
+
 type S2C_TakenFirstCoupon struct {
-	Error	int
+	Error int
 }

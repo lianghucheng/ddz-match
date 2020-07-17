@@ -17,6 +17,7 @@ type RaceInfo struct {
 	StartTime int64   // 比赛开始时间
 	StartType int     // 比赛开赛方式
 	IsSign    bool    // 是否报名
+	MatchType string
 }
 
 type C2S_RaceInfo struct {

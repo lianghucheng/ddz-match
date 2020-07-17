@@ -128,6 +128,34 @@ func showHall(w http.ResponseWriter, req *http.Request) {
 	wg.Wait()
 }
 
+func editSort(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	data := msg.RPC_EditSort{}
+	if err := json.Unmarshal([]byte(ret), &data); err != nil {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	data.WG = &wg
+	data.Write = w
+	game.ChanRPC.Go("editSort", &data)
+	wg.Wait()
+}
+
 func editMatch(w http.ResponseWriter, req *http.Request) {
 	ret := unpack(req.Body)
 	code := 0
@@ -182,5 +210,61 @@ func optMatch(w http.ResponseWriter, req *http.Request) {
 	opt.WG = &wg
 	opt.Write = w
 	game.ChanRPC.Go("optMatch", &opt)
+	wg.Wait()
+}
+
+func optUser(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	opt := msg.RPC_OptUser{}
+	if err := json.Unmarshal([]byte(ret), &opt); err != nil {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	opt.WG = &wg
+	opt.Write = w
+	game.ChanRPC.Go("optUser", &opt)
+	wg.Wait()
+}
+
+func clearRealInfo(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	opt := msg.RPC_ClearInfo{}
+	if err := json.Unmarshal([]byte(ret), &opt); err != nil {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	opt.WG = &wg
+	opt.Write = w
+	game.ChanRPC.Go("clearInfo", &opt)
 	wg.Wait()
 }

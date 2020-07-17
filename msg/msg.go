@@ -1,6 +1,7 @@
 package msg
 
 import (
+	"ddz/conf2"
 	"github.com/name5566/leaf/network/json"
 )
 
@@ -79,7 +80,9 @@ func init() {
 	Processor.Register(&S2C_LandlordRoundFinalResult{})
 	Processor.Register(&C2S_GetGameRecordAll{})
 	Processor.Register(&S2C_GetGameRecordAll{})
-	Processor.Register(&Test_WriteFlowData{})
+	Processor.Register(&C2S_CreateEdyOrder{})
+	Processor.Register(&S2C_CreateEdyOrder{})
+	Processor.Register(&S2C_PriceMenu{})
 }
 
 type C2S_Heartbeat struct{}
@@ -273,17 +276,6 @@ type S2C_WithDraw struct {
 	ErrMsg string
 }
 
-const (
-	ErrPaySuccess  = 0 //成功
-	ErrPayFail     = 1 //我们的错
-	ErrPayBusiness = 2 //他们的错
-)
-
-type S2C_PayOK struct {
-	Error     int
-	AddCoupon int
-}
-
-type Test_WriteFlowData struct {
-	UID int
+type S2C_PriceMenu struct {
+	PriceItems *[]conf2.PriceItem
 }

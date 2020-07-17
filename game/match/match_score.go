@@ -157,7 +157,9 @@ func (sc *scoreMatch) SignIn(uid int) error {
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
 	user.BaseData.UserData.Coupon -= c.EnterFee
-	hall.UpdateUserCoupon(user, -c.EnterFee, db.MatchSignIn)
+	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
+		Coupon: user.Coupon(),
+	})
 	return nil
 }
 
@@ -177,7 +179,10 @@ func (sc *scoreMatch) SignOut(uid int) error {
 		UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"Coupon": user.BaseData.UserData.Coupon}})
 		return nil
 	}
-	hall.UpdateUserCoupon(user, c.EnterFee, db.MatchSignOut)
+	// hall.UpdateUserCoupon(user, c.EnterFee, user.BaseData.UserData.Coupon-c.EnterFee, user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchSignOut)
+	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
+		Coupon: user.Coupon(),
+	})
 	return nil
 }
 
@@ -358,6 +363,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 				}
 				one := poker.LandlordPlayerRoundResult{
 					Uid:      playerData.User.BaseData.UserData.UserID,
+					Aid:      playerData.User.BaseData.UserData.AccountID,
 					Nickname: playerData.User.BaseData.UserData.Nickname,
 					Total:    player.TotalScore,
 					Last:     player.LastScore,
@@ -554,6 +560,7 @@ func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 	// 给玩家发送比赛结算总界面
 	sc.SendFinalResult(uid)
 
+	// 发奖并记录玩家数据
 	sc.awardPlayer(uid)
 
 	if room, ok := UserIDRooms[uid]; ok {
@@ -575,6 +582,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	}
 	player := user.BaseData.MatchPlayer
 	var award string
+	var moneyAwardCount float64
 	if player.Rank-1 < len(base.Award) {
 		award = base.Award[player.Rank-1]
 		one := strings.Split(award, ",")
@@ -582,6 +590,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 			// 现金奖励
 			if values.GetAwardType(oneAward) == values.Money {
 				awardAmount := values.ParseAward(oneAward)
+				moneyAwardCount += utils.Decimal(awardAmount * 0.8)
 				user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
 				hall.UpdateUserAfterTaxAward(user)
@@ -589,7 +598,8 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				awardAmount := values.ParseAward(oneAward)
 				user.BaseData.UserData.Coupon += int64(awardAmount)
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Coupon}})
-				hall.UpdateUserCoupon(user, int64(values.ParseAward(oneAward)), db.MatchAward)
+				hall.UpdateUserCoupon(user, int64(values.ParseAward(oneAward)), user.BaseData.UserData.Coupon-int64(awardAmount),
+					user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName))
 			}
 		}
 	}
@@ -609,11 +619,97 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		Result:    player.Result[:base.CurrentRound],
 		CreateDat: time.Now().Unix(),
 	}
+
+	userMatchReview := values.UserMatchReview{}
+	wins := 0
+	fails := 0
+	if len(award) > 0 {
+		wins = 1
+	} else {
+		fails = 1
+	}
+	update := values.UserMatchReview{
+		UID:            uid,
+		AccountID:      user.BaseData.UserData.AccountID,
+		MatchID:        base.NormalCofig.MatchID,
+		MatchType:      base.NormalCofig.MatchType,
+		MatchName:      base.NormalCofig.MatchName,
+		MatchWins:      wins,
+		MatchFails:     fails,
+		Coupon:         base.NormalCofig.EnterFee,
+		AwardMoney:     int64(moneyAwardCount * 100),
+		PersonalProfit: int64(moneyAwardCount*100) - base.NormalCofig.EnterFee,
+	}
+	var err error
+	gameData := &values.GameData{}
+	accountID := user.BaseData.UserData.AccountID
+	// 赛事总览以及玩家数据记录
 	game.GetSkeleton().Go(
 		func() {
 			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.Rank, award)
 			db.InsertMatchRecord(record)
-		}, nil)
+			userMatchReview, err = db.GetUserMatchReview(uid, base.NormalCofig.MatchType, base.NormalCofig.MatchID)
+			gameData = db.GetUserGameData(uid)
+		}, func() {
+			if err == nil {
+				// log.Error("err:%v", err)
+				// return
+				userMatchReview.MatchWins += update.MatchWins
+				userMatchReview.MatchFails += update.MatchFails
+				userMatchReview.Coupon += update.Coupon
+				userMatchReview.AwardMoney += update.AwardMoney
+				userMatchReview.PersonalProfit += update.PersonalProfit
+				userMatchReview.MatchTotal = userMatchReview.MatchWins + userMatchReview.MatchFails
+				userMatchReview.AverageBatting = userMatchReview.MatchWins / userMatchReview.MatchTotal
+				userMatchReview.MatchID = update.MatchID
+				userMatchReview.MatchType = update.MatchType
+				userMatchReview.UID = update.UID
+				userMatchReview.AccountID = update.AccountID
+				userMatchReview.MatchName = update.MatchName
+				db.UpsertUserMatchReview(bson.M{"uid": userMatchReview.UID, "matchname": userMatchReview.MatchName,
+					"matchtype": userMatchReview.MatchType, "matchid": userMatchReview.MatchID}, userMatchReview)
+			}
+			if gameData != nil {
+				// 无数据初始化
+				if gameData.MatchData == nil {
+					db.UpsertUserGameData(bson.M{"uid": uid}, values.GameData{
+						UID:       uid,
+						AccountID: accountID,
+						MatchData: &values.MatchData{
+							WeekCount:  1,
+							MonthCount: 1,
+							RecordTime: time.Now().Unix(),
+						}})
+				} else {
+					log.Debug("data:%+v", gameData)
+					// 先判断记录时间点
+					record := gameData.MatchData.RecordTime
+					year, mon, _ := time.Unix(record, 0).Date()
+					nYear, nMon, _ := time.Now().Date()
+					if year != nYear || (year == nYear && mon != nMon) {
+						gameData.MatchData.WeekCount = 1
+						gameData.MatchData.MonthCount = 1
+					} else {
+						gameData.MatchData.MonthCount++
+						weekDay := time.Unix(record, 0).Weekday()
+						if weekDay == 0 {
+							weekDay = 7
+						}
+						nWeekDay := time.Now().Weekday()
+						if nWeekDay == 0 {
+							nWeekDay = 7
+						}
+						// 如果时间差大于一周，清零数据重新统计
+						if nWeekDay < weekDay || (time.Now().Unix()-record > 7*24*60*60) {
+							gameData.MatchData.WeekCount = 1
+						} else {
+							gameData.MatchData.WeekCount++
+						}
+					}
+					db.UpsertUserGameData(bson.M{"uid": uid}, gameData)
+				}
+			}
+		})
 
 	// 将单个玩家的数据写入rank中
 	sc.myConfig.Rank = append(sc.myConfig.Rank, Rank{
@@ -759,6 +855,7 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 		player := playerData.User.BaseData.MatchPlayer
 		one := poker.LandlordPlayerRoundResult{
 			Uid:      playerData.User.BaseData.UserData.UserID,
+			Aid:      playerData.User.AcountID(),
 			Nickname: playerData.User.BaseData.UserData.Nickname,
 			Total:    player.TotalScore,
 			Last:     player.LastScore,
