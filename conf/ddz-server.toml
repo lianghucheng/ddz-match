@@ -5,7 +5,7 @@
 	WSAddr= ":5658"
 	HTTPAddr= ":9084"
 	MaxConnNum= 20000
-	DBUrl= "mongodb://localhost"
+	DBUrl= "mongodb://localhost:27018"
 	DBMaxConnNum= 100
 	DBName="ddz-match"
     SubsidyTotal = 2

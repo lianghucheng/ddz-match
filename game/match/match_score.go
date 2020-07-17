@@ -640,30 +640,74 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		PersonalProfit: int64(moneyAwardCount*100) - base.NormalCofig.EnterFee,
 	}
 	var err error
+	gameData := &values.GameData{}
+	accountID := user.BaseData.UserData.AccountID
+	// 赛事总览以及玩家数据记录
 	game.GetSkeleton().Go(
 		func() {
 			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.Rank, award)
 			db.InsertMatchRecord(record)
 			userMatchReview, err = db.GetUserMatchReview(uid, base.NormalCofig.MatchType, base.NormalCofig.MatchID)
+			gameData = db.GetUserGameData(uid)
 		}, func() {
-			if err != nil {
-				log.Error("err:%v", err)
-				return
+			if err == nil {
+				// log.Error("err:%v", err)
+				// return
+				userMatchReview.MatchWins += update.MatchWins
+				userMatchReview.MatchFails += update.MatchFails
+				userMatchReview.Coupon += update.Coupon
+				userMatchReview.AwardMoney += update.AwardMoney
+				userMatchReview.PersonalProfit += update.PersonalProfit
+				userMatchReview.MatchTotal = userMatchReview.MatchWins + userMatchReview.MatchFails
+				userMatchReview.AverageBatting = userMatchReview.MatchWins / userMatchReview.MatchTotal
+				userMatchReview.MatchID = update.MatchID
+				userMatchReview.MatchType = update.MatchType
+				userMatchReview.UID = update.UID
+				userMatchReview.AccountID = update.AccountID
+				userMatchReview.MatchName = update.MatchName
+				db.UpsertUserMatchReview(bson.M{"uid": userMatchReview.UID, "matchname": userMatchReview.MatchName,
+					"matchtype": userMatchReview.MatchType, "matchid": userMatchReview.MatchID}, userMatchReview)
 			}
-			userMatchReview.MatchWins += update.MatchWins
-			userMatchReview.MatchFails += update.MatchFails
-			userMatchReview.Coupon += update.Coupon
-			userMatchReview.AwardMoney += update.AwardMoney
-			userMatchReview.PersonalProfit += update.PersonalProfit
-			userMatchReview.MatchTotal = userMatchReview.MatchWins + userMatchReview.MatchFails
-			userMatchReview.AverageBatting = userMatchReview.MatchWins / userMatchReview.MatchTotal
-			userMatchReview.MatchID = update.MatchID
-			userMatchReview.MatchType = update.MatchType
-			userMatchReview.UID = update.UID
-			userMatchReview.AccountID = update.AccountID
-			userMatchReview.MatchName = update.MatchName
-			db.UpsertUserMatchReview(bson.M{"uid": userMatchReview.UID, "matchname": userMatchReview.MatchName,
-				"matchtype": userMatchReview.MatchType, "matchid": userMatchReview.MatchID}, userMatchReview)
+			if gameData != nil {
+				// 无数据初始化
+				if gameData.MatchData == nil {
+					db.UpsertUserGameData(bson.M{"uid": uid}, values.GameData{
+						UID:       uid,
+						AccountID: accountID,
+						MatchData: &values.MatchData{
+							WeekCount:  1,
+							MonthCount: 1,
+							RecordTime: time.Now().Unix(),
+						}})
+				} else {
+					log.Debug("data:%+v", gameData)
+					// 先判断记录时间点
+					record := gameData.MatchData.RecordTime
+					year, mon, _ := time.Unix(record, 0).Date()
+					nYear, nMon, _ := time.Now().Date()
+					if year != nYear || (year == nYear && mon != nMon) {
+						gameData.MatchData.WeekCount = 1
+						gameData.MatchData.MonthCount = 1
+					} else {
+						gameData.MatchData.MonthCount++
+						weekDay := time.Unix(record, 0).Weekday()
+						if weekDay == 0 {
+							weekDay = 7
+						}
+						nWeekDay := time.Now().Weekday()
+						if nWeekDay == 0 {
+							nWeekDay = 7
+						}
+						// 如果时间差大于一周，清零数据重新统计
+						if nWeekDay < weekDay || (time.Now().Unix()-record > 7*24*60*60) {
+							gameData.MatchData.WeekCount = 1
+						} else {
+							gameData.MatchData.WeekCount++
+						}
+					}
+					db.UpsertUserGameData(bson.M{"uid": uid}, gameData)
+				}
+			}
 		})
 
 	// 将单个玩家的数据写入rank中
