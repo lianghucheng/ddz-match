@@ -12,7 +12,7 @@ import (
 
 const (
 	key         = "7inrmpd5DSQTfDxnAnOH"
-	agentServer = "http://192.168.1.172:10616/bindAgent"
+	agentServer = "http://123.207.12.67:10616/bindAgent"
 )
 
 // PostToAgentServer 向代理后台发送数据

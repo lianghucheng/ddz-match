@@ -97,6 +97,7 @@ func (data *UserData) InitValue(channel int) error {
 	// 初始化点券
 	// data.Coupon = 5
 	// db.InsertItemLog(userID, data.Coupon, values.Coupon, db.InitPlayer)
+	data.FirstLogin = true
 	return nil
 }
 
@@ -125,6 +126,7 @@ func ReadUserDataByID(id int) *UserData {
 	userData := new(UserData)
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
+
 	err := db.DB(DB).C("users").Find(bson.M{"_id": id}).One(userData)
 	if err != nil {
 		log.Error(err.Error())

@@ -253,7 +253,7 @@ func (sc *scoreMatch) End() {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			hall.WriteFlowData(p.uid, utils.Decimal(values.GetMoneyAward(base.Award[p.rank-1])*0.8), hall.FlowTypeAward, cfg.MatchType, cfg.MatchID, []int{})
+			hall.WriteFlowData(p.uid, utils.Decimal(values.GetMoneyAward(base.Award[p.rank-1])*0.8), hall.FlowTypeAward, cfg.MatchType, cfg.SonMatchID, []int{})
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

@@ -175,6 +175,7 @@ const (
 type S2C_UpdateNickName struct {
 	Error    int    // 0:表示成功
 	NickName string //
+	ErrMsg 	 string
 }
 
 type C2S_TakenFirstCoupon struct {

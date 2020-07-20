@@ -39,7 +39,7 @@ func CreateOrder(user *player.User, priceID int) {
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
 		OpenOrderID:      order.TradeNo,
-		OpenNotifyUrl:    "http://123.207.12.67:9085" + edy_api.EdyBackCall,
+		OpenNotifyUrl:    "http://123.207.12.67:9084" + edy_api.EdyBackCall,
 		CreatePaymentUrl: createPaymentUrl + "/api/payment/create",
 	})
 }

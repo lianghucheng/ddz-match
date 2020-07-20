@@ -124,6 +124,7 @@ func rankings(rt *[]Rank, title string) *[]msg.Ranking {
 	rankings := []msg.Ranking{}
 	for k, v := range *rt {
 		userData := player.ReadUserDataByID(v.UserID)
+		log.Debug("***********%v", v.UserID)
 		rankings = append(rankings, msg.Ranking{
 			Order:    k + 1,
 			NickName: userData.Nickname,

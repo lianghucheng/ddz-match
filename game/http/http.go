@@ -166,11 +166,11 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if status := CheckSms(account, code); status != 0 {
-	// 	log.Debug("status:%v", status)
-	// 	w.Write(strbyte(NewError(int64(status), "验证码错误")))
-	// 	return
-	// }
+	if status := CheckSms(account, code); status != 0 {
+		log.Debug("status:%v", status)
+		w.Write(strbyte(NewError(int64(status), "验证码错误")))
+		return
+	}
 	userData := new(player.UserData)
 	db := MongoDB.Ref()
 	defer MongoDB.UnRef(db)
