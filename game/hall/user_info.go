@@ -15,6 +15,7 @@ func SetNickname(user *player.User, nickname string) {
 	if len(nickname) < 9 || len(nickname) > 18 {
 		user.WriteMsg(&msg.S2C_UpdateNickName{
 			Error: msg.S2C_SetNickName_Length,
+			ErrMsg:"请输入长度为3-6的汉字",
 		})
 		return
 	}
@@ -22,6 +23,7 @@ func SetNickname(user *player.User, nickname string) {
 	if ud.SetNickNameCount >= 1 {
 		user.WriteMsg(&msg.S2C_UpdateNickName{
 			Error: msg.S2C_SetNickName_More,
+			ErrMsg:"只能修改一次昵称",
 		})
 		return
 	}
@@ -31,6 +33,7 @@ func SetNickname(user *player.User, nickname string) {
 	user.WriteMsg(&msg.S2C_UpdateNickName{
 		Error:    0,
 		NickName: nickname,
+		ErrMsg:"修改成功",
 	})
 }
 

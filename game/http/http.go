@@ -159,8 +159,13 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		w.Write(strbyte(NewError(PASSWORD_LACK, "密码不能少于8位")))
 		return
 	}
-	account, code, password := m.Account, m.Code, m.Password
+	account, code, password, shareCode := m.Account, m.Code, m.Password, m.ShareCode
 	_ = code
+	if len(shareCode) == 0 {
+		w.Write(strbyte(NewError(FORMAT_FAIL, "邀请码不能为空!")))
+		return
+	}
+
 	if status := CheckSms(account, code); status != 0 {
 		log.Debug("status:%v", status)
 		w.Write(strbyte(NewError(int64(status), "验证码错误")))
@@ -182,6 +187,17 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		userData = nil
 		w.Write(strbyte(NewError(msg.S2C_Close_InnerError, "注册失败")))
+		return
+	}
+	// 发送代理后台检查代理情况
+	if err := utils.PostToAgentServer(struct {
+		ShareCode         string
+		RegisterAccountID int
+	}{
+		ShareCode:         shareCode,
+		RegisterAccountID: userData.AccountID,
+	}); err != nil {
+		w.Write(strbyte(NewError(FORMAT_FAIL, err.Error())))
 		return
 	}
 

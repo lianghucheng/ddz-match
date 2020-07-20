@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -184,4 +185,12 @@ func getKind(v Value) Kind {
 	default:
 		return kind
 	}
+}
+
+// CalculateHash calculate hash
+func CalculateHash(data string) string {
+	h := sha256.New()
+	h.Write([]byte(key + data))
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }

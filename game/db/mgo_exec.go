@@ -107,3 +107,26 @@ func Read(coll string, data interface{}, query bson.M) {
 		return
 	}
 }
+
+// GetUserGameData 获取玩家游戏数据
+func GetUserGameData(uid int) *values.GameData {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	data := &values.GameData{}
+	if err := s.DB(DB).C("gamedata").Find(bson.M{"uid": uid}).One(data); err != nil && err != mgo.ErrNotFound {
+		log.Error("err:%v", err)
+		return nil
+	}
+	return data
+}
+
+// UpsertUserGameData 更新玩家游戏数据
+func UpsertUserGameData(selector interface{}, update interface{}) error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	if _, err := s.DB(DB).C("gamedata").Upsert(selector, update); err != nil {
+		log.Error("err:%v", err)
+		return err
+	}
+	return nil
+}

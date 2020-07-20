@@ -38,9 +38,10 @@ type C2S_UsrnPwdLogin struct {
 }
 
 type C2S_Register struct {
-	Account  string //手机号
-	Code     string //验证码
-	Password string //密码
+	Account   string //手机号
+	Code      string //验证码
+	Password  string //密码
+	ShareCode string // 邀请码
 }
 
 const (
@@ -174,6 +175,7 @@ const (
 type S2C_UpdateNickName struct {
 	Error    int    // 0:表示成功
 	NickName string //
+	ErrMsg 	 string
 }
 
 type C2S_TakenFirstCoupon struct {
