@@ -154,9 +154,9 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//todo:没问题之后再加密
-	if len(m.Password) < 8 {
-		log.Debug("密码不够8位")
-		w.Write(strbyte(NewError(PASSWORD_LACK, "密码不能少于8位")))
+	if len(m.Password) < 8 || len(m.Password) >15 {
+		log.Debug("密码长度为8～15位")
+		w.Write(strbyte(NewError(PASSWORD_LACK, "密码长度为8～15位")))
 		return
 	}
 	account, code, password, shareCode := m.Account, m.Code, m.Password, m.ShareCode
@@ -225,6 +225,12 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 	_ = code
 	if status := CheckSms(account, code); status != 0 {
 		w.Write(strbyte(NewError(int64(status), "验证码错误")))
+		return
+	}
+
+	if len(password) < 8 || len(password) > 15 {
+		log.Debug("密码长度为8～15位")
+		w.Write(strbyte(NewError(PASSWORD_LACK, "密码长度为8～15位")))
 		return
 	}
 

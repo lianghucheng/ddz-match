@@ -97,6 +97,7 @@ const (
 	S2C_Close_Pwd_Error       = 11 // 密码错误
 	S2C_Close_Usrn_Nil        = 12 // 用户名不存在
 	S2C_Close_Usrn_Exist      = 13 // 用户名不存在
+	S2C_Close_Pass_Length     = 14 // 密码长度8到15位
 )
 
 type S2C_Close struct {
