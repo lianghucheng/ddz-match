@@ -187,7 +187,7 @@ func PrizePresentationPushMail(userid int, bankName string, fee float64) {
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "提奖通知"
-	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已下发到您的【%v】，如有问题请联系客服。", fee, bankName)
+	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已下发到您的【%v】，如有问题请联系客服微信：wkxjingjipingtai", fee, bankName)
 
 	mailBox.pushMailBox()
 }
@@ -198,7 +198,7 @@ func RefundPushMail(userid int, fee float64) {
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.Title = "退款通知"
-	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已被官方退回，如若正常操作赢取奖金请联系客服进行处理。", fee)
+	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已被官方退回，请联系客服进行处理；客服QQ：wkxjingjipingtai", fee)
 
 	mailBox.pushMailBox()
 }
