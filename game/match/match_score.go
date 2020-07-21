@@ -150,10 +150,14 @@ func (sc *scoreMatch) SignIn(uid int) error {
 		return errors.New("unknown user")
 	}
 	if user.BaseData.UserData.Coupon < c.EnterFee {
-		user.WriteMsg(&msg.S2C_Apply{
-			Error: msg.S2C_Error_Coupon,
-		})
-		return errors.New("not enough coupon")
+		if !user.IsRobot() {
+			user.WriteMsg(&msg.S2C_Apply{
+				Error: msg.S2C_Error_Coupon,
+			})
+			return errors.New("not enough coupon")
+		}
+		log.Debug("机器人加点券")
+		user.GetUserData().Coupon += 10 * c.EnterFee
 	}
 	log.Debug("玩家报名参赛:%v,matchName:%v,matchid:%v,sonid:%v", user.BaseData.UserData.UserID, c.MatchName, c.MatchID, base.SonMatchID)
 	user.BaseData.UserData.Coupon -= c.EnterFee
@@ -253,7 +257,10 @@ func (sc *scoreMatch) End() {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			hall.WriteFlowData(p.uid, utils.Decimal(values.GetMoneyAward(base.Award[p.rank-1])*0.8), hall.FlowTypeAward, cfg.MatchType, cfg.SonMatchID, []int{})
+			award := values.GetMoneyAward(base.Award[p.rank-1])
+			if award != 0 {
+				hall.WriteFlowData(p.uid, utils.Decimal( award *0.8), hall.FlowTypeAward, cfg.MatchType, cfg.SonMatchID, []int{})
+			}
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

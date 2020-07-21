@@ -70,7 +70,7 @@ func (base *BaseMatch) SignIn(uid int) error {
 		})
 		return errors.New("already signUp")
 	}
-	if user.RealName() == "" && !user.IsTest() {
+	if user.RealName() == "" && !user.IsTest() && !user.IsRobot() {
 		log.Debug("no real name. ")
 		user.WriteMsg(&msg.S2C_Apply{
 			Error: msg.S2C_Error_Realname,
