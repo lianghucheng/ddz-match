@@ -115,8 +115,9 @@ type UserMatchReview struct {
 	PersonalProfit int64
 }
 
-// 统计一些玩家的赛事数据
+// MatchData 统计一些玩家的赛事数据
 type MatchData struct {
+	TotalCount int   // 总局数
 	WeekCount  int   // 周局数
 	MonthCount int   // 月局数
 	RecordTime int64 // 记录时间

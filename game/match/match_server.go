@@ -194,6 +194,10 @@ func BroadcastMatchInfo() {
 					RaceInfo[i].IsSign = false
 				}
 			}
+		} else {
+			for i := range RaceInfo {
+				RaceInfo[i].IsSign = false
+			}
 		}
 		user.WriteMsg(&msg.S2C_RaceInfo{
 			Races: RaceInfo,

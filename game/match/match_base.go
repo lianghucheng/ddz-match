@@ -55,6 +55,9 @@ type BaseMatch struct {
 }
 
 func (base *BaseMatch) SignIn(uid int) error {
+	if base.State != Signing {
+		return errors.New("match not valid to sign")
+	}
 	user, ok := UserIDUsers[uid]
 	if !ok {
 		log.Error("unknow user:%v", uid)
@@ -95,6 +98,9 @@ func (base *BaseMatch) SignOut(uid int) error {
 	// 	log.Error("unknow user:%v", uid)
 	// 	return errors.New("unknown user")
 	// }
+	if base.State != Signing {
+		return errors.New("match start")
+	}
 	index := -1
 	for n, p := range base.SignInPlayers {
 		if p == uid {

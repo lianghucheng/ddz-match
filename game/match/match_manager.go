@@ -289,7 +289,7 @@ func (sc *ScoreConfig) End(matchID string) {
 
 // RemoveSignPlayer 清除签到玩家
 func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
-	// log.Debug("remove uid:%v,%+v", uid, sc.AllSignInPlayers)
+	log.Debug("before remove uid:%v,%+v", uid, sc.AllSignInPlayers)
 	for i, p := range sc.AllSignInPlayers {
 		if p != uid {
 			continue
@@ -301,7 +301,7 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 		}
 		break
 	}
-	log.Debug("remove uid:%v,%+v", uid, sc.AllSignInPlayers)
+	log.Debug("after remove uid:%v,%+v", uid, sc.AllSignInPlayers)
 }
 
 // CreateOneMatch 创建子赛事

@@ -159,7 +159,7 @@ func (sc *scoreMatch) SignIn(uid int) error {
 		log.Debug("机器人加点券")
 		user.GetUserData().Coupon += 10 * c.EnterFee
 	}
-	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
+	log.Debug("玩家报名参赛:%v,matchName:%v,matchid:%v,sonid:%v", user.BaseData.UserData.UserID, c.MatchName, c.MatchID, base.SonMatchID)
 	user.BaseData.UserData.Coupon -= c.EnterFee
 	user.WriteMsg(&msg.S2C_UpdateUserCoupon{
 		Coupon: user.Coupon(),
@@ -680,6 +680,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 						UID:       uid,
 						AccountID: accountID,
 						MatchData: &values.MatchData{
+							TotalCount: 1,
 							WeekCount:  1,
 							MonthCount: 1,
 							RecordTime: time.Now().Unix(),
@@ -710,6 +711,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 							gameData.MatchData.WeekCount++
 						}
 					}
+					gameData.MatchData.TotalCount++
 					db.UpsertUserGameData(bson.M{"uid": uid}, gameData)
 				}
 			}
