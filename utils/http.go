@@ -12,11 +12,11 @@ import (
 
 const (
 	key         = "7inrmpd5DSQTfDxnAnOH"
-	agentServer = "http://123.207.12.67:10616/bindAgent"
+	agentServer = "http://123.207.12.67:10616"
 )
 
 // PostToAgentServer 向代理后台发送数据
-func PostToAgentServer(send interface{}) error {
+func PostToAgentServer(send interface{}, path string) error {
 	params, err := json.Marshal(send)
 	if err != nil {
 		log.Error("http post call err:%v", err)
@@ -25,7 +25,7 @@ func PostToAgentServer(send interface{}) error {
 	sign := CalculateHash(string(params))
 	data := map[string]interface{}{"Data": string(params), "Sign": sign}
 	reqStr, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", agentServer, bytes.NewBuffer(reqStr))
+	req, err := http.NewRequest("POST", agentServer+path, bytes.NewBuffer(reqStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
