@@ -63,6 +63,16 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		sc.CreateOneMatch()
 	}
 
+	if user.IsRobot() && sc.RobotNum() > 0 {
+		user.WriteMsg(&msg.S2C_Apply{
+			Error:  msg.S2C_Error_MoreRobot,
+			RaceID: sc.MatchID,
+			Action: 1,
+			Count:  len(sc.AllSignInPlayers),
+		})
+		return
+	}
+
 	// ok 先将报名玩家添加进去,比赛开始后将触发清除报名玩家的逻辑
 	sc.AllSignInPlayers = append(sc.AllSignInPlayers, uid)
 	if err := sc.LastMatch.SignIn(uid); err != nil {
@@ -392,4 +402,15 @@ func (sc *ScoreConfig) CheckConfig() error {
 func (sc *ScoreConfig) ClearLastMatch() {
 	sc.LastMatch = nil
 	sc.SonMatchID = ""
+}
+
+func (sc *ScoreConfig) RobotNum() int {
+	cnt := 0
+	for _, v := range sc.AllSignInPlayers {
+		ud := ReadUserDataByID(v)
+		if ud.Role == RoleRobot {
+			cnt++
+		}
+	}
+	return cnt
 }

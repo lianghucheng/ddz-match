@@ -207,3 +207,7 @@ func (user *User) IsTest() bool {
 	}
 	return false
 }
+
+func (user *User) IsRobot() bool {
+	return user.GetUserData().Role == RoleRobot
+}

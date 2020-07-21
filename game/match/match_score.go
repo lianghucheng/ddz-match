@@ -150,10 +150,14 @@ func (sc *scoreMatch) SignIn(uid int) error {
 		return errors.New("unknown user")
 	}
 	if user.BaseData.UserData.Coupon < c.EnterFee {
-		user.WriteMsg(&msg.S2C_Apply{
-			Error: msg.S2C_Error_Coupon,
-		})
-		return errors.New("not enough coupon")
+		if !user.IsRobot() {
+			user.WriteMsg(&msg.S2C_Apply{
+				Error: msg.S2C_Error_Coupon,
+			})
+			return errors.New("not enough coupon")
+		}
+		log.Debug("机器人加点券")
+		user.GetUserData().Coupon += 10 * c.EnterFee
 	}
 	log.Debug("玩家报名参赛:%v", user.BaseData.UserData.UserID)
 	user.BaseData.UserData.Coupon -= c.EnterFee
