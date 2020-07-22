@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
 )
@@ -12,8 +13,13 @@ func SendAwardInfo(user *player.User) {
 func sendAwardInfo(user *player.User) {
 	flowData := new(FlowData)
 	flowData.Userid = user.BaseData.UserData.UserID
+	changeAmount := FeeAmount(user.UID())
+	user.GetUserData().Fee = changeAmount
+	game.GetSkeleton().Go(func() {
+		player.SaveUserData(user.GetUserData())
+	}, nil)
 	user.WriteMsg(&msg.S2C_AwardInfo{
-		Amount:       user.Fee(),
+		Amount:       changeAmount,
 		WithDrawList: *withDrawList(flowData.readAllByUserID()),
 	})
 }

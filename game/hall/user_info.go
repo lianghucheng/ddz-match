@@ -46,8 +46,13 @@ func AddCoupon(user *player.User, count int64) {
 }
 
 func UpdateUserAfterTaxAward(user *player.User) {
+	changeAmount := FeeAmount(user.UID())
+	user.GetUserData().Fee = changeAmount
+	game.GetSkeleton().Go(func() {
+		player.SaveUserData(user.GetUserData())
+	}, nil)
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-		AfterTaxAward: utils.Decimal(user.Fee()),
+		AfterTaxAward: utils.Decimal(changeAmount),
 	})
 }
 

@@ -89,3 +89,13 @@ func flowIDAndAmount(id int) (flowIDs []int, changeAmount float64) {
 	}
 	return flowIDs, changeAmount
 }
+
+func FeeAmount(id int) (changeAmount float64) {
+	fd := new(FlowData)
+	fd.Userid = id
+	flowdatas := fd.readAllNormal()
+	for _, v := range *flowdatas {
+		changeAmount += v.ChangeAmount
+	}
+	return changeAmount
+}

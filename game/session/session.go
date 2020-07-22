@@ -223,7 +223,7 @@ func rpcAddFee(args []interface{}) {
 	if user, ok := UserIDUsers[m.Userid]; ok {
 		ud := user.GetUserData()
 		if m.FeeType == "fee" {
-			ud.Fee += m.Amount
+			ud.Fee = hall.FeeAmount(ud.UserID)
 		} else if m.FeeType == "takenfee" {
 			ud.TakenFee += m.Amount
 		}
@@ -232,7 +232,7 @@ func rpcAddFee(args []interface{}) {
 		hall.SendAwardInfo(user)
 	} else {
 		if m.FeeType == "fee" {
-			ud.Fee += m.Amount
+			ud.Fee += hall.FeeAmount(ud.UserID)
 		} else if m.FeeType == "takenfee" {
 			ud.TakenFee += m.Amount
 		}
@@ -255,20 +255,22 @@ func rpcAddAward(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_AddAward)
 	if user, ok := UserIDUsers[m.Uid]; ok {
-		user.GetUserData().Fee += m.Amount
+		hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
+		user.GetUserData().Fee = hall.FeeAmount(m.Uid)
 		game.GetSkeleton().Go(func() {
 			SaveUserData(user.GetUserData())
-			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		}, func() {
 			hall.UpdateUserAfterTaxAward(user)
 		})
 	} else {
+		hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
 		ud := ReadUserDataByID(m.Uid)
-		ud.Fee += m.Amount
+		ud.Fee = hall.FeeAmount(m.Uid)
 		game.GetSkeleton().Go(func() {
 			SaveUserData(ud)
-			hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
-		}, nil)
+		}, func() {
+
+		})
 	}
 	log.Debug("【添加提现测试数据成功】")
 }
