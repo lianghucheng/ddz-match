@@ -63,7 +63,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		sc.CreateOneMatch()
 	}
 
-	if user.IsRobot() && sc.RobotNum() > 0 {
+	if user.IsRobot() && sc.RobotNum() > 1 {
 		user.WriteMsg(&msg.S2C_Apply{
 			Error:  msg.S2C_Error_MoreRobot,
 			RaceID: sc.MatchID,

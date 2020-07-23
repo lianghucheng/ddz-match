@@ -206,6 +206,8 @@ const (
 	ErrRealNameAuthFail     = 1 //失败
 	ErrRealNameAuthAlready  = 2 //已经实名认证
 	ErrRealNameAuthBusiness = 3 //三方接口未通过
+	ErrRealNameAuthLengthLack = 4 //身份证号码长度不足
+	ErrRealNameAuthLengthMore = 5 //身份证号码长度过长
 )
 
 type S2C_RealNameAuth struct {

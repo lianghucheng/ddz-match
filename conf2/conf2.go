@@ -1,5 +1,10 @@
 package conf2
 
+import (
+	"github.com/name5566/leaf/db/mongodb"
+	"github.com/name5566/leaf/log"
+)
+
 type Config2 struct {
 	RmbCouponRate int
 	NewGiftCoupon int
@@ -71,4 +76,52 @@ func GetPriceMenu() *[]PriceItem {
 	})
 
 	return rt
+}
+
+const (
+	ModelDev = iota //开发环境模式
+	ModelPro //生产环境模式
+)
+
+type CfgMatchRobotMaxNum struct {
+	MatchID string //
+	MaxNum int
+}
+
+type Config struct {
+	Model int //配置模式
+
+}
+
+const (
+	dbUrl = "mongodb://localhost" //mongodb服务地址
+	dbName = "ddz-match" //数据库名称
+	collection = "conf" //集合名称
+)
+
+var (
+	dial *mongodb.DialContext
+)
+
+func init() {
+	var err error
+	dial, err = mongodb.Dial(dbUrl, 1)
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
+	se := dial.Ref()
+	defer dial.UnRef(se)
+	se.DB(dbName).C(collection).Find(nil)
+}
+
+func initCfg() error {
+	return nil
+}
+
+func ReadCfg() {
+	se := dial.Ref()
+	defer dial.UnRef(se)
+
+	se.DB(dbName).C(collection).Find(nil).One(nil)
 }

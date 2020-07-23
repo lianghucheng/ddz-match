@@ -29,10 +29,15 @@ func (ctx *Realname) realNameAuth(user *player.User, api func(accountid int, idC
 		UpdateRealName(user, msg.ErrRealNameAuthFail, "认证失败")
 		return
 	}
-	//if user.RealName() != "" {
-	//	UpdateRealName(user, msg.ErrRealNameAuthAlready, "重复认证")
-	//	return
-	//}
+
+	if len(ctx.IDCardNo) < 18 {
+		UpdateRealName(user, msg.ErrRealNameAuthLengthLack, "长度不足18位")
+		return
+	} else if len(ctx.IDCardNo) > 18 {
+		UpdateRealName(user, msg.ErrRealNameAuthLengthMore, "长度超过18位")
+		return
+	}
+
 	var err error
 	game.GetSkeleton().Go(func() {
 		err = api(ctx.UserID, ctx.IDCardNo, ctx.RealName, ctx.PhoneNum)
