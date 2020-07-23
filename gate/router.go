@@ -79,4 +79,6 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_UpdateHeadImg{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_CreateEdyOrder{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_CreateOrderSuccess{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_UseProp{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_SendKnapsack{}, game.ChanRPC)
 }

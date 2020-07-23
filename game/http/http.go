@@ -2,6 +2,7 @@ package http
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	. "ddz/game/db"
@@ -49,6 +50,7 @@ func startHTTPServer() {
 
 	mux.HandleFunc("/addaward", addAward)
 	mux.HandleFunc("/update-headimg", updateHeadImg)
+	mux.HandleFunc("/give-coupon-frag", giveCouponFrag)
 	//电竞二打一支付回调
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 
@@ -154,7 +156,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//todo:没问题之后再加密
-	if len(m.Password) < 8 || len(m.Password) >15 {
+	if len(m.Password) < 8 || len(m.Password) > 15 {
 		log.Debug("密码长度为8～15位")
 		w.Write(strbyte(NewError(PASSWORD_LACK, "密码长度为8～15位")))
 		return
@@ -402,4 +404,37 @@ func updateHeadImg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	game.GetSkeleton().ChanRPCServer.Go("UpdateHeadImg", m)
+}
+
+func giveCouponFrag(w http.ResponseWriter, r *http.Request) {
+	accountid := r.FormValue("accountid")
+	amount := r.FormValue("amount")
+	log.Debug("后台发放点券:aid:%v   amount:%v", accountid, amount)
+	aid, _ := strconv.Atoi(accountid)
+	a, _ := strconv.Atoi(amount)
+	propid := config.PropIDCouponFrag
+	prop, ok := config.PropList[propid]
+	if !ok {
+		log.Error("没有这个道具配置")
+		return
+	}
+	knapsack := new(hall.KnapsackProp)
+	knapsack.PropID = propid
+	knapsack.Accountid = aid
+	knapsack.ReadByAidPid()
+	if knapsack.Createdat == 0 {
+		knapsack.ID, _ = MongoDBNextSeq("knapsackprop")
+		knapsack.Createdat = time.Now().Unix()
+		knapsack.Name = prop.Name
+		knapsack.IsAdd = prop.IsAdd
+		knapsack.IsUse = prop.IsUse
+		knapsack.Expiredat = prop.Expiredat
+		knapsack.Desc = prop.Desc
+	}
+	knapsack.Num += int(a)
+	knapsack.Save()
+	w.Write([]byte(`1`))
+	game.GetSkeleton().ChanRPCServer.Go("SendKnapsack", &msg.RPC_SendKnapsack{
+		Aid: aid,
+	})
 }

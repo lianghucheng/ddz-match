@@ -15,6 +15,7 @@ const (
 	FlowTypeAward    = 1
 	FlowTypeWithDraw = 2
 	FlowTypeGift     = 3
+	FlowTypeSign     = 4
 )
 
 const (

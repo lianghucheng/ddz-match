@@ -108,6 +108,15 @@ func Read(coll string, data interface{}, query bson.M) {
 	}
 }
 
+func ReadAll(coll string, data interface{}, query bson.M) {
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	if err := se.DB(DB).C(coll).Find(query).All(data); err != nil {
+		log.Error(err.Error())
+		return
+	}
+}
+
 // GetUserGameData 获取玩家游戏数据
 func GetUserGameData(uid int) *values.GameData {
 	s := MongoDB.Ref()

@@ -1,8 +1,8 @@
 package hall
 
 import (
-	"ddz/conf"
-	"ddz/game/db"
+	"ddz/config"
+	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
@@ -11,23 +11,39 @@ import (
 
 func DailySign(user *player.User) {
 	checkDailySign(user)
-
+	ud := user.GetUserData()
 	if user.GetUserData().DailySign {
 		return
 	}
 
-	user.GetUserData().DailySign = true
-	addCoupon := conf.GetCfgDailySign()[user.GetUserData().SignTimes].Chips
-	user.GetUserData().Coupon += addCoupon
-	user.GetUserData().SignTimes++
-	player.SaveUserData(user.GetUserData())
+	ud.DailySign = true
+	ud.SignTimes++
+	cfgDs := config.GetCfgDailySignItem()
+	item := (*cfgDs)[ud.SignTimes]
 
-	UpdateUserCoupon(user, addCoupon, user.GetUserData().Coupon-addCoupon, user.GetUserData().Coupon, db.NormalOpt, db.DailySign)
-	user.WriteMsg(&msg.S2C_DailySign{
-		Coupon: addCoupon,
+	game.GetSkeleton().Go(func() {
+		switch item.ID {
+		case config.PropIDAward:
+			WriteFlowData(ud.UserID, item.Amount, FlowTypeSign, "", "", []int{})
+			ud.Fee = FeeAmount(ud.UserID)
+			player.SaveUserData(ud)
+			UpdateUserAfterTaxAward(user)
+		case config.PropIDCoupon:
+			ud.Coupon += int64(item.Amount)
+			player.SaveUserData(user.GetUserData())
+		case config.PropIDCouponFrag:
+			AddPropAmount(item.ID, ud.AccountID, int(item.Amount))
+			SendKnapsack(user)
+		}
+	}, func() {
+		user.WriteMsg(&msg.S2C_DailySign{
+			Name:   item.Name,
+			PropID: item.ID,
+			Amount: item.Amount,
+		})
+
+		SendDailySignItems(user)
 	})
-
-	SendDailySignItems(user)
 }
 
 func checkDailySign(user *player.User) {
@@ -50,34 +66,43 @@ func checkDailySign(user *player.User) {
 
 func SendDailySignItems(user *player.User) {
 	checkDailySign(user)
-
+	ud := user.GetUserData()
+	cfgDs := config.GetCfgDailySignItem()
 	dailySignItems := []msg.DailySignItems{}
-	for i := 0; i < user.GetUserData().SignTimes; i++ {
+	for i := 0; i < ud.SignTimes; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Chips:  conf.GetCfgDailySign()[i].Chips,
+			Name:   (*cfgDs)[i].Name,
+			PropID: (*cfgDs)[i].ID,
+			Amount: (*cfgDs)[i].Amount,
 			Status: msg.SignFinish,
 		})
 	}
 	if !user.GetUserData().DailySign {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Chips:  conf.GetCfgDailySign()[user.GetUserData().SignTimes].Chips,
+			Name:   (*cfgDs)[ud.SignTimes].Name,
+			PropID: (*cfgDs)[ud.SignTimes].ID,
+			Amount: (*cfgDs)[ud.SignTimes].Amount,
 			Status: msg.SignAccess,
 		})
 	} else {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Chips:  conf.GetCfgDailySign()[user.GetUserData().SignTimes].Chips,
+			Name:   (*cfgDs)[ud.SignTimes].Name,
+			PropID: (*cfgDs)[ud.SignTimes].ID,
+			Amount: (*cfgDs)[ud.SignTimes].Amount,
 			Status: msg.SignDeny,
 		})
 	}
 
 	for i := user.GetUserData().SignTimes + 1; i < 7; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Chips:  conf.GetCfgDailySign()[i].Chips,
+			Name:   (*cfgDs)[i].Name,
+			PropID: (*cfgDs)[i].ID,
+			Amount: (*cfgDs)[i].Amount,
 			Status: msg.SignDeny,
 		})
 	}
 	user.WriteMsg(&msg.S2C_DailySignItems{
 		SignItems: dailySignItems,
-		IsSign:    user.GetUserData().DailySign,
+		IsSign:    ud.DailySign,
 	})
 }

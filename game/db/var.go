@@ -5,6 +5,7 @@ const (
 	NormalOpt = iota + 1
 	MatchOpt
 	ChargeOpt
+	FragChangeOpt
 )
 
 // 定义获取物品的方式
@@ -17,6 +18,7 @@ const (
 	MatchSignOut = "退出赛事" // 赛事签出
 	MatchAward   = "赛事奖励" // 赛事奖励
 	Backstage    = "后台发放" // 后台发放
+	CouponFrag   = "点券碎片" // 点券碎片
 )
 
 // ItemLog 物品日志

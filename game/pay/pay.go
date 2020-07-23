@@ -1,7 +1,7 @@
 package pay
 
 import (
-	"ddz/conf2"
+	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
@@ -19,8 +19,8 @@ const createPaymentUrl = "https://open.test.boai1986.cn"
 func CreateOrder(user *player.User, priceID int) {
 	order := new(values.EdyOrder)
 	order.TradeNo = utils.GetOutTradeNo()
-	pm := conf2.PriceItem{}
-	for _, v := range *conf2.GetPriceMenu() {
+	pm := config.PriceItem{}
+	for _, v := range *config.GetPriceMenu() {
 		if v.PriceID == priceID {
 			pm = v
 			order.Fee = v.Fee

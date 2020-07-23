@@ -13,6 +13,7 @@ func init() {
 	Processor.Register(&RPC_UpdateAwardInfo{})
 	Processor.Register(&RPC_UpdateCoupon{})
 	Processor.Register(&RPC_UpdateHeadImg{})
+	Processor.Register(&RPC_SendKnapsack{})
 }
 
 type C2S_EndMatch struct {
@@ -78,4 +79,8 @@ type RPC_UpdateHeadImg struct {
 	Secret    string
 	Accountid int
 	HeadImg   string
+}
+
+type RPC_SendKnapsack struct {
+	Aid int
 }

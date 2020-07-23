@@ -55,6 +55,7 @@ func init() {
 	handler(&msg.C2S_TakenFirstCoupon{}, handleTakenFirstCoupon)
 	handler(&msg.C2S_CreateEdyOrder{}, handleCreateEdyOrder)
 	handler(&msg.C2S_CreateOrderSuccess{}, handleCreateOrderSuccess)
+	handler(&msg.C2S_UseProp{}, handleUseProp)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -587,4 +588,17 @@ func handleCreateOrderSuccess(args []interface{}) {
 		return
 	}
 	pay.CreateOrderSuccess(user, m)
+}
+
+func handleUseProp(args []interface{}) {
+	m := args[0].(*msg.C2S_UseProp)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	hall.UseProp(user, m)
 }

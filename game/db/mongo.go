@@ -55,6 +55,10 @@ func initCollection() {
 	if err != nil {
 		log.Fatal("ensure counter error: %v", err)
 	}
+	err = db.EnsureCounter(DB, "counters", "knapsackprop")
+	if err != nil {
+		log.Fatal("ensure counter error: %v", err)
+	}
 	err = db.EnsureCounter(DB, "counters", "usermail")
 	err = db.EnsureUniqueIndex(DB, "users", []string{"accountid"})
 	if err != nil {

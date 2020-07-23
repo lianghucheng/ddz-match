@@ -1,7 +1,7 @@
 package msg
 
 import (
-	"ddz/conf2"
+	"ddz/config"
 	"github.com/name5566/leaf/network/json"
 )
 
@@ -93,7 +93,9 @@ type C2S_DailySign struct {
 }
 
 type S2C_DailySign struct {
-	Coupon int64 //获取的点券
+	Name   string
+	PropID int
+	Amount float64
 }
 
 type S2C_DailySignItems struct {
@@ -108,7 +110,9 @@ const (
 )
 
 type DailySignItems struct {
-	Chips  int64
+	Name   string
+	PropID int
+	Amount float64
 	Status int
 }
 
@@ -202,10 +206,10 @@ type C2S_RealNameAuth struct {
 }
 
 const (
-	ErrRealNameAuthSuccess  = 0 //成功
-	ErrRealNameAuthFail     = 1 //失败
-	ErrRealNameAuthAlready  = 2 //已经实名认证
-	ErrRealNameAuthBusiness = 3 //三方接口未通过
+	ErrRealNameAuthSuccess    = 0 //成功
+	ErrRealNameAuthFail       = 1 //失败
+	ErrRealNameAuthAlready    = 2 //已经实名认证
+	ErrRealNameAuthBusiness   = 3 //三方接口未通过
 	ErrRealNameAuthLengthLack = 4 //身份证号码长度不足
 	ErrRealNameAuthLengthMore = 5 //身份证号码长度过长
 )
@@ -279,5 +283,5 @@ type S2C_WithDraw struct {
 }
 
 type S2C_PriceMenu struct {
-	PriceItems *[]conf2.PriceItem
+	PriceItems *[]config.PriceItem
 }
