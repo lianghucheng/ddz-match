@@ -30,6 +30,7 @@ func CreateOrder(user *player.User, priceID int) {
 	order.Createdat = time.Now().Unix()
 	order.ID, _ = db.MongoDBNextSeq("edyorder")
 	order.Accountid = user.AcountID()
+	order.Merchant = values.MerchantSportCentralAthketicAssociation
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
 		AppID:            edy_api.AppID,

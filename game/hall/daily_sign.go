@@ -17,10 +17,9 @@ func DailySign(user *player.User) {
 	}
 
 	ud.DailySign = true
-	ud.SignTimes++
 	cfgDs := config.GetCfgDailySignItem()
 	item := (*cfgDs)[ud.SignTimes]
-
+	ud.SignTimes++
 	game.GetSkeleton().Go(func() {
 		switch item.ID {
 		case config.PropIDAward:
@@ -33,7 +32,6 @@ func DailySign(user *player.User) {
 			player.SaveUserData(user.GetUserData())
 		case config.PropIDCouponFrag:
 			AddPropAmount(item.ID, ud.AccountID, int(item.Amount))
-			SendKnapsack(user)
 		}
 	}, func() {
 		user.WriteMsg(&msg.S2C_DailySign{

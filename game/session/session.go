@@ -38,7 +38,6 @@ func init() {
 	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
-	skeleton.RegisterChanRPC("SendKnapsack", rpcSendKnapsack)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -390,16 +389,5 @@ func rpcUpdateHeadImg(args []interface{}) {
 	} else {
 		ud.Headimgurl = m.HeadImg
 		SaveUserData(ud)
-	}
-}
-
-func rpcSendKnapsack(args []interface{}) {
-	if len(args) != 1 {
-		return
-	}
-	m := args[0].(*msg.RPC_SendKnapsack)
-	ud := ReadUserDataByAid(m.Aid)
-	if user, ok := UserIDUsers[ud.UserID]; ok {
-		hall.SendKnapsack(user)
 	}
 }

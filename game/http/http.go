@@ -244,7 +244,7 @@ func handleFindPwd(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		userData = nil
-		w.Write(strbyte(NewError(msg.S2C_Close_Usrn_Nil, "用户名不存在")))
+		w.Write(strbyte(NewError(msg.S2C_Close_Usrn_Nil, "用户不存在")))
 		return
 	}
 
@@ -323,6 +323,7 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	Read("edyorder", order, bson.M{"tradeno": edyPayNotifyReq.OpenOrderID, "status": false})
 	order.TradeNoReceive = edyPayNotifyReq.OrderID
 	order.Status = true
+	order.PayStatus = values.PayStatusSuccess
 	Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
 		TotalFee:  int(order.Fee),

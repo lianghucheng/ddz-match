@@ -56,6 +56,7 @@ func init() {
 	handler(&msg.C2S_CreateEdyOrder{}, handleCreateEdyOrder)
 	handler(&msg.C2S_CreateOrderSuccess{}, handleCreateOrderSuccess)
 	handler(&msg.C2S_UseProp{}, handleUseProp)
+	handler(&msg.C2S_Knapsack{}, handleKnapsack)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -601,4 +602,18 @@ func handleUseProp(args []interface{}) {
 		return
 	}
 	hall.UseProp(user, m)
+}
+
+func handleKnapsack(args []interface{}) {
+	m := args[0].(*msg.C2S_Knapsack)
+	_ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	hall.SendKnapsack(user)
 }

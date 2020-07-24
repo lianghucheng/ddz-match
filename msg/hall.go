@@ -1,9 +1,14 @@
 package msg
 
 func init() {
+	Processor.Register(&C2S_Knapsack{})
 	Processor.Register(&S2C_Knapsack{})
 	Processor.Register(&C2S_UseProp{})
 	Processor.Register(&S2C_UseProp{})
+}
+
+type C2S_Knapsack struct {
+
 }
 
 type KnapsackProp struct {
@@ -17,7 +22,7 @@ type KnapsackProp struct {
 }
 
 type S2C_Knapsack struct {
-	Props *[]KnapsackProp //道具数据列表
+	Props []KnapsackProp //道具数据列表
 }
 
 type C2S_UseProp struct {
@@ -28,4 +33,7 @@ type C2S_UseProp struct {
 type S2C_UseProp struct {
 	Error  int    //错误码
 	ErrMsg string //错误信息
+	Name string
+	PropID int
+	Amount int
 }

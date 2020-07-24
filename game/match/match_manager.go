@@ -1,6 +1,7 @@
 package match
 
 import (
+	"ddz/config"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
@@ -63,7 +64,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		sc.CreateOneMatch()
 	}
 
-	if user.IsRobot() && sc.RobotNum() > 1 {
+	if user.IsRobot() && sc.RobotNum() > config.GetCfgMatchRobotMaxNums()[sc.MatchID] {
 		user.WriteMsg(&msg.S2C_Apply{
 			Error:  msg.S2C_Error_MoreRobot,
 			RaceID: sc.MatchID,

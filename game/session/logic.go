@@ -191,8 +191,11 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
 		Customer: msg.Customer{
-			WeChat: "1994327647",
+			WeChat: "wkxjingjipingtai",
 			Email:  "jingjikefu@qq.com",
+			QQ:"2721372487",
+			QQGroup:"914746797",
+			PhoneNum:"13292757620",
 		},
 		RealName:       user.RealName(),
 		PhoneNum:       user.PhoneNum(),

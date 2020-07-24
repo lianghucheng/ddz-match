@@ -109,6 +109,8 @@ type Customer struct {
 	WeChat   string //微信
 	Email    string //邮箱
 	PhoneNum string //电话号码
+	QQ 	string
+	QQGroup string
 }
 
 type S2C_Login struct {

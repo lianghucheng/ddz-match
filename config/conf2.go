@@ -89,13 +89,15 @@ const (
 
 type Config struct {
 	Model                int //配置模式
-	CfgMatchRobotMaxNums *[]CfgMatchRobotMaxNum
+	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
 }
 
 type CfgMatchRobotMaxNum struct {
 	MatchID string //
-	MaxNum  int
+	PerMaxNum  int
+	Total   int
+	JoinNum int
 }
 
 type CfgDailySignItem struct {
@@ -212,11 +214,15 @@ var PropList = map[int]TempProp{
 	},
 	PropIDCouponFrag: {
 		ID:               10003,
-		Name:             "奖金",
+		Name:             "碎片",
 		IsAdd:            true,
 		IsTowardKnapsack: true,
 		IsUse:            true,
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
+}
+
+func GetCfgMatchRobotMaxNums() map[string]int {
+	return cfg.CfgMatchRobotMaxNums
 }

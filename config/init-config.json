@@ -6,7 +6,7 @@
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
-      "Amount": 10.0
+      "Amount": 40.0
     },
     {
       "ID": 10001,
