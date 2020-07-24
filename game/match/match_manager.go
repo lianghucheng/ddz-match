@@ -6,6 +6,7 @@ import (
 	"ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/player"
+	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
@@ -230,6 +231,8 @@ func (sc *ScoreConfig) GetAwardItem() {
 		}
 		// log.Debug("award:%v", award)
 		awards[rank-1] = award
+		sc.MoneyAward += values.GetMoneyAward(award)
+		sc.CouponAward += values.GetCouponAward(award)
 	}
 	sc.Award = awards
 	log.Debug("match award:%v", sc.Award)

@@ -106,12 +106,12 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		return
 	}
 
-	if len(password) < 8 || len(password) > 15 {
-		userData = nil
-		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Pass_Length})
-		user.Close()
-		return
-	}
+	// if len(password) < 8 || len(password) > 15 {
+	// 	userData = nil
+	// 	user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Pass_Length})
+	// 	user.Close()
+	// 	return
+	// }
 	if userData.Password != password {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_Pwd_Error})

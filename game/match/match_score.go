@@ -319,21 +319,21 @@ func (sc *scoreMatch) SplitTable() {
 		}
 	}
 	log.Debug("num:%v,rooms:%v", num, len(base.Rooms))
-	// 所有玩家先退出原来的房间
-	for _, r := range base.Rooms {
-		game := r.Game.(*ddz.LandlordMatchRoom)
-		for _, playerData := range game.UserIDPlayerDatas {
-			log.Debug("kick player:%v", playerData.User.BaseData.UserData.UserID)
-			game.Exit(playerData.User.BaseData.UserData.UserID)
-		}
-		// 房间重置
-		game.Reset()
-	}
-	if num < len(base.Rooms) { // 淘汰玩家后，先拆除房间
-		n := len(base.Rooms) - num // 需要拆开的房间数
-		base.Rooms = base.Rooms[:len(base.Rooms)-n]
-	}
 	game.GetSkeleton().AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordNextStart)*time.Millisecond, func() {
+		// 所有玩家先退出原来的房间
+		for _, r := range base.Rooms {
+			game := r.Game.(*ddz.LandlordMatchRoom)
+			for _, playerData := range game.UserIDPlayerDatas {
+				log.Debug("kick player:%v", playerData.User.BaseData.UserData.UserID)
+				game.Exit(playerData.User.BaseData.UserData.UserID)
+			}
+			// 房间重置
+			game.Reset()
+		}
+		if num < len(base.Rooms) { // 淘汰玩家后，先拆除房间
+			n := len(base.Rooms) - num // 需要拆开的房间数
+			base.Rooms = base.Rooms[:len(base.Rooms)-n]
+		}
 		for _, room := range base.Rooms {
 			// 随机分配桌子
 			for i := 0; i < sc.myConfig.TablePlayer; i++ {

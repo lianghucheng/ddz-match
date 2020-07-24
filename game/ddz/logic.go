@@ -81,7 +81,7 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 		max := game.UserIDPlayerDatas[game.dealerUserID].score
 		userID := game.dealerUserID
 		for i := 1; i < len(game.UserIDPlayerDatas); i++ {
-			position := ((game.UserIDPlayerDatas[userID].position) + 1) % game.rule.MaxPlayers
+			position := ((game.UserIDPlayerDatas[userID].position) + i) % game.rule.MaxPlayers
 			nextUserID := game.PositionUserIDs[position]
 			if game.UserIDPlayerDatas[nextUserID].score <= max {
 				continue

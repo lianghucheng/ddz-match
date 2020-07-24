@@ -158,3 +158,15 @@ func GetMoneyAward(award string) float64 {
 	}
 	return amount
 }
+
+// GetCouponAward 获取奖励字段中的点券之和
+func GetCouponAward(award string) float64 {
+	var amount float64
+	s := strings.Split(award, ",")
+	for _, one := range s {
+		if GetAwardType(one) == Coupon {
+			amount += ParseAward(one)
+		}
+	}
+	return amount
+}
