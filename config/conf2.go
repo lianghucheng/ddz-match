@@ -144,6 +144,7 @@ func init() {
 			log.Fatal(err.Error())
 			return
 		}
+		ret.CfgMatchRobotMaxNums = make(map[string]int)
 	}
 	cfg = ret
 }

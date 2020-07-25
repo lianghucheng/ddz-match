@@ -53,7 +53,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/give-coupon-frag", giveCouponFrag)
 	//电竞二打一支付回调
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
-
+	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -438,4 +438,15 @@ func giveCouponFrag(w http.ResponseWriter, r *http.Request) {
 	game.GetSkeleton().ChanRPCServer.Go("SendKnapsack", &msg.RPC_SendKnapsack{
 		Aid: aid,
 	})
+}
+
+func confRobotMaxNum(w http.ResponseWriter, r *http.Request) {
+	maxRobotNum := r.FormValue("max_robot_num")
+	matchid := r.FormValue("matchid")
+	num, _ := strconv.Atoi(maxRobotNum)
+	log.Debug("更新赛事机器人最大数量配置，配置前数量：%v", config.GetCfgMatchRobotMaxNums()[matchid])
+	config.GetCfgMatchRobotMaxNums()[matchid] = num
+	log.Debug("更新赛事机器人最大数量配置，配置后数量：%v", config.GetCfgMatchRobotMaxNums()[matchid])
+	//todo: Save
+	w.Write([]byte(`更新赛事机器人最大数量配置，配置后数量：`+ strconv.Itoa(config.GetCfgMatchRobotMaxNums()[matchid])))
 }
