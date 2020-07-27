@@ -65,7 +65,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		sc.CreateOneMatch()
 	}
 
-	log.Debug("####机器人报名：%v   %v   %v", user.IsRobot(), sc.RobotNum(), config.GetCfgMatchRobotMaxNums()[sc.MatchID])
+	//log.Debug("####机器人报名：%v   %v   %v", user.IsRobot(), sc.RobotNum(), config.GetCfgMatchRobotMaxNums()[sc.MatchID])
 	if user.IsRobot() && sc.RobotNum() > config.GetCfgMatchRobotMaxNums()[sc.MatchID] - 1 {
 		user.WriteMsg(&msg.S2C_Apply{
 			Error:  msg.S2C_Error_MoreRobot,

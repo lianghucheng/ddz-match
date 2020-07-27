@@ -122,7 +122,7 @@ func (ctx *KnapsackProp) ReadByAidPid() {
 
 func (ctx *KnapsackProp) ReadAllByAid() *[]KnapsackProp {
 	knapsackProps := new([]KnapsackProp)
-	db.ReadAll("knapsackprop", knapsackProps, bson.M{"accountid": ctx.Accountid})
+	db.ReadAll("knapsackprop", knapsackProps, bson.M{"accountid": ctx.Accountid, "num": bson.M{"$ne": 0}})
 	return knapsackProps
 }
 
