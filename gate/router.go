@@ -82,4 +82,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_UseProp{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_SendKnapsack{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_Knapsack{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_AddCouponFrag{}, game.ChanRPC)
 }

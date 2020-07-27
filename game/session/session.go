@@ -2,6 +2,7 @@ package session
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
@@ -38,6 +39,7 @@ func init() {
 	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
+	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -390,4 +392,19 @@ func rpcUpdateHeadImg(args []interface{}) {
 		ud.Headimgurl = m.HeadImg
 		SaveUserData(ud)
 	}
+}
+
+func rpcAddCouponFrag(args []interface{}) {
+	log.Debug("远程调用加点券碎片")
+	if len(args) != 1 {
+		log.Debug("参数长度异常")
+		return
+	}
+	m := args[0].(*msg.RPC_AddCouponFrag)
+	if m.Secret != "123456" {
+		log.Debug("非法请求")
+		return
+	}
+	hall.AddPropAmount(config.PropIDCouponFrag, m.Accountid, m.Amount)
+	log.Debug("成功！！！远程调用加点券碎片")
 }

@@ -54,6 +54,7 @@ func startHTTPServer() {
 	//电竞二打一支付回调
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
+	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -321,6 +322,10 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	//todo:存订单，发货
 	order := new(values.EdyOrder)
 	Read("edyorder", order, bson.M{"tradeno": edyPayNotifyReq.OpenOrderID, "status": false})
+	if order.PayStatus != values.PayStatusAction {
+		log.Debug("支付失败，不发货")
+		return
+	}
 	order.TradeNoReceive = edyPayNotifyReq.OrderID
 	order.Status = true
 	order.PayStatus = values.PayStatusSuccess
@@ -449,4 +454,20 @@ func confRobotMaxNum(w http.ResponseWriter, r *http.Request) {
 	log.Debug("更新赛事机器人最大数量配置，配置后数量：%v", config.GetCfgMatchRobotMaxNums()[matchid])
 	//todo: Save
 	w.Write([]byte(`更新赛事机器人最大数量配置，配置后数量：`+ strconv.Itoa(config.GetCfgMatchRobotMaxNums()[matchid])))
+}
+
+func addCouponFrag(w http.ResponseWriter, r *http.Request) {
+	data := new(msg.RPC_AddCouponFrag)
+	b ,errReadIO := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	errJson := json.Unmarshal(b, data)
+	if errReadIO != nil || errJson != nil {
+		log.Error("errReadIO: %v, errJson: %v. ", errReadIO, errJson)
+	}
+	if data.Secret != "123456" {
+		log.Debug("非法调用")
+		return
+	}
+	game.GetSkeleton().ChanRPCServer.Go("AddCouponFrag", data)
+	w.Write([]byte(`1`))
 }

@@ -24,6 +24,7 @@ func CreateOrder(user *player.User, priceID int) {
 		if v.PriceID == priceID {
 			pm = v
 			order.Fee = v.Fee
+			order.Amount = v.Amount
 			break
 		}
 	}
@@ -42,6 +43,16 @@ func CreateOrder(user *player.User, priceID int) {
 		OpenOrderID:      order.TradeNo,
 		OpenNotifyUrl:    "http://123.207.12.67:9084" + edy_api.EdyBackCall,
 		CreatePaymentUrl: createPaymentUrl + "/api/payment/create",
+	})
+
+	//若干时间后，判定为支付失败
+	game.GetSkeleton().AfterFunc(5*time.Minute, func(){
+		data := new(values.EdyOrder)
+		db.Read("edyorder", data, bson.M{"tradeno": order.TradeNo})
+		if data.PayStatus != 1 {
+			data.PayStatus = 2
+			db.Save("edyorder", data, bson.M{"_id": order.ID})
+		}
 	})
 }
 

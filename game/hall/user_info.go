@@ -8,7 +8,7 @@ import (
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -198,6 +198,7 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 }
 
 func AddPropAmount(propid int, accountid int, amount int) {
+	log.Debug("道具数量变动，propid：%v， accountid： %v, amount:%v. ", propid, accountid, amount)
 	knapsackProp := new(KnapsackProp)
 	prop, ok := config.PropList[propid]
 	if !ok {
