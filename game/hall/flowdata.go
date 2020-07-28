@@ -24,6 +24,7 @@ const (
 	FlowDataStatusOver   = 2
 	FlowDataStatusBack   = 3
 	FlowDataStatusGift   = 4
+	FlowDataStatusSign   = 5
 )
 
 var FlowDataStatusMsg = map[int]string{

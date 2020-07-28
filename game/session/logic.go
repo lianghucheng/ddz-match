@@ -215,6 +215,9 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user)
+	user.WriteMsg(&msg.S2C_OnlineUserNum{
+		Num:len(UserIDUsers),
+	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {

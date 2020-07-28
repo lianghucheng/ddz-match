@@ -83,6 +83,7 @@ func init() {
 	Processor.Register(&C2S_CreateEdyOrder{})
 	Processor.Register(&S2C_CreateEdyOrder{})
 	Processor.Register(&S2C_PriceMenu{})
+	Processor.Register(&S2C_OnlineUserNum{})
 }
 
 type C2S_Heartbeat struct{}
@@ -284,4 +285,8 @@ type S2C_WithDraw struct {
 
 type S2C_PriceMenu struct {
 	PriceItems *[]config.PriceItem
+}
+
+type S2C_OnlineUserNum struct {
+	Num int
 }
