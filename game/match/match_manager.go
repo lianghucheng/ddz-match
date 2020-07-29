@@ -66,7 +66,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	}
 
 	//log.Debug("####机器人报名：%v   %v   %v", user.IsRobot(), sc.RobotNum(), config.GetCfgMatchRobotMaxNums()[sc.MatchID])
-	if user.IsRobot() && sc.RobotNum() > config.GetCfgMatchRobotMaxNums()[sc.MatchID] - 1 {
+	if user.IsRobot() && sc.RobotNum() > config.GetCfgMatchRobotMaxNums()[sc.MatchID]-1 {
 		user.WriteMsg(&msg.S2C_Apply{
 			Error:  msg.S2C_Error_MoreRobot,
 			RaceID: sc.MatchID,
@@ -88,6 +88,8 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	// 	sc.AllSignInPlayers = []int{}
 	// }
 
+	sc.AllPlayingPlayersCount++
+
 	user.WriteMsg(&msg.S2C_Apply{
 		Error:  0,
 		RaceID: sc.MatchID,
@@ -96,8 +98,9 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	})
 
 	Broadcast(&msg.S2C_MatchNum{
-		MatchId: sc.MatchID,
-		Count:   len(sc.AllSignInPlayers),
+		MatchId:      sc.MatchID,
+		Count:        len(sc.AllSignInPlayers),
+		AllPlayerNum: sc.AllPlayingPlayersCount,
 	})
 
 	// 赛事结束
@@ -125,6 +128,7 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		if err := sc.LastMatch.SignOut(uid); err != nil {
 			return
 		}
+		sc.AllPlayingPlayersCount--
 	} else if match, ok := MatchList[matchID]; ok { // 系统赛事倒计时时间到了，人数不够，清理玩家
 		// log.Debug("player %v kickout", uid)
 		// log.Debug("check:%v", match.SignInPlayers)
@@ -142,8 +146,9 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		Count:  len(sc.AllSignInPlayers),
 	})
 	Broadcast(&msg.S2C_MatchNum{
-		MatchId: sc.MatchID,
-		Count:   len(sc.AllSignInPlayers),
+		MatchId:      sc.MatchID,
+		Count:        len(sc.AllSignInPlayers),
+		AllPlayerNum: sc.AllPlayingPlayersCount,
 	})
 
 	// 如果当前赛事玩家全部退出，那么检查一次是否有新赛事配置更新
@@ -173,6 +178,9 @@ func (sc *ScoreConfig) SetNormalConfig(config *NormalCofig) {
 // CheckNewConfig 检查是否有新的配置需要更新
 func (sc *ScoreConfig) CheckNewConfig() {
 	if c, ok := MatchConfigQueue[sc.MatchID]; ok {
+		// 部分参数不配置
+		c.AllSignInPlayers = sc.AllSignInPlayers
+		c.AllPlayingPlayersCount = sc.AllPlayingPlayersCount
 		sc.SetNormalConfig(c)
 		sc.Save()
 		// 通知客户端
@@ -184,26 +192,6 @@ func (sc *ScoreConfig) CheckNewConfig() {
 // GetAwardItem 根据list，解析出具体的奖励物品
 func (sc *ScoreConfig) GetAwardItem() {
 	list := sc.AwardList
-	// items := strings.Split(list, ",")
-	// log.Debug("check items:%v", items)
-	// for _, s := range items {
-	// 	item := strings.Split(s, ":")
-	// 	if len(item) < 2 {
-	// 		continue
-	// 	}
-	// 	one := strings.Split(item[1][:len(item[1])-1], `"`)
-	// 	if len(one) < 2 {
-	// 		continue
-	// 	}
-	// 	awards = append(awards, one[1])
-	// 	count := ParseAward(one[1])
-	// 	if GetAwardType(one[1]) == values.Money {
-	// 		sc.MoneyAward += count
-	// 	} else if GetAwardType(one[1]) == values.Coupon {z
-	// 		sc.CouponAward += count
-	// 	}
-	// 	// awards = append(awards, item[1][:len(item[1])-1])
-	// }
 	tmp := map[string]interface{}{}
 	err := json.Unmarshal([]byte(list), &tmp)
 	if err != nil {
@@ -211,6 +199,9 @@ func (sc *ScoreConfig) GetAwardItem() {
 		return
 	}
 	awards := make([]string, len(tmp))
+	sc.MoneyAward = 0
+	sc.CouponAward = 0
+	sc.FragmentAward = 0
 	for i, v := range tmp {
 		num := []byte{}
 		for _, s := range []byte(i) {
@@ -234,6 +225,7 @@ func (sc *ScoreConfig) GetAwardItem() {
 		awards[rank-1] = award
 		sc.MoneyAward += values.GetMoneyAward(award)
 		sc.CouponAward += values.GetCouponAward(award)
+		sc.FragmentAward += values.GetFragmentAward(award)
 	}
 	sc.Award = awards
 	log.Debug("match award:%v", sc.Award)
@@ -280,10 +272,19 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 
 // End 赛事結束的逻辑
 func (sc *ScoreConfig) End(matchID string) {
-	// match, ok := MatchList[matchID]
-	// if !ok {
-	// 	return
-	// }
+	match, ok := MatchList[matchID]
+	if !ok {
+		return
+	}
+	log.Debug("all:%v,sign:%+v", sc.AllPlayingPlayersCount, match.SignInPlayers)
+	sc.AllPlayingPlayersCount -= len(match.SignInPlayers)
+	// 广播比赛剩余人数
+	Broadcast(&msg.S2C_MatchNum{
+		MatchId:      sc.MatchID,
+		Count:        len(sc.AllSignInPlayers),
+		AllPlayerNum: sc.AllPlayingPlayersCount,
+	})
+
 	// for _, p := range match.SignInPlayers {
 	// 	sc.RemoveSignPlayer(p)
 	// }

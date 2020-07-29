@@ -186,12 +186,12 @@ func editMatch(args []interface{}) {
 		// 通知客户端
 		BroadcastMatchInfo()
 	} else {
+		c.AllSignInPlayers = []int{}
 		MatchConfigQueue[data.MatchID] = c
 	}
 }
 
 func optMatch(args []interface{}) {
-	log.Debug("optMatch:%+v", args)
 	if len(args) != 1 {
 		log.Error("error req:%+v", args)
 		return
@@ -201,6 +201,7 @@ func optMatch(args []interface{}) {
 		log.Error("error req:%+v", args)
 		return
 	}
+	log.Debug("optMatch:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {

@@ -45,6 +45,7 @@ type S2C_MatchInfo struct {
 }
 
 type S2C_MatchNum struct {
-	MatchId string
-	Count   int //已报名人数
+	MatchId      string
+	Count        int //已报名人数
+	AllPlayerNum int // 正在参与赛事的人数
 }

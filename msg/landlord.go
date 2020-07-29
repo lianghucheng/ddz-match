@@ -147,15 +147,16 @@ type OneMatchType struct {
 }
 
 type OneMatch struct {
-	MatchID   string
-	MatchName string
-	SignInNum int
-	Recommend string
-	MaxPlayer int
-	EnterFee  int64
-	StartTime int64
-	StartType int
-	IsSign    bool
-	MatchType string
-	MatchIcon string
+	MatchID      string
+	MatchName    string
+	SignInNum    int
+	AllPlayerNum int
+	Recommend    string
+	MaxPlayer    int
+	EnterFee     int64
+	StartTime    int64
+	StartType    int
+	IsSign       bool
+	MatchType    string
+	MatchIcon    string
 }

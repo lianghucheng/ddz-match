@@ -150,16 +150,10 @@ func (base *BaseMatch) Start() {
 	if base.myMatch != nil {
 		base.myMatch.Start()
 	}
-	// 开赛后清除报名人数
-	// c := base.Manager.GetNormalConfig()
-	// c.AllSignInPlayers = []int{}
-	// base.Manager.SetNormalConfig(c)
 	for uid, user := range base.AllPlayers {
 		log.Debug("remove uid:%v", uid)
 		base.Manager.RemoveSignPlayer(uid)
 		// 统计报名费
-		// hall.UpdateUserCoupon(user, -base.NormalCofig.EnterFee, user.BaseData.UserData.Coupon+base.NormalCofig.EnterFee,
-		// 	user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchSignIn)
 		db.InsertItemLog(db.ItemLog{
 			UID:        user.BaseData.UserData.AccountID,
 			Item:       values.Coupon,
@@ -178,22 +172,8 @@ func (base *BaseMatch) Start() {
 
 func (base *BaseMatch) End() {
 	base.State = Ending
-	// for _, uid := range base.SignInPlayers {
-	// 	// uid := p.BaseData.UserData.UserID
-	// 	game, ok := UserIDRooms[uid]
-	// 	if !ok {
-	// 		continue
-	// 	}
-	// 	game.Exit(uid)
-	// 	delete(UserIDRooms, uid)
-	// 	delete(UserIDMatch, uid)
-	// }
 	base.Manager.End(base.SonMatchID)
 
-	// Broadcast(&msg.S2C_MatchNum{
-	// 	MatchId: base.Manager.GetNormalConfig().MatchID,
-	// 	Count:   len(base.Manager.GetNormalConfig().AllSignInPlayers),
-	// })
 	if base.myMatch != nil {
 		base.myMatch.End()
 	}

@@ -2,6 +2,7 @@ package match
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/ddz"
@@ -38,6 +39,7 @@ type ScoreConfig struct {
 	CreateTime    int64    `bson:"createtime"`    // 比赛创建时间
 	MoneyAward    float64  `bson:"moneyaward"`    // 赛事金钱总奖励
 	CouponAward   float64  `bson:"couponaward"`   // 赛事点券总奖励
+	FragmentAward float64  `bson:"fragmentaward"` // 赛事碎片总奖励
 	Award         []string // 具体的赛事奖励
 
 	// score配置
@@ -67,11 +69,12 @@ type ScoreConfig struct {
 	ShowHall   bool     `bson:"showhall"`   // 是否首页展示
 	MatchIcon  string   `bson:"matchicon"`  // 赛事图标
 
-	AllSignInPlayers []int        `bson:"-"` // 已报名玩家该种赛事的所有玩家
-	CurrentIDIndex   int          `bson:"-"` // 当前赛事取id的序号
-	LastMatch        *BaseMatch   `bson:"-"` // 最新分配的一个赛事
-	ReadyTime        int64        `bson:"-"` // 比赛开始时间
-	StartTimer       *timer.Timer `bson:"-"` // 上架倒计时
+	AllSignInPlayers       []int        `bson:"-"` // 已报名玩家该种赛事的所有玩家
+	AllPlayingPlayersCount int          `bson:"-"` // 正在参与赛事的玩家总数
+	CurrentIDIndex         int          `bson:"-"` // 当前赛事取id的序号
+	LastMatch              *BaseMatch   `bson:"-"` // 最新分配的一个赛事
+	ReadyTime              int64        `bson:"-"` // 比赛开始时间
+	StartTimer             *timer.Timer `bson:"-"` // 上架倒计时
 }
 
 type sConfig struct {
@@ -607,6 +610,28 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Coupon}})
 				hall.UpdateUserCoupon(user, int64(values.ParseAward(oneAward)), user.BaseData.UserData.Coupon-int64(awardAmount),
 					user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName))
+			} else if values.GetAwardType(oneAward) == values.Fragment { // 碎片奖励
+				data := hall.KnapsackProp{}
+				data.Accountid = user.BaseData.UserData.AccountID
+				data.PropID = config.PropIDCouponFrag
+				data.ReadAllByAid()
+				amount := values.ParseAward(oneAward)
+				before := int64(data.Num)
+				data.Num += int(amount)
+				after := int64(data.Num)
+				data.Save()
+				// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
+				db.InsertItemLog(db.ItemLog{
+					UID:        user.BaseData.UserData.UserID,
+					Item:       values.Fragment,
+					Amount:     int64(amount),
+					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
+					CreateTime: time.Now().Unix(),
+					Before:     before,
+					After:      after,
+					OptType:    db.MatchOpt,
+					MatchID:    base.SonMatchID,
+				})
 			}
 		}
 	}

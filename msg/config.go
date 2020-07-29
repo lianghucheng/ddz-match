@@ -8,16 +8,17 @@ func init() {
 }
 
 type RaceInfo struct {
-	ID        string  //赛事Id
-	Desc      string  //赛事名称
-	Award     float64 //赛事
-	EnterFee  float64 //报名费
-	ConDes    string  //赛事开赛条件
-	JoinNum   int     //赛事报名人数
-	StartTime int64   // 比赛开始时间
-	StartType int     // 比赛开赛方式
-	IsSign    bool    // 是否报名
-	MatchType string
+	ID           string  //赛事Id
+	Desc         string  //赛事名称
+	Award        float64 //赛事
+	EnterFee     float64 //报名费
+	ConDes       string  //赛事开赛条件
+	JoinNum      int     //赛事报名人数
+	AllPlayerNum int     // 赛事参与总人数
+	StartTime    int64   // 比赛开始时间
+	StartType    int     // 比赛开赛方式
+	IsSign       bool    // 是否报名
+	MatchType    string
 }
 
 type C2S_RaceInfo struct {

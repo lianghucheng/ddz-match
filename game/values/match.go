@@ -60,28 +60,29 @@ type MatchPlayer struct {
 
 // NormalCofig 需要返回给客户端的通用配置
 type NormalCofig struct {
-	MatchID          string
-	MatchName        string
-	MatchType        string // 赛事类型
-	MatchDesc        string
-	EnterFee         int64
-	State            int
-	Award            []string
-	AwardDesc        string // 奖励描述
-	Recommend        string // 赛事推荐文字信息
-	MaxPlayer        int
-	AllSignInPlayers []int        // 所有已报名该赛事的玩家
-	StartTime        int64        // 比赛开始时间或者比赛倒计时
-	StartType        int          // 比赛开赛种类
-	ReadyTime        int64        // 剩余时间
-	Sort             int          // 赛事排序
-	ShowHall         bool         // 首页展示
-	MatchIcon        string       // 赛事图标
-	SonMatchID       string       // 自赛事id
-	TotalMatch       int          // 总赛事场次
-	Eliminate        []int        // 淘汰人数
-	AwardList        string       // 奖励
-	StartTimer       *timer.Timer // 上架倒计时
+	MatchID                string
+	MatchName              string
+	MatchType              string // 赛事类型
+	MatchDesc              string
+	EnterFee               int64
+	State                  int
+	Award                  []string
+	AwardDesc              string // 奖励描述
+	Recommend              string // 赛事推荐文字信息
+	MaxPlayer              int
+	AllSignInPlayers       []int        // 所有已报名该赛事的玩家
+	StartTime              int64        // 比赛开始时间或者比赛倒计时
+	StartType              int          // 比赛开赛种类
+	ReadyTime              int64        // 剩余时间
+	Sort                   int          // 赛事排序
+	ShowHall               bool         // 首页展示
+	MatchIcon              string       // 赛事图标
+	SonMatchID             string       // 自赛事id
+	TotalMatch             int          // 总赛事场次
+	Eliminate              []int        // 淘汰人数
+	AwardList              string       // 奖励
+	StartTimer             *timer.Timer // 上架倒计时
+	AllPlayingPlayersCount int          // 正在参与赛事的玩家总数
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
@@ -165,6 +166,18 @@ func GetCouponAward(award string) float64 {
 	s := strings.Split(award, ",")
 	for _, one := range s {
 		if GetAwardType(one) == Coupon {
+			amount += ParseAward(one)
+		}
+	}
+	return amount
+}
+
+// GetFragmentAward 获取奖励字段中的碎片之和
+func GetFragmentAward(award string) float64 {
+	var amount float64
+	s := strings.Split(award, ",")
+	for _, one := range s {
+		if GetAwardType(one) == Fragment {
 			amount += ParseAward(one)
 		}
 	}

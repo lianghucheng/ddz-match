@@ -125,15 +125,16 @@ func GetMatchManagerInfo(opt int) interface{} {
 				sTime = info.ReadyTime - time.Now().Unix()
 			}
 			raceInfo = append(raceInfo, msg.RaceInfo{
-				ID:        info.MatchID,
-				Desc:      info.MatchName,
-				Award:     award,
-				EnterFee:  float64(info.EnterFee),
-				ConDes:    info.MatchDesc,
-				JoinNum:   len(info.AllSignInPlayers),
-				StartTime: sTime,
-				StartType: info.StartType,
-				MatchType: info.MatchType,
+				ID:           info.MatchID,
+				Desc:         info.MatchName,
+				Award:        award,
+				EnterFee:     float64(info.EnterFee),
+				ConDes:       info.MatchDesc,
+				JoinNum:      len(info.AllSignInPlayers),
+				AllPlayerNum: info.AllPlayingPlayersCount,
+				StartTime:    sTime,
+				StartType:    info.StartType,
+				MatchType:    info.MatchType,
 			})
 		}
 		return raceInfo
@@ -149,17 +150,18 @@ func GetMatchManagerInfo(opt int) interface{} {
 				sTime = m.ReadyTime - time.Now().Unix()
 			}
 			list = append(list, msg.OneMatch{
-				MatchID:   m.MatchID,
-				MatchName: m.MatchName,
-				SignInNum: len(m.AllSignInPlayers),
-				Recommend: m.Recommend,
-				MaxPlayer: m.MaxPlayer,
-				EnterFee:  m.EnterFee,
-				StartTime: sTime,
-				StartType: m.StartType,
-				IsSign:    false,
-				MatchType: m.MatchType,
-				MatchIcon: m.MatchIcon,
+				MatchID:      m.MatchID,
+				MatchName:    m.MatchName,
+				SignInNum:    len(m.AllSignInPlayers),
+				AllPlayerNum: m.AllPlayingPlayersCount,
+				Recommend:    m.Recommend,
+				MaxPlayer:    m.MaxPlayer,
+				EnterFee:     m.EnterFee,
+				StartTime:    sTime,
+				StartType:    m.StartType,
+				IsSign:       false,
+				MatchType:    m.MatchType,
+				MatchIcon:    m.MatchIcon,
 			})
 		}
 		return list
