@@ -131,7 +131,10 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.BaseData = oldUser.BaseData
 		userData = oldUser.BaseData.UserData
 	}
-	UserIDUsers[userData.UserID] = user
+	if userData.Role != -2 {
+		log.Debug("机器人不能加入在线人数%v", userData.Role)
+		UserIDUsers[userData.UserID] = user
+	}
 	user.BaseData.UserData = userData
 	onLogin(user, userData.FirstLogin, anotherLogin)
 }
@@ -215,7 +218,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user)
-	user.WriteMsg(&msg.S2C_OnlineUserNum{
+	Broadcast(&msg.S2C_OnlineUserNum{
 		Num:len(UserIDUsers),
 	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
