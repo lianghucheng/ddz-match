@@ -165,6 +165,13 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 			return
 		}
 		if item.IsUse || item.IsAdd {
+			if m.Amount == 0 {
+				user.WriteMsg(&msg.S2C_UseProp{
+					Error:  values.ErrS2C_UsePropCouponFragLack,
+					ErrMsg: values.ErrMsg[values.ErrS2C_UsePropCouponFragLack],
+				})
+				return
+			}
 			knapsackProp := new(KnapsackProp)
 			knapsackProp.Accountid = user.AcountID()
 			knapsackProp.PropID = m.PropID
