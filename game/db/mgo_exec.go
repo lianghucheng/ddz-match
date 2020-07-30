@@ -139,3 +139,16 @@ func UpsertUserGameData(selector interface{}, update interface{}) error {
 	}
 	return nil
 }
+
+// GetWhiteList 获取白名单
+func GetWhiteList() error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	wConfig := values.WhiteListConfig{}
+	if err := s.DB(DB).C("serverconfig").Find(bson.M{"config": "whitelist"}).One(&wConfig); err != nil {
+		log.Error("err:%v", err)
+		return err
+	}
+	values.DefaultWhiteListConfig = wConfig
+	return nil
+}

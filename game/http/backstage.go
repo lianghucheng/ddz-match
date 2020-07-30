@@ -268,3 +268,59 @@ func clearRealInfo(w http.ResponseWriter, req *http.Request) {
 	game.ChanRPC.Go("clearInfo", &opt)
 	wg.Wait()
 }
+
+func restartServer(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	data := msg.RPC_Restart{}
+	if err := json.Unmarshal([]byte(ret), &data); err != nil {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	data.WG = &wg
+	data.Write = w
+	game.ChanRPC.Go("restartServer", &data)
+	wg.Wait()
+}
+
+func editWhiteList(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	data := msg.RPC_EditWhitList{}
+	// if err := json.Unmarshal([]byte(ret), &data); err != nil {
+	// 	code = 1
+	// 	desc = "请求参数有误！"
+	// 	resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+	// 	w.Write(resp)
+	// 	return
+	// }
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	data.WG = &wg
+	data.Write = w
+	game.ChanRPC.Go("editWhiteList", &data)
+	wg.Wait()
+}

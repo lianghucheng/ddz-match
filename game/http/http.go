@@ -47,6 +47,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/optMatch", optMatch)
 	mux.HandleFunc("/optUser", optUser)
 	mux.HandleFunc("/clearRealInfo", clearRealInfo)
+	mux.HandleFunc("/editWhiteList", editWhiteList)
 
 	mux.HandleFunc("/addaward", addAward)
 	mux.HandleFunc("/update-headimg", updateHeadImg)
@@ -453,12 +454,12 @@ func confRobotMaxNum(w http.ResponseWriter, r *http.Request) {
 	config.GetCfgMatchRobotMaxNums()[matchid] = num
 	log.Debug("更新赛事机器人最大数量配置，配置后数量：%v", config.GetCfgMatchRobotMaxNums()[matchid])
 	//todo: Save
-	w.Write([]byte(`更新赛事机器人最大数量配置，配置后数量：`+ strconv.Itoa(config.GetCfgMatchRobotMaxNums()[matchid])))
+	w.Write([]byte(`更新赛事机器人最大数量配置，配置后数量：` + strconv.Itoa(config.GetCfgMatchRobotMaxNums()[matchid])))
 }
 
 func addCouponFrag(w http.ResponseWriter, r *http.Request) {
 	data := new(msg.RPC_AddCouponFrag)
-	b ,errReadIO := ioutil.ReadAll(r.Body)
+	b, errReadIO := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	errJson := json.Unmarshal(b, data)
 	if errReadIO != nil || errJson != nil {

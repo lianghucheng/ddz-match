@@ -13,6 +13,8 @@ func init() {
 	Processor.Register(&RPC_OptMatch{})
 	Processor.Register(&RPC_OptUser{})
 	Processor.Register(&RPC_ClearInfo{})
+	Processor.Register(&RPC_Restart{})
+	Processor.Register(&RPC_EditWhitList{})
 }
 
 // RPC_AddManagerReq 后台调用游戏服新增赛事
@@ -96,6 +98,20 @@ type RPC_ClearInfo struct {
 	UID int
 	Opt int
 
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_Restart 后台设置服务器重启
+type RPC_Restart struct {
+	RestartTime int64
+
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_EditWhitList 后台通知服务器白名单有变动
+type RPC_EditWhitList struct {
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter
 }

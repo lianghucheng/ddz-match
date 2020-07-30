@@ -9,6 +9,7 @@ import (
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
+	"ddz/game/server"
 	"ddz/msg"
 	"ddz/utils"
 	"strings"
@@ -38,6 +39,12 @@ func tokenLogin(user *User, token string) {
 		}
 	}, func() {
 		if userData == nil || user.State == UserLogout {
+			return
+		}
+		// 系统维护，白名单可入
+		if !server.CheckWhite(userData.AccountID) {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_SystemOff})
+			user.Close()
 			return
 		}
 		if userData.Role == RoleBlack {
@@ -97,6 +104,12 @@ func usernamePasswordLogin(user *User, account string, password string) {
 	if err != nil { //&& err != mgo.ErrNotFound {
 		userData = nil
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_InnerError})
+		user.Close()
+		return
+	}
+	// 系统维护，白名单可入
+	if !server.CheckWhite(userData.AccountID) {
+		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_SystemOff})
 		user.Close()
 		return
 	}
@@ -194,11 +207,11 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,
 		ShareIcon:         conf.GetCfgHall().ShareIcon,
 		Customer: msg.Customer{
-			WeChat: "wkxjingjipingtai",
-			Email:  "jingjikefu@qq.com",
-			QQ:"2721372487",
-			QQGroup:"914746797",
-			PhoneNum:"13292757620",
+			WeChat:   "wkxjingjipingtai",
+			Email:    "jingjikefu@qq.com",
+			QQ:       "2721372487",
+			QQGroup:  "914746797",
+			PhoneNum: "13292757620",
 		},
 		RealName:       user.RealName(),
 		PhoneNum:       user.PhoneNum(),
@@ -219,7 +232,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user)
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num:len(UserIDUsers),
+		Num: len(UserIDUsers),
 	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {

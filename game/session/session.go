@@ -8,6 +8,8 @@ import (
 	"ddz/game/hall"
 	. "ddz/game/match"
 	. "ddz/game/player"
+	"ddz/game/server"
+	"ddz/game/values"
 	"ddz/msg"
 	"encoding/json"
 	"fmt"
@@ -35,8 +37,10 @@ func init() {
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
 	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
-	skeleton.RegisterChanRPC("optUser", optUser)     // 操作玩家
-	skeleton.RegisterChanRPC("clearInfo", clearInfo) // 清除玩家实名信息
+	skeleton.RegisterChanRPC("optUser", optUser)             // 操作玩家
+	skeleton.RegisterChanRPC("clearInfo", clearInfo)         // 清除玩家实名信息
+	skeleton.RegisterChanRPC("restartServer", restartServer) // 服务器停服
+	skeleton.RegisterChanRPC("editWhiteList", editWhiteList) // 白名单操作
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
@@ -407,4 +411,56 @@ func rpcAddCouponFrag(args []interface{}) {
 	}
 	hall.AddPropAmount(config.PropIDCouponFrag, m.Accountid, m.Amount)
 	log.Debug("成功！！！远程调用加点券碎片")
+}
+
+func restartServer(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_Restart)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if data.RestartTime == 0 || data.RestartTime < time.Now().Unix() {
+		code = 1
+		desc = "无效设置时间!"
+		return
+	}
+	server.SetRestart(data.RestartTime)
+}
+
+func editWhiteList(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_EditWhitList)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	if err := db.GetWhiteList(); err != nil {
+		code = 1
+		desc = "更新失败！"
+		return
+	}
+	log.Debug("update white:%+v", values.DefaultWhiteListConfig)
 }
