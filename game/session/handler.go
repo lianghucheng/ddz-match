@@ -575,7 +575,7 @@ func handleCreateEdyOrder(args []interface{}) {
 		return
 	}
 
-	pay.CreateOrder(user, m.PriceID)
+	pay.CreateOrder(user, m)
 }
 
 func handleCreateOrderSuccess(args []interface{}) {

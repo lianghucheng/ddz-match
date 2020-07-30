@@ -17,6 +17,7 @@ type S2C_PayOK struct {
 
 type C2S_CreateEdyOrder struct {
 	PriceID int
+	DefPayType string
 }
 
 type S2C_CreateEdyOrder struct {
@@ -25,6 +26,7 @@ type S2C_CreateEdyOrder struct {
 	AppToken         string
 	Amount           int
 	PayType          int
+	DefPayType	string
 	Subject          string
 	Description      string
 	OpenOrderID      string

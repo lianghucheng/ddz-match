@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/name5566/leaf/db/mongodb"
 	"github.com/name5566/leaf/log"
 	"gopkg.in/mgo.v2"
@@ -91,6 +92,14 @@ type Config struct {
 	Model                int //配置模式
 	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
+	CfgPay *CfgPay
+}
+
+func (ctx *Config)print() {
+	fmt.Printf("Model:%+v\n", ctx.Model)
+	fmt.Printf("CfgMatchRobotMaxNums:%+v\n", ctx.CfgMatchRobotMaxNums)
+	fmt.Printf("CfgDailySignItems:%+v\n", *ctx.CfgDailySignItems)
+	fmt.Printf("CfgPay:%+v\n", *ctx.CfgPay)
 }
 
 type CfgMatchRobotMaxNum struct {
@@ -106,6 +115,11 @@ type CfgDailySignItem struct {
 	IsTowardKnapsack bool
 	Desc             string
 	Amount           float64
+}
+
+type CfgPay struct {
+	Host string
+	CreatePaymentUrl string
 }
 
 var cfg *Config
@@ -147,6 +161,7 @@ func init() {
 		ret.CfgMatchRobotMaxNums = make(map[string]int)
 	}
 	cfg = ret
+	cfg.print()
 }
 
 func UpdateCfg(model int) error {
@@ -226,4 +241,8 @@ var PropList = map[int]TempProp{
 
 func GetCfgMatchRobotMaxNums() map[string]int {
 	return cfg.CfgMatchRobotMaxNums
+}
+
+func GetCfgPay() *CfgPay {
+	return cfg.CfgPay
 }

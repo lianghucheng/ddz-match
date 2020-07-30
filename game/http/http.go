@@ -349,7 +349,7 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	}, nil)
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
 	edyPayNotifyResp.OrderResult = "success"
-	edyPayNotifyResp.OrderAmount = fmt.Sprintln(order.Fee)
+	edyPayNotifyResp.OrderAmount = fmt.Sprintf("%v",order.Fee)
 	ts := time.Now().Unix()
 	edyPayNotifyResp.OrderTime = time.Unix(ts, 0).Format("2006-01-02 03:04:05")
 	edyPayNotifyResp.Ts = ts

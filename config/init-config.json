@@ -50,5 +50,9 @@
       "Desc": "平台内通用货币，人民币兑换1:1",
       "Amount": 2.0
     }
-  ]
+  ],
+  "CfgPay": {
+    "Host": "http://123.207.12.67:9084",
+    "CreatePaymentUrl": "https://open.test.boai1986.cn"
+  }
 }

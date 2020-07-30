@@ -14,14 +14,12 @@ import (
 	"time"
 )
 
-const createPaymentUrl = "https://open.test.boai1986.cn"
-
-func CreateOrder(user *player.User, priceID int) {
+func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	order := new(values.EdyOrder)
 	order.TradeNo = utils.GetOutTradeNo()
 	pm := config.PriceItem{}
 	for _, v := range *config.GetPriceMenu() {
-		if v.PriceID == priceID {
+		if v.PriceID == m.PriceID {
 			pm = v
 			order.Fee = v.Fee
 			order.Amount = v.Amount
@@ -33,16 +31,23 @@ func CreateOrder(user *player.User, priceID int) {
 	order.Accountid = user.AcountID()
 	order.Merchant = values.MerchantSportCentralAthketicAssociation
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
+	payType := -1
+	if m.DefPayType == "alipay" {
+		payType = 5
+	} else if m.DefPayType == "wxpay" {
+		payType = 10
+	}
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
 		AppID:            edy_api.AppID,
 		AppToken:         edy_api.AppToken,
 		Amount:           int(order.Fee),
-		PayType:          5,
+		PayType:          payType,
+		DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
 		OpenOrderID:      order.TradeNo,
-		OpenNotifyUrl:    "http://123.207.12.67:9084" + edy_api.EdyBackCall,
-		CreatePaymentUrl: createPaymentUrl + "/api/payment/create",
+		OpenNotifyUrl:    config.GetCfgPay().Host + edy_api.EdyBackCall,
+		CreatePaymentUrl: config.GetCfgPay().CreatePaymentUrl + "/api/payment/create",
 	})
 
 	//若干时间后，判定为支付失败
