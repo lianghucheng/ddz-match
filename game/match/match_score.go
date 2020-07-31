@@ -264,6 +264,7 @@ func (sc *scoreMatch) End() {
 			if award != 0 {
 				hall.WriteFlowData(p.uid, utils.Decimal(award*0.8), hall.FlowTypeAward, cfg.MatchType, cfg.SonMatchID, []int{})
 			}
+			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}

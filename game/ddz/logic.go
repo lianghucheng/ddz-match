@@ -279,6 +279,9 @@ func (game *LandlordMatchRoom) discard(userID int, actionDiscardType int) {
 		}
 		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
+		log.Debug("提示出牌~~~~~~~~~~~~~~~~~~~~~")
+		log.Debug("prevDiscards %v,  playerData.hands:%v", prevDiscards, playerData.hands)
+		log.Debug("所提示的拍：%v", poker.GetDiscardHint(prevDiscards, playerData.hands))
 		if !poker.CompareLandlordHands(prevDiscards, playerData.hands) {
 			hint = poker.GetDiscardHint(prevDiscards, playerData.hands)
 			log.Debug("提示出牌:%v", poker.ToMeldsString(hint))

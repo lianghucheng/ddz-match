@@ -144,10 +144,7 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.BaseData = oldUser.BaseData
 		userData = oldUser.BaseData.UserData
 	}
-	if userData.Role != -2 {
-		log.Debug("机器人不能加入在线人数%v", userData.Role)
-		UserIDUsers[userData.UserID] = user
-	}
+	UserIDUsers[userData.UserID] = user
 	user.BaseData.UserData = userData
 	onLogin(user, userData.FirstLogin, anotherLogin)
 }
@@ -159,6 +156,10 @@ func logout(user *User) {
 	if user.BaseData == nil {
 		return
 	}
+	OnlineNum--
+	Broadcast(&msg.S2C_OnlineUserNum{
+		Num: OnlineNum,
+	})
 	if existUser, ok := UserIDUsers[user.BaseData.UserData.UserID]; ok {
 		if existUser == user {
 			log.Debug("userID: %v 登出", user.BaseData.UserData.UserID)
@@ -170,6 +171,10 @@ func logout(user *User) {
 }
 
 func onLogin(user *User, firstLogin bool, anotherLogin bool) {
+	if !user.IsRobot() {
+		log.Debug("机器人不能加入在线人数%v", user.IsRobot())
+		OnlineNum++
+	}
 	user.BaseData.UserData.LoginIP = strings.Split(user.RemoteAddr().String(), ":")[0]
 	user.BaseData.UserData.Token = utils.GetToken(32)
 	user.BaseData.UserData.ExpireAt = time.Now().Add(2 * time.Hour).Unix()
@@ -232,7 +237,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user)
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: len(UserIDUsers),
+		Num: OnlineNum,
 	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {

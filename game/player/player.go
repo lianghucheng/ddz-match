@@ -29,6 +29,7 @@ const (
 // 保存所有玩家信息
 var (
 	UserIDUsers = make(map[int]*User)
+	OnlineNum = 0
 )
 
 type UserData struct {
