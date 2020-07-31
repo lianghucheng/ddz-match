@@ -31,18 +31,19 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	order.Accountid = user.AcountID()
 	order.Merchant = values.MerchantSportCentralAthketicAssociation
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
-	payType := -1
-	if m.DefPayType == "alipay" {
-		payType = 5
-	} else if m.DefPayType == "wxpay" {
-		payType = 10
-	}
+	//payType := -1
+	//if m.DefPayType == "alipay" {
+	//	payType = 5
+	//} else if m.DefPayType == "wxpay" {
+	//	payType = 10
+	//}
+
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
 		AppID:            edy_api.AppID,
 		AppToken:         edy_api.AppToken,
 		Amount:           int(order.Fee),
-		PayType:          payType,
-		DefPayType:m.DefPayType,
+		PayType:          5,
+		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
 		OpenOrderID:      order.TradeNo,
