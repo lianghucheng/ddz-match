@@ -41,6 +41,7 @@ func init() {
 	skeleton.RegisterChanRPC("clearInfo", clearInfo)         // 清除玩家实名信息
 	skeleton.RegisterChanRPC("restartServer", restartServer) // 服务器停服
 	skeleton.RegisterChanRPC("editWhiteList", editWhiteList) // 白名单操作
+	skeleton.RegisterChanRPC("getOnline", getOnline)         // 获取在线人数
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
@@ -423,7 +424,7 @@ func restartServer(args []interface{}) {
 		log.Error("error req:%+v", args)
 		return
 	}
-	log.Debug("data:%+v", data)
+	log.Debug("restart data:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {
@@ -431,12 +432,42 @@ func restartServer(args []interface{}) {
 		data.Write.Write(resp)
 		data.WG.Done()
 	}()
-	if data.RestartTime == 0 || data.RestartTime < time.Now().Unix() {
+	if values.DefaultRestartConfig.Status == values.RestartStatusIng && data.Status != values.RestartStatusFinish {
 		code = 1
-		desc = "无效设置时间!"
+		desc = "服务器维护进行中,无法修改!"
 		return
 	}
-	server.SetRestart(data.RestartTime)
+	// if values.DefaultRestartConfig.Status >= values.RestartStatusFinish {
+	// 	code = 1
+	// 	desc = "服务器维护已完成,无法修改!"
+	// 	return
+	// }
+	if data.Status == values.RestartStatusFinish {
+		values.DefaultRestartConfig.Status = values.RestartStatusFinish
+		return
+	}
+	if err := db.GetRestart(); err != nil {
+		code = 1
+		desc = err.Error()
+	}
+	if values.DefaultRestartConfig.RestartTimer != nil {
+		values.DefaultRestartConfig.RestartTimer.Stop()
+	}
+	if values.DefaultRestartConfig.Status < values.RestartStatusIng {
+		startKick := 1 * time.Second
+		if values.DefaultRestartConfig.RestartTime > time.Now().Unix() {
+			startKick = time.Unix(values.DefaultRestartConfig.RestartTime, 0).Sub(time.Now())
+		}
+		values.DefaultRestartConfig.RestartTimer = game.GetSkeleton().AfterFunc(startKick, func() {
+			values.DefaultRestartConfig.Status = values.RestartStatusIng
+			server.KickAllPlayers()
+			db.UpdateRestart(bson.M{"id": values.DefaultRestartConfig.ID}, bson.M{"$set": bson.M{"status": values.RestartStatusIng}})
+			// 自动打开白名单
+			values.DefaultWhiteListConfig.WhiteSwitch = true
+			db.UpdateWhite(true)
+			log.Debug("white:%+v,restart:%+v", values.DefaultWhiteListConfig, values.DefaultRestartConfig)
+		})
+	}
 }
 
 func editWhiteList(args []interface{}) {
@@ -444,12 +475,12 @@ func editWhiteList(args []interface{}) {
 		log.Error("error req:%+v", args)
 		return
 	}
-	data, ok := args[0].(*msg.RPC_EditWhitList)
+	data, ok := args[0].(*msg.RPC_EditWhiteList)
 	if !ok {
 		log.Error("error req:%+v", args)
 		return
 	}
-	log.Debug("data:%+v", data)
+	log.Debug("edit white data:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {
@@ -463,4 +494,28 @@ func editWhiteList(args []interface{}) {
 		return
 	}
 	log.Debug("update white:%+v", values.DefaultWhiteListConfig)
+}
+
+func getOnline(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_GetOnline)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("online data:%+v", data)
+	code := 0
+	desc := "OK"
+	onlinePlayer := 0
+	matchPlayer := 0
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc, "online": onlinePlayer, "match": matchPlayer})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	onlinePlayer = len(UserIDUsers)
+	matchPlayer = len(UserIDMatch)
 }

@@ -41,6 +41,7 @@ type MatchManager interface {
 	Save() error
 	CheckNewConfig()
 	ClearLastMatch()
+	CloseMatch()
 }
 
 // MatchPlayer 比赛玩家对象
@@ -131,6 +132,9 @@ func GetAwardType(award string) string {
 	}
 	if strings.Index(award, Coupon) != -1 {
 		return Coupon
+	}
+	if strings.Index(award, Fragment) != -1 {
+		return Fragment
 	}
 	return Unknown
 }

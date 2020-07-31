@@ -98,19 +98,21 @@ const (
 	S2C_Close_Usrn_Nil        = 12 // 用户名不存在
 	S2C_Close_Usrn_Exist      = 13 // 用户名不存在
 	S2C_Close_Pass_Length     = 14 // 密码长度8到15位
+	S2C_Close_ServerRestart   = 15 // 服务器停服更新
 )
 
 type S2C_Close struct {
 	Error        int
 	WeChatNumber string
+	Info         interface{}
 }
 
 type Customer struct {
 	WeChat   string //微信
 	Email    string //邮箱
 	PhoneNum string //电话号码
-	QQ 	string
-	QQGroup string
+	QQ       string
+	QQGroup  string
 }
 
 type S2C_Login struct {

@@ -10,6 +10,7 @@ import (
 	. "ddz/game/player"
 	. "ddz/game/room"
 	"ddz/game/server"
+	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"strings"
@@ -41,7 +42,15 @@ func tokenLogin(user *User, token string) {
 		if userData == nil || user.State == UserLogout {
 			return
 		}
-		// 系统维护，白名单可入
+		// 系统维护
+		if values.CheckRestart() {
+			if !server.CheckWhite(userData.AccountID) {
+				user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_ServerRestart, Info: values.DefaultRestartConfig})
+				user.Close()
+				return
+			}
+		}
+		// 开启白名单模式，白名单可入
 		if !server.CheckWhite(userData.AccountID) {
 			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_SystemOff})
 			user.Close()
@@ -107,7 +116,15 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
-	// 系统维护，白名单可入
+	// 系统维护
+	if values.CheckRestart() {
+		if !server.CheckWhite(userData.AccountID) {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_ServerRestart, Info: values.DefaultRestartConfig})
+			user.Close()
+			return
+		}
+	}
+	// 开启白名单模式，白名单可入
 	if !server.CheckWhite(userData.AccountID) {
 		user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_SystemOff})
 		user.Close()

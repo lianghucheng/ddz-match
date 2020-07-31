@@ -581,6 +581,14 @@ func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 	delete(UserIDMatch, uid)
 	delete(UserIDRooms, uid)
 	delete(base.AllPlayers, uid)
+	// 如果服务器在更新，踢出玩家
+	if values.CheckRestart() {
+		if user, ok := UserIDUsers[uid]; ok {
+			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_ServerRestart, Info: values.DefaultRestartConfig})
+			user.Close()
+			delete(UserIDUsers, uid)
+		}
+	}
 }
 
 func (sc *scoreMatch) awardPlayer(uid int) {
@@ -597,6 +605,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		award = base.Award[player.Rank-1]
 		one := strings.Split(award, ",")
 		for _, oneAward := range one {
+			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
 			// 现金奖励
 			if values.GetAwardType(oneAward) == values.Money {
 				awardAmount := values.ParseAward(oneAward)
@@ -604,6 +613,17 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
 				hall.UpdateUserAfterTaxAward(user)
+				db.InsertItemLog(db.ItemLog{
+					UID:        user.BaseData.UserData.UserID,
+					Item:       "奖金",
+					Amount:     int64(awardAmount*100) * 8 / 10,
+					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
+					CreateTime: time.Now().Unix(),
+					Before:     int64(user.BaseData.UserData.Fee*100) - int64(awardAmount*100)*8/10,
+					After:      int64(user.BaseData.UserData.Fee * 100),
+					OptType:    db.MatchOpt,
+					MatchID:    base.SonMatchID,
+				})
 			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
 				awardAmount := values.ParseAward(oneAward)
 				user.BaseData.UserData.Coupon += int64(awardAmount)
@@ -614,7 +634,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				data := hall.KnapsackProp{}
 				data.Accountid = user.BaseData.UserData.AccountID
 				data.PropID = config.PropIDCouponFrag
-				data.ReadAllByAid()
+				data.ReadByAidPid()
 				amount := values.ParseAward(oneAward)
 				before := int64(data.Num)
 				data.Num += int(amount)
