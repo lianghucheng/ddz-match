@@ -84,6 +84,7 @@ type NormalCofig struct {
 	AwardList              string       // 奖励
 	StartTimer             *timer.Timer // 上架倒计时
 	AllPlayingPlayersCount int          // 正在参与赛事的玩家总数
+	DownShelfTime          int64        // 下架时间
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等

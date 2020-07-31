@@ -56,18 +56,19 @@ type ScoreConfig struct {
 	Record      [][]MatchRecord `bson:"matchrecord"` // 整个比赛的总记录
 
 	// 赛事管理配置
-	MatchName  string   `bson:"matchname"`  // 赛事名称 '添加赛事时的必填字段'
-	MatchDesc  string   `bson:"matchdesc"`  // 赛事描述
-	MatchType  string   `bson:"matchtype"`  // 赛事类型 '添加赛事时的必填字段'
-	EnterFee   int64    `bson:"enterfee"`   // 报名费 '添加赛事时的必填字段'
-	Recommend  string   `bson:"recommend"`  // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息) '添加赛事时的必填字段'
-	TotalMatch int      `bson:"totalmatch"` // 后台配置的该种比赛可创建的比赛次数 '添加赛事时的必填字段'
-	UseMatch   int      `bson:"usematch"`   // 已使用次数
-	OfficalIDs []string `bson:"officalIDs"` // 后台配置的可用比赛id号
-	ShelfTime  int64    `bson:"shelftime"`  // 上架时间
-	Sort       int      `bson:"sort"`       // 赛事排序 '添加赛事时的必填字段'
-	ShowHall   bool     `bson:"showhall"`   // 是否首页展示
-	MatchIcon  string   `bson:"matchicon"`  // 赛事图标
+	MatchName     string   `bson:"matchname"`     // 赛事名称 '添加赛事时的必填字段'
+	MatchDesc     string   `bson:"matchdesc"`     // 赛事描述
+	MatchType     string   `bson:"matchtype"`     // 赛事类型 '添加赛事时的必填字段'
+	EnterFee      int64    `bson:"enterfee"`      // 报名费 '添加赛事时的必填字段'
+	Recommend     string   `bson:"recommend"`     // 赛事推荐介绍(在赛事列表界面倒计时左侧的文字信息) '添加赛事时的必填字段'
+	TotalMatch    int      `bson:"totalmatch"`    // 后台配置的该种比赛可创建的比赛次数 '添加赛事时的必填字段'
+	UseMatch      int      `bson:"usematch"`      // 已使用次数
+	OfficalIDs    []string `bson:"officalIDs"`    // 后台配置的可用比赛id号
+	ShelfTime     int64    `bson:"shelftime"`     // 上架时间
+	DownShelfTime int64    `bson:"downshelftime"` // 下架时间
+	Sort          int      `bson:"sort"`          // 赛事排序 '添加赛事时的必填字段'
+	ShowHall      bool     `bson:"showhall"`      // 是否首页展示
+	MatchIcon     string   `bson:"matchicon"`     // 赛事图标
 
 	AllSignInPlayers       []int        `bson:"-"` // 已报名玩家该种赛事的所有玩家
 	AllPlayingPlayersCount int          `bson:"-"` // 正在参与赛事的玩家总数
