@@ -14,7 +14,8 @@ func init() {
 	Processor.Register(&RPC_OptUser{})
 	Processor.Register(&RPC_ClearInfo{})
 	Processor.Register(&RPC_Restart{})
-	Processor.Register(&RPC_EditWhitList{})
+	Processor.Register(&RPC_EditWhiteList{})
+	Processor.Register(&RPC_GetOnline{})
 }
 
 // RPC_AddManagerReq 后台调用游戏服新增赛事
@@ -104,14 +105,29 @@ type RPC_ClearInfo struct {
 
 // RPC_Restart 后台设置服务器重启
 type RPC_Restart struct {
-	RestartTime int64
+	Config         string `bson:"config"`
+	ID             string `bson:"id"`
+	TipsTime       int64  `bson:"tipstime"`
+	RestartTime    int64  `bson:"restarttime"`
+	EndTime        int64  `bson:"endtime"`
+	RestartTitle   string `bson:"restarttitle"`
+	RestartType    string `bson:"restarttype"`
+	Status         int    `bson:"status"`
+	RestartContent string `bson:"restartcontent"`
+	CreateTime     int64  `bson:"createtime"`
 
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter
 }
 
-// RPC_EditWhitList 后台通知服务器白名单有变动
-type RPC_EditWhitList struct {
+// RPC_EditWhiteList 后台通知服务器白名单有变动
+type RPC_EditWhiteList struct {
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_GetOnline 后台获取在线人数
+type RPC_GetOnline struct {
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter
 }

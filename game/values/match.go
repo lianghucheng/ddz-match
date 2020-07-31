@@ -41,6 +41,7 @@ type MatchManager interface {
 	Save() error
 	CheckNewConfig()
 	ClearLastMatch()
+	CloseMatch()
 }
 
 // MatchPlayer 比赛玩家对象
@@ -83,6 +84,7 @@ type NormalCofig struct {
 	AwardList              string       // 奖励
 	StartTimer             *timer.Timer // 上架倒计时
 	AllPlayingPlayersCount int          // 正在参与赛事的玩家总数
+	DownShelfTime          int64        // 下架时间
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
@@ -131,6 +133,9 @@ func GetAwardType(award string) string {
 	}
 	if strings.Index(award, Coupon) != -1 {
 		return Coupon
+	}
+	if strings.Index(award, Fragment) != -1 {
+		return Fragment
 	}
 	return Unknown
 }

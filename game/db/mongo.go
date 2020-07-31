@@ -76,6 +76,10 @@ func initCollection() {
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)
 	}
+	err = db.EnsureUniqueIndex(DB, "serverconfig", []string{"id"})
+	if err != nil {
+		log.Fatal("ensure index error: %v", err)
+	}
 }
 
 func MongoDBDestroy() {

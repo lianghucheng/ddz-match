@@ -247,6 +247,7 @@ func optMatch(args []interface{}) {
 				match.CloseMatch()
 			}
 		}
+		c.DownShelfTime = time.Now().Unix()
 	case 3: // 删除
 		if c.State < Cancel {
 			code = 1

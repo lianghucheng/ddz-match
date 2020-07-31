@@ -308,7 +308,7 @@ func editWhiteList(w http.ResponseWriter, req *http.Request) {
 		w.Write(resp)
 		return
 	}
-	data := msg.RPC_EditWhitList{}
+	data := msg.RPC_EditWhiteList{}
 	// if err := json.Unmarshal([]byte(ret), &data); err != nil {
 	// 	code = 1
 	// 	desc = "请求参数有误！"
@@ -322,5 +322,27 @@ func editWhiteList(w http.ResponseWriter, req *http.Request) {
 	data.WG = &wg
 	data.Write = w
 	game.ChanRPC.Go("editWhiteList", &data)
+	wg.Wait()
+}
+
+// 获取在线人数
+func getOnline(w http.ResponseWriter, req *http.Request) {
+	ret := unpack(req.Body)
+	code := 0
+	desc := "OK"
+	if ret == "" {
+		code = 1
+		desc = "请求参数有误！"
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		w.Write(resp)
+		return
+	}
+	data := msg.RPC_GetOnline{}
+	// 等待主协程处理完成后返回
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	data.WG = &wg
+	data.Write = w
+	game.ChanRPC.Go("getOnline", &data)
 	wg.Wait()
 }

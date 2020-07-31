@@ -104,7 +104,7 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	})
 
 	// 赛事结束
-	if sc.UseMatch >= sc.TotalMatch {
+	if sc.UseMatch >= sc.TotalMatch && sc.LastMatch.State != Signing {
 		delete(MatchManagerList, sc.MatchID)
 		// 通知客户端
 		BroadcastMatchInfo()
@@ -115,10 +115,10 @@ func (sc *ScoreConfig) SignIn(uid int) {
 // SignOut 赛事管理报名
 func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 	user, ok := UserIDUsers[uid]
-	if !ok {
-		log.Error("unknow user:%v", uid)
-		return
-	}
+	// if !ok {
+	// 	log.Error("unknow user:%v", uid)
+	// 	return
+	// }
 
 	// 玩家自己退出比赛
 	if _, ok := MatchManagerList[matchID]; ok {
@@ -128,23 +128,25 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 		if err := sc.LastMatch.SignOut(uid); err != nil {
 			return
 		}
-		sc.AllPlayingPlayersCount--
 	} else if match, ok := MatchList[matchID]; ok { // 系统赛事倒计时时间到了，人数不够，清理玩家
 		// log.Debug("player %v kickout", uid)
 		// log.Debug("check:%v", match.SignInPlayers)
 		if err := match.SignOut(uid); err != nil {
 			return
 		}
-		hall.MatchInterruptPushMail(user.BaseData.UserData.UserID, sc.MatchName, sc.EnterFee)
+		hall.MatchInterruptPushMail(uid, sc.MatchName, sc.EnterFee)
 	}
+	sc.AllPlayingPlayersCount--
 	// ok
 	sc.RemoveSignPlayer(uid)
-	user.WriteMsg(&msg.S2C_Apply{
-		Error:  0,
-		RaceID: sc.MatchID,
-		Action: 2,
-		Count:  len(sc.AllSignInPlayers),
-	})
+	if ok {
+		user.WriteMsg(&msg.S2C_Apply{
+			Error:  0,
+			RaceID: sc.MatchID,
+			Action: 2,
+			Count:  len(sc.AllSignInPlayers),
+		})
+	}
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId:      sc.MatchID,
 		Count:        len(sc.AllSignInPlayers),
@@ -419,4 +421,18 @@ func (sc *ScoreConfig) RobotNum() int {
 		}
 	}
 	return cnt
+}
+
+// CloseMatch 系统停服维护,踢出所有报名玩家
+func (sc *ScoreConfig) CloseMatch() {
+	log.Debug("last:%+v", sc.LastMatch)
+	if sc.LastMatch != nil && sc.LastMatch.State == Signing {
+		for _, p := range sc.LastMatch.AllPlayers {
+			sc.SignOut(p.BaseData.UserData.UserID, sc.MatchID)
+			hall.GamePushMail(p.BaseData.UserData.UserID, "更新通知",
+				fmt.Sprintf("平台于[%v]－[%v]进行优化更新,期间暂时无法登录游戏,请您谅解。祝各位选手玩的开心，赢得漂亮！",
+					time.Unix(values.DefaultRestartConfig.RestartTime, 0).Format("2006-01-02 15:04:05"),
+					time.Unix(values.DefaultRestartConfig.EndTime, 0).Format("2006-01-02 15:04:05")))
+		}
+	}
 }

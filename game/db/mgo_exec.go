@@ -152,3 +152,39 @@ func GetWhiteList() error {
 	values.DefaultWhiteListConfig = wConfig
 	return nil
 }
+
+// UpdateWhite 更新白名单状态
+func UpdateWhite(open bool) error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	if err := s.DB(DB).C("serverconfig").Update(bson.M{"config": "whitelist"}, bson.M{"$set": bson.M{"whiteswitch": open}}); err != nil {
+		log.Error("err:%v", err)
+		return err
+	}
+	return nil
+}
+
+// GetRestart 获取重启配置
+func GetRestart() error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	rConfig := values.RestartConfig{}
+	if err := s.DB(DB).C("serverconfig").Find(bson.M{"config": "restart"}).
+		Sort("-createtime").Limit(1).One(&rConfig); err != nil && err != mgo.ErrNotFound {
+		log.Error("err:%v", err)
+		return err
+	}
+	values.DefaultRestartConfig = rConfig
+	return nil
+}
+
+// UpdateRestart 更新重启配置
+func UpdateRestart(selector interface{}, update interface{}) error {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	if err := s.DB(DB).C("serverconfig").Update(selector, update); err != nil {
+		log.Error("err:%v", err)
+		return err
+	}
+	return nil
+}
