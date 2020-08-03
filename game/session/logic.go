@@ -51,11 +51,6 @@ func tokenLogin(user *User, token string) {
 			}
 		}
 
-		if userData.Role != RoleRobot {
-			log.Debug("机器人不能加入在线人数%v, 当前人数：%v", user.IsRobot(), OnlineNum)
-			OnlineNum++
-		}
-
 		// 开启白名单模式，白名单可入
 		if !server.CheckWhite(userData.AccountID) {
 			user.WriteMsg(&msg.S2C_Close{Error: msg.S2C_Close_SystemOff})
@@ -122,12 +117,6 @@ func usernamePasswordLogin(user *User, account string, password string) {
 		user.Close()
 		return
 	}
-
-	if userData.Role != RoleRobot {
-		log.Debug("机器人不能加入在线人数%v, 当前人数：%v", user.IsRobot(), OnlineNum)
-		OnlineNum++
-	}
-
 	// 系统维护
 	if values.CheckRestart() {
 		if !server.CheckWhite(userData.AccountID) {
@@ -185,11 +174,9 @@ func logout(user *User) {
 	if user.BaseData == nil {
 		return
 	}
-	if !user.IsRobot() {
-		OnlineNum--
-	}
+
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: OnlineNum,
+		Num: CalcOnlineCnt(UserIDUsers),
 	})
 	if existUser, ok := UserIDUsers[user.BaseData.UserData.UserID]; ok {
 		if existUser == user {
@@ -263,9 +250,8 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user)
-	log.Debug("广播：%v", OnlineNum)
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: OnlineNum,
+		Num: CalcOnlineCnt(UserIDUsers),
 	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {

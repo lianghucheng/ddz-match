@@ -29,7 +29,6 @@ const (
 // 保存所有玩家信息
 var (
 	UserIDUsers = make(map[int]*User)
-	OnlineNum = 0
 )
 
 type UserData struct {
@@ -211,4 +210,14 @@ func (user *User) IsTest() bool {
 
 func (user *User) IsRobot() bool {
 	return user.GetUserData().Role == RoleRobot
+}
+
+func CalcOnlineCnt(userIDUsers map[int]*User) int {
+	cnt := 0
+	for _,user := range userIDUsers {
+		if !user.IsRobot() {
+			cnt++
+		}
+	}
+	return cnt
 }
