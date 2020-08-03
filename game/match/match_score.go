@@ -616,7 +616,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
 				hall.UpdateUserAfterTaxAward(user)
 				db.InsertItemLog(db.ItemLog{
-					UID:        user.BaseData.UserData.UserID,
+					UID:        user.BaseData.UserData.AccountID,
 					Item:       "奖金",
 					Amount:     int64(awardAmount*100) * 8 / 10,
 					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
@@ -644,7 +644,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				data.Save()
 				// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
 				db.InsertItemLog(db.ItemLog{
-					UID:        user.BaseData.UserData.UserID,
+					UID:        user.BaseData.UserData.AccountID,
 					Item:       values.Fragment,
 					Amount:     int64(amount),
 					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
