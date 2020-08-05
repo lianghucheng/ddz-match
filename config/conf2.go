@@ -43,24 +43,24 @@ func GetGiftCoupon() int {
 
 func GetPriceMenu() *[]PriceItem {
 	rt := new([]PriceItem)
-	*rt = append(*rt, PriceItem{
-		PriceID: 1,
-		Fee:     20000,
-		Name:    "点券",
-		Amount:  200,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 2,
-		Fee:     10000,
-		Name:    "点券",
-		Amount:  100,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 3,
-		Fee:     5000,
-		Name:    "点券",
-		Amount:  50,
-	})
+	//*rt = append(*rt, PriceItem{
+	//	PriceID: 1,
+	//	Fee:     20000,
+	//	Name:    "点券",
+	//	Amount:  200,
+	//})
+	//*rt = append(*rt, PriceItem{
+	//	PriceID: 2,
+	//	Fee:     10000,
+	//	Name:    "点券",
+	//	Amount:  100,
+	//})
+	//*rt = append(*rt, PriceItem{
+	//	PriceID: 3,
+	//	Fee:     5000,
+	//	Name:    "点券",
+	//	Amount:  50,
+	//})
 	*rt = append(*rt, PriceItem{
 		PriceID: 4,
 		Fee:     2000,

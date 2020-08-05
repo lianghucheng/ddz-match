@@ -42,7 +42,7 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 		AppID:            edy_api.AppID,
 		AppToken:         edy_api.AppToken,
 		Amount:           int(order.Fee),
-		PayType:          5,
+		PayType:          9,
 		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
