@@ -25,6 +25,7 @@ type Match interface {
 	GetRank(uid int)         // 获取排名情况
 	SendRoundResult(uid int) // 给玩家发送单局结算
 	SendFinalResult(uid int) // 给玩家发送总结算
+	SendMatchInfo(uid int)   // 发送赛事信息
 }
 
 // MatchManager 比赛配置接口
