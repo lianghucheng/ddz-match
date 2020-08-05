@@ -388,25 +388,6 @@ func (sc *scoreMatch) SplitTable() {
 				index++
 			}
 		}
-		// 广播牌局信息
-		eliminate := len(base.AllPlayers)
-		if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
-			eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
-		}
-		for _, p := range base.AllPlayers {
-			info := msg.S2C_MatchInfo{
-				RoundNum:       sc.myConfig.RoundNum,
-				Process:        fmt.Sprintf("第%v局 第1副", base.CurrentRound),
-				Level:          fmt.Sprintf("%v/%v", p.BaseData.MatchPlayer.Rank, len(base.AllPlayers)),
-				Competition:    fmt.Sprintf("前%v晋级", eliminate),
-				AwardList:      base.AwardList,
-				MatchName:      base.NormalCofig.MatchName,
-				Duration:       p.BaseData.MatchPlayer.OpTime,
-				WinCnt:         p.BaseData.MatchPlayer.Wins,
-				AwardPersonCnt: len(base.Award),
-			}
-			p.WriteMsg(&info)
-		}
 	})
 }
 
@@ -1114,4 +1095,29 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 		RankOrder: player.Rank,
 		Award:     award,
 	})
+}
+
+// SendMatchInfo 广播赛事信息
+func (sc *scoreMatch) SendMatchInfo(uid int) {
+	base := sc.base.(*BaseMatch)
+	// 广播牌局信息
+	eliminate := len(base.AllPlayers)
+	if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
+		eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
+	}
+	log.Debug("players:%v", base.AllPlayers)
+	for _, p := range base.AllPlayers {
+		info := msg.S2C_MatchInfo{
+			RoundNum:       sc.myConfig.RoundNum,
+			Process:        fmt.Sprintf("第%v局 第1副", base.CurrentRound),
+			Level:          fmt.Sprintf("%v/%v", p.BaseData.MatchPlayer.Rank, len(base.AllPlayers)),
+			Competition:    fmt.Sprintf("前%v晋级", eliminate),
+			AwardList:      base.AwardList,
+			MatchName:      base.NormalCofig.MatchName,
+			Duration:       p.BaseData.MatchPlayer.OpTime,
+			WinCnt:         p.BaseData.MatchPlayer.Wins,
+			AwardPersonCnt: len(base.Award),
+		}
+		p.WriteMsg(&info)
+	}
 }

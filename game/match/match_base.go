@@ -285,3 +285,10 @@ func (base *BaseMatch) GetMatchTypeField() string {
 		return ""
 	}
 }
+
+// SendMatchInfo 广播赛事信息
+func (base *BaseMatch) SendMatchInfo(uid int) {
+	if base.myMatch != nil {
+		base.myMatch.SendMatchInfo(uid)
+	}
+}

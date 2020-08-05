@@ -179,21 +179,23 @@ func (game *LandlordMatchRoom) StartGame() {
 	game.prepare()
 	game.count++
 	game.broadcast(&msg.S2C_GameStart{}, game.PositionUserIDs, -1)
-	// for _, userID := range game.PositionUserIDs {
-	// 	playerData := game.UserIDPlayerDatas[userID]
-	// 	info := msg.S2C_MatchInfo{
-	// 		RoundNum:       game.rule.RoundNum,
-	// 		Process:        fmt.Sprintf("第%v局 第1副", game.count),
-	// 		Level:          fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
-	// 		Competition:    "前3晋级",
-	// 		AwardList:      game.rule.AwardList,
-	// 		MatchName:      game.rule.MatchName,
-	// 		Duration:       playerData.User.BaseData.MatchPlayer.OpTime,
-	// 		WinCnt:         playerData.User.BaseData.MatchPlayer.Wins,
-	// 		AwardPersonCnt: len(game.rule.Awards),
-	// 	}
-	// 	playerData.User.WriteMsg(&info)
-	// }
+
+	for _, userID := range game.PositionUserIDs {
+		game.Match.SendMatchInfo(userID)
+		// 	playerData := game.UserIDPlayerDatas[userID]
+		// 	info := msg.S2C_MatchInfo{
+		// 		RoundNum:       game.rule.RoundNum,
+		// 		Process:        fmt.Sprintf("第%v局 第1副", game.count),
+		// 		Level:          fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
+		// 		Competition:    "前3晋级",
+		// 		AwardList:      game.rule.AwardList,
+		// 		MatchName:      game.rule.MatchName,
+		// 		Duration:       playerData.User.BaseData.MatchPlayer.OpTime,
+		// 		WinCnt:         playerData.User.BaseData.MatchPlayer.Wins,
+		// 		AwardPersonCnt: len(game.rule.Awards),
+		// 	}
+		// 	playerData.User.WriteMsg(&info)
+	}
 
 	// 所有玩家都发十七张牌
 	for _, userID := range game.PositionUserIDs {
