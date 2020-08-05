@@ -75,7 +75,7 @@ func GetPriceMenu() *[]PriceItem {
 	})
 	*rt = append(*rt, PriceItem{
 		PriceID: 6,
-		Fee:     500,
+		Fee:      500,
 		Name:    "点券",
 		Amount:  5,
 	})
