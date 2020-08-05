@@ -58,6 +58,8 @@ func startHTTPServer() {
 	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
 	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
 	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
+	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
+	mux.HandleFunc("/notify/pricemenu", notidyPriceMenu)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -473,4 +475,52 @@ func addCouponFrag(w http.ResponseWriter, r *http.Request) {
 	}
 	game.GetSkeleton().ChanRPCServer.Go("AddCouponFrag", data)
 	w.Write([]byte(`1`))
+}
+
+func notifyPayAccount(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 10000
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	hall.SendPayAccount(nil, hall.SendBroacast)
+}
+
+func notidyPriceMenu(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 10000
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	hall.SendPriceMenu(nil, hall.SendBroacast)
 }

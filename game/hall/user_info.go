@@ -96,10 +96,17 @@ func TakenFirstCoupon(user *player.User) {
 	})
 }
 
-func SendPriceMenu(user *player.User) {
-	user.WriteMsg(&msg.S2C_PriceMenu{
-		PriceItems: config.GetPriceMenu(),
-	})
+func SendPriceMenu(user *player.User, model int) {
+	goodsType := db.ReadGoodsTypeFirst()
+
+	m := &msg.S2C_PriceMenu{
+		PriceItems: GetPriceMenu(goodsType.ID),
+	}
+	if model == 1 {
+		user.WriteMsg(m)
+	} else if model == 2 {
+		player.Broadcast(m)
+	}
 }
 
 // todo：暂时PropType当作PropID的作用

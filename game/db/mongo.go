@@ -2,12 +2,13 @@ package db
 
 import (
 	"ddz/conf"
+	"ddz/config"
 
 	"github.com/name5566/leaf/db/mongodb"
 	"github.com/szxby/tools/log"
 )
 
-var MongoDB *mongodb.DialContext
+var MongoDB, BackstageDB *mongodb.DialContext
 
 var DB string
 
@@ -22,6 +23,12 @@ func init() {
 		log.Fatal("dial mongodb error: %v", err)
 	}
 	MongoDB = db
+
+	bkDB, err := mongodb.Dial(config.GetCfgDB().BackstageDBName, config.GetCfgDB().ConnNum)
+	if err != nil {
+		log.Fatal("dial backstage mongodb error: %v. ", err)
+	}
+	BackstageDB = bkDB
 	initCollection()
 }
 

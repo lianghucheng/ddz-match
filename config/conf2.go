@@ -15,13 +15,6 @@ type Config2 struct {
 	NewGiftCoupon int
 }
 
-type PriceItem struct {
-	PriceID int
-	Fee     int64
-	Name    string
-	Amount  int
-}
-
 var dbcfg Config2
 
 //func DBCfgInit() {
@@ -41,48 +34,6 @@ func GetGiftCoupon() int {
 	return dbcfg.RmbCouponRate
 }
 
-func GetPriceMenu() *[]PriceItem {
-	rt := new([]PriceItem)
-	*rt = append(*rt, PriceItem{
-		PriceID: 1,
-		Fee:     20000,
-		Name:    "点券",
-		Amount:  200,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 2,
-		Fee:     10000,
-		Name:    "点券",
-		Amount:  100,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 3,
-		Fee:     5000,
-		Name:    "点券",
-		Amount:  50,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 4,
-		Fee:     2000,
-		Name:    "点券",
-		Amount:  20,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 5,
-		Fee:     1000,
-		Name:    "点券",
-		Amount:  10,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 6,
-		Fee:     500,
-		Name:    "点券",
-		Amount:  5,
-	})
-
-	return rt
-}
-
 const (
 	ModelDev = 1 //开发环境模式
 	ModelPro = 2 //生产环境模式
@@ -92,14 +43,15 @@ type Config struct {
 	Model                int //配置模式
 	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
-	CfgPay *CfgPay
+	CfgPay map[string]*CfgPay
+	CfgDB *CfgDB
 }
 
 func (ctx *Config)print() {
 	fmt.Printf("Model:%+v\n", ctx.Model)
 	fmt.Printf("CfgMatchRobotMaxNums:%+v\n", ctx.CfgMatchRobotMaxNums)
 	fmt.Printf("CfgDailySignItems:%+v\n", *ctx.CfgDailySignItems)
-	fmt.Printf("CfgPay:%+v\n", *ctx.CfgPay)
+	fmt.Printf("CfgPay:%+v\n", ctx.CfgPay)
 }
 
 type CfgMatchRobotMaxNum struct {
@@ -118,14 +70,23 @@ type CfgDailySignItem struct {
 }
 
 type CfgPay struct {
-	Host string
+	NotifyHost string
+	NotifyUrl string
+	PayHost string
 	CreatePaymentUrl string
+}
+
+type CfgDB struct {
+	GameDBName string
+	BackstageDBName string
+	DBUrl string
+	ConnNum int
 }
 
 var cfg *Config
 
 const (
-	dbUrl      = "mongodb://localhost" //mongodb服务地址
+	dbUrl      = "mongodb://192.168.1.8" //mongodb服务地址
 	dbName     = "ddz-match"           //数据库名称
 	collection = "config"              //集合名称
 )
@@ -243,6 +204,10 @@ func GetCfgMatchRobotMaxNums() map[string]int {
 	return cfg.CfgMatchRobotMaxNums
 }
 
-func GetCfgPay() *CfgPay {
+func GetCfgPay() map[string]*CfgPay {
 	return cfg.CfgPay
+}
+
+func GetCfgDB() *CfgDB {
+	return cfg.CfgDB
 }

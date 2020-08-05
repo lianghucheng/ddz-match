@@ -10,6 +10,8 @@ const (
 	MerchantSportCentralAthketicAssociation = 1
 )
 
+var MerchantPay = []int{MerchantSportCentralAthketicAssociation}
+
 const (
 	GoodsTypeCoupon = iota
 	GoodsTypeCouponFrag

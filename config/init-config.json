@@ -52,7 +52,17 @@
     }
   ],
   "CfgPay": {
-    "Host": "http://123.207.12.67:9084",
-    "CreatePaymentUrl": "https://open.test.boai1986.cn"
+    "1":{
+      "NotifyHost": "http://123.207.12.67:9084",
+      "NotifyUrl": "/edy/pay-bc",
+      "PayHost": "https://open.test.boai1986.cn",
+      "CreatePaymentUrl": "/api/payment/create"
+    }
+  },
+  "CfgDB": {
+    "GameDBName": "ddz-match",
+    "BackstageDBName": "backstage",
+    "DBUrl": "mongodb://192.168.1.8",
+    "ConnNum": 100
   }
 }

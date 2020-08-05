@@ -13,7 +13,7 @@ import (
 func init() {
 	log.Debug("init whiteList....")
 	if err := db.GetWhiteList(); err != nil {
-		log.Fatal("err:%v", err)
+		//log.Fatal("err:%v", err)
 	}
 	log.Debug("finish init whiteList:%+v", values.DefaultWhiteListConfig)
 	if err := db.GetRestart(); err != nil {

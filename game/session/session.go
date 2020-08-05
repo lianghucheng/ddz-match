@@ -45,6 +45,7 @@ func init() {
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
+	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -518,4 +519,13 @@ func getOnline(args []interface{}) {
 	}()
 	onlinePlayer = len(UserIDUsers)
 	matchPlayer = len(UserIDMatch)
+}
+
+func rpcSendPayAccount(args []interface{}) {
+	if len(args) != 1 {
+		return
+	}
+	m := args[0].(*msg.RPC_SendPayAccount)
+	_ = m
+	hall.SendPayAccount(nil, hall.SendBroacast)
 }

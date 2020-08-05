@@ -1,0 +1,43 @@
+2020/08/04 12:09:51 conf.go:120: [INFO] *****************:{3 120 8 0 6 14 3 2500 1500 6000}
+2020/08/04 12:11:33 conf.go:120: [INFO] *****************:{3 120 8 0 6 14 3 2500 1500 6000}
+2020/08/04 12:11:51 conf.go:120: [INFO] *****************:{3 120 8 0 6 14 3 2500 1500 6000}
+2020/08/04 12:11:51 redis.go:13: [DEBUG] 连接redis服务器
+2020/08/04 12:11:51 redis.go:36: [DEBUG] 处理redis服务器:<nil>
+2020/08/04 12:11:51 match_server.go:38: [DEBUG] init MatchConfig........
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元,1点券]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 12:11:51 match_server.go:77: [DEBUG] init match finish:match manager:map[1001:0xc0001f2480 2222:0xc0000ba000 robot-control-pannel2:0xc0000ba240 robot-control3:0xc0000ba480 robot-control4:0xc0000ba6c0 robot-control5:0xc0000ba900 robot-control6:0xc0000bab40 robot-control7:0xc0000bb440 vghltrf:0xc0001f3d40]
+2020/08/04 12:11:51 match_server.go:85: [DEBUG] init MatchType Config........
+2020/08/04 12:11:51 match_server.go:96: [DEBUG] finish init matchtype config map[]
+2020/08/04 12:11:51 serverConfig.go:14: [DEBUG] init whiteList....
+2020/08/04 12:11:51 mgo_exec.go:149: [ERROR] err:not found
+2020/08/04 12:11:51 serverConfig.go:16: [FATAL] err:not found
+2020/08/04 15:03:58 conf.go:120: [INFO] *****************:{3 120 8 0 6 14 3 2500 1500 6000}
+2020/08/04 15:03:58 redis.go:13: [DEBUG] 连接redis服务器
+2020/08/04 15:03:58 redis.go:36: [DEBUG] 处理redis服务器:<nil>
+2020/08/04 15:03:58 match_server.go:38: [DEBUG] init MatchConfig........
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元,1点券]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_manager.go:233: [DEBUG] match award:[1元]
+2020/08/04 15:03:58 match_server.go:77: [DEBUG] init match finish:match manager:map[1001:0xc00015e6c0 2222:0xc0000ca240 robot-control-pannel2:0xc0000ca480 robot-control3:0xc0000ca6c0 robot-control4:0xc0000ca900 robot-control5:0xc0000cab40 robot-control6:0xc0000cb440 robot-control7:0xc0000cb680 vghltrf:0xc0000ca000]
+2020/08/04 15:03:58 match_server.go:85: [DEBUG] init MatchType Config........
+2020/08/04 15:03:58 match_server.go:96: [DEBUG] finish init matchtype config map[]
+2020/08/04 15:03:58 serverConfig.go:14: [DEBUG] init whiteList....
+2020/08/04 15:03:58 mgo_exec.go:149: [ERROR] err:not found
+2020/08/04 15:03:58 serverConfig.go:18: [DEBUG] finish init whiteList:{WhiteSwitch:false WhiteList:[]}
+2020/08/04 15:03:58 serverConfig.go:22: [DEBUG] finish init restart:{ID: TipsTime:0 RestartTime:0 EndTime:0 RestartTitle: RestartType: Status:0 RestartContent: CreateTime:0 RestartTimer:<nil>}
+2020/08/05 22:57:43 conf.go:120: [INFO] *****************:{3 120 8 0 6 14 3 2500 1500 6000}
+2020/08/05 22:57:53 mongo.go:29: [FATAL] dial backstage mongodb error: no reachable servers. 

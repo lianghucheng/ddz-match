@@ -14,18 +14,26 @@ import (
 	"time"
 )
 
+//todo: 支付下架，引导支付失败？处理方式人工处理，或程序不做拦截。
 func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	order := new(values.EdyOrder)
 	order.TradeNo = utils.GetOutTradeNo()
-	pm := config.PriceItem{}
-	for _, v := range *config.GetPriceMenu() {
-		if v.PriceID == m.PriceID {
-			pm = v
-			order.Fee = v.Fee
-			order.Amount = v.Amount
-			break
-		}
-	}
+	pm := msg.PriceItem{}
+	goods := db.ReadGoodsById(m.PriceID)
+
+	pm.GiftAmount = goods.GiftAmount
+	pm.Amount = goods.GetAmount
+	pm.Fee = int64(goods.Price)
+	pm.Name = values.PropTypeStr[goods.PropType]
+	pm.PriceID = goods.ID
+	//for _, v := range *config.GetPriceMenu() {
+	//	if v.PriceID == m.PriceID {
+	//		pm = v
+	//		order.Fee = v.Fee
+	//		order.Amount = v.Amount
+	//		break
+	//	}
+	//}
 	order.Createdat = time.Now().Unix()
 	order.ID, _ = db.MongoDBNextSeq("edyorder")
 	order.Accountid = user.AcountID()
@@ -38,17 +46,20 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	//	payType = 10
 	//}
 
+	shopMerchant := db.ReadShopMerchant()
+	merType := strconv.Itoa(shopMerchant.MerchantType)
+	cfgPay := config.GetCfgPay()[merType]
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
 		AppID:            edy_api.AppID,
 		AppToken:         edy_api.AppToken,
 		Amount:           int(order.Fee),
-		PayType:          5,
+		PayType:          9,
 		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
 		OpenOrderID:      order.TradeNo,
-		OpenNotifyUrl:    config.GetCfgPay().Host + edy_api.EdyBackCall,
-		CreatePaymentUrl: config.GetCfgPay().CreatePaymentUrl + "/api/payment/create",
+		OpenNotifyUrl:    cfgPay.NotifyHost + cfgPay.NotifyUrl,
+		CreatePaymentUrl: cfgPay.PayHost + cfgPay.CreatePaymentUrl,
 	})
 
 	//若干时间后，判定为支付失败

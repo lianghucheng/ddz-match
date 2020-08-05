@@ -1,7 +1,6 @@
 package msg
 
 import (
-	"ddz/config"
 	"github.com/name5566/leaf/network/json"
 )
 
@@ -283,8 +282,15 @@ type S2C_WithDraw struct {
 	ErrMsg string
 }
 
+type PriceItem struct {
+	PriceID int
+	Fee     int64
+	Name    string
+	Amount  int
+	GiftAmount int
+}
 type S2C_PriceMenu struct {
-	PriceItems *[]config.PriceItem
+	PriceItems *[]PriceItem
 }
 
 type S2C_OnlineUserNum struct {
