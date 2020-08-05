@@ -58,6 +58,12 @@ func initMatchConfig() error {
 			if err := sConfig.CheckConfig(); err != nil {
 				continue
 			}
+			if sConfig.UseMatch >= sConfig.TotalMatch {
+				game.GetSkeleton().Go(func() {
+					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+				}, nil)
+				continue
+			}
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
 				sConfig.State = Cancel

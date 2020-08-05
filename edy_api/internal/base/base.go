@@ -123,6 +123,7 @@ func (ctx *MyClient) DoGet() ([]byte, error) {
 		log.Error("no generate sign code. ")
 		return nil, errors.New("no generate sign code. ")
 	}
+	log.Debug("url:%v", url+ctx.Uri+"?"+ctx.Param+"&sign="+ctx.SignCode)
 	resp, err := ctx.Get(url + ctx.Uri + "?" + ctx.Param + "&sign=" + ctx.SignCode)
 	if err != nil {
 		return nil, err
@@ -149,6 +150,7 @@ func (ctx *MyClient) DoPost() ([]byte, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("timestamp", fmt.Sprintf("%v", ctx.TimeStamp))
 	req.Header.Set("sign", ctx.SignCode)
+	log.Debug("reqBody:%v", ctx.Param)
 
 	resp, err := ctx.Do(req)
 	if err != nil {
@@ -177,7 +179,7 @@ func (ctx *MyClient) GenerateSign(signType int) {
 				str += v2
 			}
 		}
-		str += fmt.Sprintf("%v", ctx.TimeStamp) + secret
+		str += secret
 	}
 	log.Debug("生成签名之前的字符串：%v", str)
 
