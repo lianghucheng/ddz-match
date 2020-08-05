@@ -60,11 +60,11 @@ func addMatch(args []interface{}) {
 			return
 		}
 		// 上架时间
-		if sConfig.ShelfTime > time.Now().Unix() {
-			sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+		if sConfig.ShelfTime > time.Now().Unix() && sConfig.StartType >= 2 {
+			sConfig.SetTimer(game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
 				// NewScoreManager(sConfig)
 				sConfig.NewManager()
-			})
+			}))
 			MatchManagerList[sConfig.MatchID] = sConfig
 		} else {
 			// NewScoreManager(sConfig)
@@ -224,29 +224,32 @@ func optMatch(args []interface{}) {
 			desc = "赛事已上架!"
 			return
 		}
-		c.State = Signing
-		if c.StartTimer != nil {
-			c.StartTimer.Stop()
+		if m.StopTimer() {
 			switch c.MatchType {
 			case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
 				m.NewManager()
 			default:
 				log.Error("unknown match:%+v", c)
 			}
+			c = m.GetNormalConfig()
 		}
+		c.State = Signing
 	case 2: // 下架
 		if c.State != Signing {
 			code = 1
 			desc = "赛事未上架!"
 			return
 		}
-		c.State = Cancel
 		if c.SonMatchID != "" {
 			match, ok := MatchList[c.SonMatchID]
 			if ok && match.State == Signing {
+				match.OptMatchType = 2
 				match.CloseMatch()
 			}
 		}
+		m.StopTimer()
+		c = m.GetNormalConfig()
+		c.State = Cancel
 		c.DownShelfTime = time.Now().Unix()
 	case 3: // 删除
 		if c.State < Cancel {
@@ -254,9 +257,7 @@ func optMatch(args []interface{}) {
 			desc = "赛事未下架!"
 			return
 		}
-		if c.StartTimer != nil {
-			c.StartTimer.Stop()
-		}
+		m.StopTimer()
 		c.State = Delete
 		delete(MatchManagerList, c.MatchID)
 	default: // 未知

@@ -2,6 +2,7 @@ package match
 
 import (
 	"ddz/config"
+	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/name5566/leaf/timer"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -63,6 +65,28 @@ func (sc *ScoreConfig) SignIn(uid int) {
 	// 当前没有空闲赛事，则创建一个赛事
 	if sc.LastMatch == nil || sc.LastMatch.State != Signing {
 		sc.CreateOneMatch()
+		if sc.LastMatch == nil {
+			user.WriteMsg(&msg.S2C_Apply{
+				Error:  msg.S2C_Error_MatchId,
+				RaceID: sc.MatchID,
+				Action: 1,
+				Count:  len(sc.AllSignInPlayers),
+			})
+			return
+		}
+	}
+
+	// 体总赛事,首先验证赛事是否合法
+	if sc.MatchSource == MatchSourceSportsCenter {
+		if _, err := edy_api.CheckMatch(sc.LastMatch.SonMatchID); err != nil {
+			user.WriteMsg(&msg.S2C_Apply{
+				Error:  msg.S2C_Error_MatchId,
+				RaceID: sc.MatchID,
+				Action: 1,
+				Count:  len(sc.AllSignInPlayers),
+			})
+			return
+		}
 	}
 
 	//log.Debug("####机器人报名：%v   %v   %v", user.IsRobot(), sc.RobotNum(), config.GetCfgMatchRobotMaxNums()[sc.MatchID])
@@ -105,9 +129,6 @@ func (sc *ScoreConfig) SignIn(uid int) {
 
 	// 赛事结束
 	if sc.UseMatch >= sc.TotalMatch && sc.LastMatch.State != Signing {
-		delete(MatchManagerList, sc.MatchID)
-		// 通知客户端
-		BroadcastMatchInfo()
 		sc.EndMatchManager()
 	}
 }
@@ -169,6 +190,9 @@ func (sc *ScoreConfig) GetNormalConfig() *NormalCofig {
 
 // SetNormalConfig 获取通用配置
 func (sc *ScoreConfig) SetNormalConfig(config *NormalCofig) {
+	// 部分参数不配置
+	config.AllSignInPlayers = sc.AllSignInPlayers
+	config.AllPlayingPlayersCount = sc.AllPlayingPlayersCount
 	utils.StructCopy(sc, config)
 	sc.CheckConfig()
 	if len(config.AwardList) > 0 {
@@ -180,9 +204,6 @@ func (sc *ScoreConfig) SetNormalConfig(config *NormalCofig) {
 // CheckNewConfig 检查是否有新的配置需要更新
 func (sc *ScoreConfig) CheckNewConfig() {
 	if c, ok := MatchConfigQueue[sc.MatchID]; ok {
-		// 部分参数不配置
-		c.AllSignInPlayers = sc.AllSignInPlayers
-		c.AllPlayingPlayersCount = sc.AllPlayingPlayersCount
 		sc.SetNormalConfig(c)
 		sc.Save()
 		// 通知客户端
@@ -287,6 +308,12 @@ func (sc *ScoreConfig) End(matchID string) {
 		AllPlayerNum: sc.AllPlayingPlayersCount,
 	})
 
+	// 如果是后台下架赛事,赛事使用次数返回
+	if match.OptMatchType == 2 {
+		match.OptMatchType = 0
+		sc.UseMatch--
+	}
+
 	// for _, p := range match.SignInPlayers {
 	// 	sc.RemoveSignPlayer(p)
 	// }
@@ -314,12 +341,18 @@ func (sc *ScoreConfig) RemoveSignPlayer(uid int) {
 
 // CreateOneMatch 创建子赛事
 func (sc *ScoreConfig) CreateOneMatch() {
+	if sc.UseMatch >= sc.TotalMatch {
+		sc.EndMatchManager()
+		return
+	}
 	sonID := ""
-	if sc.CurrentIDIndex < len(sc.OfficalIDs) {
-		sonID = sc.OfficalIDs[sc.CurrentIDIndex]
+	// if sc.CurrentIDIndex < len(sc.OfficalIDs) {
+	if sc.MatchSource == MatchSourceSportsCenter {
+		sonID = sc.MatchID + "01" + fmt.Sprintf("%06d", (sc.UseMatch+1))
 	} else {
 		sonID = sc.MatchID + strconv.FormatInt(time.Now().Unix(), 10)
 	}
+	log.Debug("usematch:%v,sonmatchid:%v", sc.UseMatch, sonID)
 	sc.SonMatchID = sonID
 	if sc.StartType == 2 {
 		sc.ReadyTime = time.Now().Unix() + sc.StartTime
@@ -339,10 +372,10 @@ func (sc *ScoreConfig) CreateOneMatch() {
 		}
 		sc.Save()
 	}
-	nSconfig := &ScoreConfig{}
-	utils.StructCopy(nSconfig, sc)
-	newMatch := NewScoreMatch(nSconfig)
-	newMatch.Manager = sc
+	// nSconfig := &ScoreConfig{}
+	// utils.StructCopy(nSconfig, sc)
+	newMatch := NewScoreMatch(sc)
+	// newMatch.Manager = sc
 	sc.LastMatch = newMatch
 	sc.UseMatch++
 	sc.CurrentIDIndex++
@@ -359,6 +392,9 @@ func (sc *ScoreConfig) Save() error {
 
 // EndMatchManager 该类赛事结束
 func (sc *ScoreConfig) EndMatchManager() {
+	delete(MatchManagerList, sc.MatchID)
+	// 通知客户端
+	BroadcastMatchInfo()
 	// 修改赛事配置数据
 	game.GetSkeleton().Go(func() {
 		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Delete}})
@@ -435,4 +471,20 @@ func (sc *ScoreConfig) CloseMatch() {
 					time.Unix(values.DefaultRestartConfig.EndTime, 0).Format("2006-01-02 15:04:05")))
 		}
 	}
+}
+
+// SetTimer 设置开始时间
+func (sc *ScoreConfig) SetTimer(timer *timer.Timer) {
+	sc.StopTimer()
+	sc.StartTimer = timer
+}
+
+// StopTimer 停止开始时间
+func (sc *ScoreConfig) StopTimer() bool {
+	log.Debug("stop timer:%v", sc.StartTimer)
+	if sc.StartTimer != nil {
+		sc.StartTimer.Stop()
+		return true
+	}
+	return false
 }
