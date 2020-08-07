@@ -9,9 +9,10 @@ import (
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
-	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
@@ -39,10 +40,10 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	//}
 
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
-		AppID:            edy_api.AppID,
-		AppToken:         edy_api.AppToken,
-		Amount:           int(order.Fee),
-		PayType:          9,
+		AppID:    edy_api.AppID,
+		AppToken: edy_api.AppToken,
+		Amount:   int(order.Fee),
+		PayType:  11,
 		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
@@ -52,7 +53,7 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	})
 
 	//若干时间后，判定为支付失败
-	game.GetSkeleton().AfterFunc(5*time.Minute, func(){
+	game.GetSkeleton().AfterFunc(5*time.Minute, func() {
 		data := new(values.EdyOrder)
 		db.Read("edyorder", data, bson.M{"tradeno": order.TradeNo})
 		if data.PayStatus != 1 {

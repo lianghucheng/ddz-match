@@ -3,11 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/name5566/leaf/db/mongodb"
 	"github.com/name5566/leaf/log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 )
 
 type Config2 struct {
@@ -67,18 +68,18 @@ func GetPriceMenu() *[]PriceItem {
 		Name:    "点券",
 		Amount:  20,
 	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 5,
-		Fee:     1000,
-		Name:    "点券",
-		Amount:  10,
-	})
-	*rt = append(*rt, PriceItem{
-		PriceID: 6,
-		Fee:      500,
-		Name:    "点券",
-		Amount:  5,
-	})
+	// *rt = append(*rt, PriceItem{
+	// 	PriceID: 5,
+	// 	Fee:     1000,
+	// 	Name:    "点券",
+	// 	Amount:  10,
+	// })
+	// *rt = append(*rt, PriceItem{
+	// 	PriceID: 6,
+	// 	Fee:      500,
+	// 	Name:    "点券",
+	// 	Amount:  5,
+	// })
 
 	return rt
 }
@@ -92,10 +93,10 @@ type Config struct {
 	Model                int //配置模式
 	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
-	CfgPay *CfgPay
+	CfgPay               *CfgPay
 }
 
-func (ctx *Config)print() {
+func (ctx *Config) print() {
 	fmt.Printf("Model:%+v\n", ctx.Model)
 	fmt.Printf("CfgMatchRobotMaxNums:%+v\n", ctx.CfgMatchRobotMaxNums)
 	fmt.Printf("CfgDailySignItems:%+v\n", *ctx.CfgDailySignItems)
@@ -103,10 +104,10 @@ func (ctx *Config)print() {
 }
 
 type CfgMatchRobotMaxNum struct {
-	MatchID string //
-	PerMaxNum  int
-	Total   int
-	JoinNum int
+	MatchID   string //
+	PerMaxNum int
+	Total     int
+	JoinNum   int
 }
 
 type CfgDailySignItem struct {
@@ -118,7 +119,7 @@ type CfgDailySignItem struct {
 }
 
 type CfgPay struct {
-	Host string
+	Host             string
 	CreatePaymentUrl string
 }
 
