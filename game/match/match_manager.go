@@ -406,7 +406,7 @@ func (sc *ScoreConfig) CheckConfig() error {
 	if sc.StartType == 0 || sc.Round == 0 || len(sc.AwardList) == 0 || len(sc.MatchID) == 0 || sc.LimitPlayer == 0 ||
 		len(sc.Recommend) == 0 || sc.TotalMatch == 0 || len(sc.MatchName) == 0 || len(sc.MatchType) == 0 ||
 		// (sc.StartType == 3 && sc.StartTime < time.Now().Unix()) ||
-		(sc.StartType == 2 && sc.StartTime <= 0) {
+		(sc.StartType == 2 && sc.StartTime <= 0) || sc.TotalMatch < sc.UseMatch {
 		log.Error("invalid config:%+v", sc)
 		return errors.New("config error")
 	}
@@ -415,9 +415,6 @@ func (sc *ScoreConfig) CheckConfig() error {
 	}
 	if sc.TablePlayer == 0 {
 		sc.TablePlayer = 3
-	}
-	if len(sc.RoundNum) == 0 {
-		sc.RoundNum = fmt.Sprintf("%v局%v副", sc.Round, sc.Card)
 	}
 	if len(sc.AwardDesc) == 0 {
 		sc.GetAwardItem()
@@ -439,6 +436,9 @@ func (sc *ScoreConfig) CheckConfig() error {
 	if sc.BaseScore == 0 {
 		sc.BaseScore = 1
 	}
+
+	// 刷新描述
+	sc.RoundNum = fmt.Sprintf("%v局%v副", sc.Round, sc.Card)
 	return nil
 }
 
@@ -473,18 +473,95 @@ func (sc *ScoreConfig) CloseMatch() {
 	}
 }
 
-// SetTimer 设置开始时间
-func (sc *ScoreConfig) SetTimer(timer *timer.Timer) {
-	sc.StopTimer()
+// SetStartTimer 设置开始时间
+func (sc *ScoreConfig) SetStartTimer(timer *timer.Timer) {
+	if sc.StartTimer != nil {
+		sc.StartTimer.Stop()
+	}
 	sc.StartTimer = timer
 }
 
-// StopTimer 停止开始时间
-func (sc *ScoreConfig) StopTimer() bool {
+// SetDownShelfTimer 设置开始时间
+func (sc *ScoreConfig) SetDownShelfTimer(timer *timer.Timer) {
+	if sc.DownShelfTimer != nil {
+		sc.DownShelfTimer.Stop()
+	}
+	sc.DownShelfTimer = timer
+}
+
+// stopAllTimer 停止所有计时器
+func (sc *ScoreConfig) stopAllTimer() {
 	log.Debug("stop timer:%v", sc.StartTimer)
 	if sc.StartTimer != nil {
 		sc.StartTimer.Stop()
-		return true
 	}
-	return false
+	if sc.DownShelfTimer != nil {
+		sc.DownShelfTimer.Stop()
+	}
+}
+
+// DownShelf 下架
+func (sc *ScoreConfig) DownShelf() {
+	if sc.State != Signing {
+		log.Error("down shelf unCancel matchID:%v", sc.MatchID)
+		return
+	}
+
+	if sc.SonMatchID != "" {
+		match, ok := MatchList[sc.SonMatchID]
+		if ok && match.State == Signing {
+			match.OptMatchType = 2
+			match.CloseMatch()
+		}
+	}
+	sc.stopAllTimer()
+	sc.State = Cancel
+
+	// 刷新数据库
+	sc.Save()
+	if sc.ShowHall {
+		// 通知客户端
+		BroadcastMatchInfo()
+	}
+}
+
+// Shelf 上架
+func (sc *ScoreConfig) Shelf() {
+	if sc.State != Cancel {
+		log.Error("shelf not cancel matchID:%v", sc.MatchID)
+		return
+	}
+
+	if sc.StartTimer != nil {
+		sc.StartTimer.Stop()
+		switch sc.MatchType {
+		case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
+			sc.NewManager()
+		default:
+			log.Error("unknown match:%+v", sc)
+		}
+	}
+	sc.State = Signing
+
+	// 刷新数据库
+	sc.Save()
+	if sc.ShowHall {
+		// 通知客户端
+		BroadcastMatchInfo()
+	}
+}
+
+// Delete 删除
+func (sc *ScoreConfig) Delete() {
+	if sc.State != Cancel {
+		log.Error("delete not cancel matchID:%v", sc.MatchID)
+		return
+	}
+
+	sc.stopAllTimer()
+	sc.State = Delete
+	delete(MatchManagerList, sc.MatchID)
+
+	// 刷新数据库
+	sc.Save()
 }

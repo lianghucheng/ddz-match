@@ -79,6 +79,7 @@ type ScoreConfig struct {
 	LastMatch              *BaseMatch   `bson:"-"` // 最新分配的一个赛事
 	ReadyTime              int64        `bson:"-"` // 比赛开始时间
 	StartTimer             *timer.Timer `bson:"-"` // 上架倒计时
+	DownShelfTimer         *timer.Timer `bson:"-"` // 下架倒计时
 }
 
 type sConfig struct {
@@ -142,12 +143,12 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 		timer := game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime)*time.Second, func() {
 			base.CheckStart()
 		})
-		base.Manager.SetTimer(timer)
+		base.Manager.SetStartTimer(timer)
 	} else if score.myConfig.StartType == 3 && score.myConfig.StartTime > 0 {
 		timer := game.GetSkeleton().AfterFunc(time.Duration(score.myConfig.StartTime-time.Now().Unix())*time.Second, func() {
 			base.CheckStart()
 		})
-		base.Manager.SetTimer(timer)
+		base.Manager.SetStartTimer(timer)
 	}
 	return base
 }
@@ -904,6 +905,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 						}
 					}
 					gameData.MatchData.TotalCount++
+					gameData.MatchData.RecordTime = time.Now().Unix()
 					db.UpsertUserGameData(bson.M{"uid": uid}, gameData)
 				}
 			}

@@ -69,12 +69,18 @@ func initMatchConfig() error {
 				sConfig.State = Cancel
 				sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
 					// NewScoreManager(sConfig)
-					sConfig.NewManager()
+					sConfig.Shelf()
 				})
 				MatchManagerList[sConfig.MatchID] = sConfig
 			} else {
 				// NewScoreManager(sConfig)
 				sConfig.NewManager()
+			}
+			if sConfig.DownShelfTime > time.Now().Unix() {
+				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+					// NewScoreManager(sConfig)
+					sConfig.DownShelf()
+				})
 			}
 		default:
 			log.Error("unknown match:%v", one)

@@ -40,7 +40,7 @@ type RPC_AddManagerReq struct {
 	AwardList   string   // 奖励列表
 	TablePlayer int      // 一桌的游戏人数 `选填`
 	OfficalIDs  []string // 后台配置的可用比赛id号 `选填`
-	RoundNum    string   // 几局几副 `选填`
+	MatchIcon   string   // 赛事图标
 
 	WG    *sync.WaitGroup     // 用于等待协程返回
 	Write http.ResponseWriter // 在协程中返回请求
@@ -64,14 +64,21 @@ type RPC_EditSort struct {
 	Write http.ResponseWriter // 在协程中返回请求
 }
 
-// RPC_EditMatch 后台控制赛事是否在大厅显示
+// RPC_EditMatch 后台修改赛事
 type RPC_EditMatch struct {
-	MatchID    string // 赛事id号
-	TotalMatch int    // 后台配置的该种比赛可创建的比赛次数
-	Eliminate  []int  // 每轮淘汰人数
-	EnterFee   int64  // 报名费
-	AwardList  string // 奖励列表
-	MatchIcon  string // 赛事图标
+	MatchID       string // 赛事id号
+	MatchName     string // 赛事名称
+	TotalMatch    int    // 后台配置的该种比赛可创建的比赛次数
+	Eliminate     []int  // 每轮淘汰人数
+	EnterFee      *int64 // 报名费
+	AwardList     string // 奖励列表
+	MatchIcon     string // 赛事图标
+	Card          int    // 赛制几副
+	StartType     int    // 比赛开始类型
+	StartTime     int64  // 比赛开始时间
+	ShelfTime     int64  // 上架时间
+	DownShelfTime int64  // 下架时间
+	LimitPlayer   int    // 比赛开始的最少人数 '添加赛事时的必填字段'
 
 	WG    *sync.WaitGroup     // 用于等待协程返回
 	Write http.ResponseWriter // 在协程中返回请求
