@@ -54,6 +54,9 @@ func UpdateUserAfterTaxAward(user *player.User) {
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(user.GetUserData())
 	}, nil)
+	log.Debug("$$$$$$$$$$$$   %v", msg.S2C_UpdateUserAfterTaxAward{
+		AfterTaxAward: utils.Decimal(changeAmount),
+	})
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
 		AfterTaxAward: utils.Decimal(changeAmount),
 	})
@@ -94,19 +97,6 @@ func TakenFirstCoupon(user *player.User) {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
 		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
 	})
-}
-
-func SendPriceMenu(user *player.User, model int) {
-	goodsType := db.ReadGoodsTypeFirst()
-
-	m := &msg.S2C_PriceMenu{
-		PriceItems: GetPriceMenu(goodsType.ID),
-	}
-	if model == 1 {
-		user.WriteMsg(m)
-	} else if model == 2 {
-		player.Broadcast(m)
-	}
 }
 
 // todo：暂时PropType当作PropID的作用

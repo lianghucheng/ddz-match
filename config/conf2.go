@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/name5566/leaf/db/mongodb"
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -48,10 +48,19 @@ type Config struct {
 }
 
 func (ctx *Config)print() {
-	fmt.Printf("Model:%+v\n", ctx.Model)
-	fmt.Printf("CfgMatchRobotMaxNums:%+v\n", ctx.CfgMatchRobotMaxNums)
-	fmt.Printf("CfgDailySignItems:%+v\n", *ctx.CfgDailySignItems)
-	fmt.Printf("CfgPay:%+v\n", ctx.CfgPay)
+	buf ,err := json.Marshal(ctx)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(buf, &m); err != nil {
+		log.Error(err.Error())
+		return
+	}
+	for k, v := range m {
+		fmt.Println(k, v)
+	}
 }
 
 type CfgMatchRobotMaxNum struct {
@@ -74,12 +83,15 @@ type CfgPay struct {
 	NotifyUrl string
 	PayHost string
 	CreatePaymentUrl string
+	AppID     int
+	AppToken  string
+	AppSecret string
 }
 
 type CfgDB struct {
 	GameDBName string
 	BackstageDBName string
-	DBUrl string
+	BkDBUrl string
 	ConnNum int
 }
 

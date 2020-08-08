@@ -32,7 +32,7 @@ func read(coll string, data interface{}, query bson.M, model int) {
 	if model == readOne {
 		err = se.DB(dbName).C(coll).Find(query).One(data)
 	} else if model == readAll {
-		err = se.DB(DB).C(coll).Find(query).All(data)
+		err = se.DB(dbName).C(coll).Find(query).Sort("order").All(data)
 	}
 	if err != nil {
 		log.Error(err.Error())
@@ -70,10 +70,10 @@ func ReadGoodsById(id int) *values.Goods {
 	return data
 }
 
-func ReadGoodsTypes(query bson.M) *[]values.GoodsType {
-	data := new([]values.GoodsType)
-	read("shopgoodstype", data, query, readAll)
-	return data
+func ReadGoodsTypes(merID int) *[]values.GoodsType {
+	datas := new([]values.GoodsType)
+	read("shopgoodstype", datas, bson.M{"merchantid": merID}, readAll)
+	return datas
 }
 
 func ReadGoodsTypeFirst() *values.GoodsType {
@@ -93,11 +93,13 @@ func ReadGoodsTypeFirst() *values.GoodsType {
 func ReadShopMerchant() *values.ShopMerchant {
 	data := new(values.ShopMerchant)
 	read("shopmerchant", data, bson.M{"updownstatus": 1}, readOne)
+	log.Debug("商家数据： %v", *data)
 	return data
 }
 
 func ReadPayAccounts(merID, paybranch int) *[]values.PayAccount {
 	datas := new([]values.PayAccount)
 	read("shoppayaccount", datas, bson.M{"merchantid": merID, "paybranch": paybranch}, readAll)
+	log.Debug("支付账号数据： %v", *datas)
 	return datas
 }

@@ -56,13 +56,16 @@
       "NotifyHost": "http://123.207.12.67:9084",
       "NotifyUrl": "/edy/pay-bc",
       "PayHost": "https://open.test.boai1986.cn",
-      "CreatePaymentUrl": "/api/payment/create"
+      "CreatePaymentUrl": "/api/payment/create",
+      "AppID"     : 100001,
+      "AppToken"  : "fddda32b4cb543babbf78a4ba955c05d",
+      "AppSecret" : "51b793ef1b7e49cf8060e9c083cf17e5"
     }
   },
   "CfgDB": {
     "GameDBName": "ddz-match",
     "BackstageDBName": "backstage",
-    "DBUrl": "mongodb://192.168.1.8",
+    "BkDBUrl": "mongodb://192.168.1.8",
     "ConnNum": 100
   }
 }

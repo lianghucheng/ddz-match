@@ -4,6 +4,7 @@ import (
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
+	"ddz/utils"
 )
 
 func SendAwardInfo(user *player.User) {
@@ -19,7 +20,7 @@ func sendAwardInfo(user *player.User) {
 		player.SaveUserData(user.GetUserData())
 	}, nil)
 	user.WriteMsg(&msg.S2C_AwardInfo{
-		Amount:       changeAmount,
+		Amount:       utils.Decimal(changeAmount),
 		WithDrawList: *withDrawList(flowData.readAllByUserID()),
 	})
 }

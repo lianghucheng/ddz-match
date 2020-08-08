@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -193,4 +194,17 @@ func CalculateHash(data string) string {
 	h.Write([]byte(key + data))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
+}
+
+func Transfer(src interface{}, dir interface{}) error {
+	b, err := json.Marshal(src)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	if err := json.Unmarshal(b, dir); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	return nil
 }

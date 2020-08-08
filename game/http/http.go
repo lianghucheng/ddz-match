@@ -55,11 +55,12 @@ func startHTTPServer() {
 	mux.HandleFunc("/update-headimg", updateHeadImg)
 	mux.HandleFunc("/give-coupon-frag", giveCouponFrag)
 	//电竞二打一支付回调
-	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
+	mux.HandleFunc("/edy/pay-bc", edyPayBackCall)
 	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
 	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
 	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
 	mux.HandleFunc("/notify/pricemenu", notidyPriceMenu)
+	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -523,4 +524,21 @@ func notidyPriceMenu(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	hall.SendPriceMenu(nil, hall.SendBroacast)
+}
+
+func handleTest(w http.ResponseWriter, r *http.Request) {
+	log.Debug("the http test")
+	m := map[string]interface{}{}
+	query:=bson.M{"merchantid": 7, "paybranch": 1}
+	query["deletedat"] = -1
+	se := BackstageDB.Ref()
+	defer BackstageDB.UnRef(se)
+	dbName := config.GetCfgDB().BackstageDBName
+	var err error
+	err = se.DB(dbName).C("shoppayaccount").Find(query).All(&m)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	log.Debug("%v",m)
 }

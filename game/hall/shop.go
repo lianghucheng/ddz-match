@@ -5,6 +5,7 @@ import (
 	"ddz/game/player"
 	"ddz/game/values"
 	"ddz/msg"
+	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -14,6 +15,7 @@ const (
 )
 
 func SendPayAccount(user *player.User, model int) {
+	log.Debug("send pay account")
 	mer := db.ReadShopMerchant()
 	payAccounts := []string{}
 	for _, v := range mer.UpPayBranchs {
@@ -26,8 +28,10 @@ func SendPayAccount(user *player.User, model int) {
 		Accounts: payAccounts,
 	}
 	if model == 1 {
+		log.Debug("single %v", m)
 		user.WriteMsg(m)
 	} else if model == 2 {
+		log.Debug("broadcast %v", m)
 		player.Broadcast(m)
 	}
 }
@@ -79,7 +83,47 @@ func GetPriceMenu(goodsTypeID int) *[]msg.PriceItem {
 			Name:    values.PropTypeStr[v.PropType],
 			Amount:  v.GetAmount,
 			GiftAmount:v.GiftAmount,
+			ImgUrl: v.ImgUrl,
+			TakenType:v.TakenType,
 		})
 	}
 	return rt
+}
+
+func SendPriceMenu(user *player.User, model int) {
+	log.Debug("send price menu")
+	merchant := db.ReadShopMerchant()
+	if merchant.ID <= 0 {
+		log.Error("Has no up merchant int shop. ")
+		return
+	}
+	goodsTypes := db.ReadGoodsTypes(merchant.ID)
+	if len(*goodsTypes) == 0 {
+		log.Error("The goodsType is nil. ")
+		return
+	}
+
+	if len(*goodsTypes) == 0 {
+		log.Error("The goodsType is nil. ")
+		return
+	}
+	msgGoodsTypes := new([]msg.GoodsType)
+	for _, v := range *goodsTypes {
+		*msgGoodsTypes = append(*msgGoodsTypes, msg.GoodsType{
+			ID:         v.ID,
+			TypeName:   v.TypeName,
+			ImgUrl:     v.ImgUrl,
+			PriceItems: *GetPriceMenu(v.ID),
+		})
+	}
+	m := &msg.S2C_PriceMenu{
+		PriceItems: *msgGoodsTypes,
+	}
+	if model == 1 {
+		log.Debug("price menu single %v   %v", *m, (m.PriceItems))
+		user.WriteMsg(m)
+	} else if model == 2 {
+		log.Debug("price menu broadcast %v   %v", *m, (m.PriceItems))
+		player.Broadcast(m)
+	}
 }

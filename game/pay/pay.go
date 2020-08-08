@@ -2,7 +2,6 @@ package pay
 
 import (
 	"ddz/config"
-	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
@@ -50,10 +49,10 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	merType := strconv.Itoa(shopMerchant.MerchantType)
 	cfgPay := config.GetCfgPay()[merType]
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
-		AppID:            edy_api.AppID,
-		AppToken:         edy_api.AppToken,
+		AppID:            cfgPay.AppID,
+		AppToken:         cfgPay.AppToken,
 		Amount:           int(order.Fee),
-		PayType:          9,
+		PayType:          11,
 		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
 		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
