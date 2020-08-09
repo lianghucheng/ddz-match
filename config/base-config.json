@@ -1,0 +1,5 @@
+{
+  "DBUrl": "mongodb://localhost",
+  "DBName": "test",
+  "Collection": "config"
+}
