@@ -145,6 +145,15 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("0"))
+		order := new(values.EdyOrder)
+		order.TradeNo = utils.GetOutTradeNo()
+		order.Fee = int64(f)
+		order.Amount = f / 100
+		order.Createdat = time.Now().Unix()
+		order.ID, _ = MongoDBNextSeq("edyorder")
+		order.Accountid = a
+		order.Merchant = values.ZrddzAliPay
+		Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
 		TotalFee:  f,
 		AccountID: a,

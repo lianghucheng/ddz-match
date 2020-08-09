@@ -62,6 +62,8 @@ type UserData struct {
 	SetNickNameCount  int
 	TakenFee          float64
 	FirstLogin        bool
+		IsWithdraw   	  bool
+		WithdrawDeadLine int64
 }
 
 type User struct {

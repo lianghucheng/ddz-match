@@ -96,34 +96,49 @@ type CfgDB struct {
 }
 
 var cfg *Config
+var BaseCfg *BaseConfig
 
-const (
-	dbUrl      = "mongodb://192.168.1.8" //mongodb服务地址
-	dbName     = "ddz-match"           //数据库名称
-	collection = "config"              //集合名称
-)
+type BaseConfig struct {
+		DBUrl string//mongodb服务地址
+		DBName string//数据库名称
+		Collection string//集合名称
+	}
 
 var (
 	dial *mongodb.DialContext
 )
 
 func init() {
+	var (
+			err error
+			baseCfg *BaseConfig
+			baseBuf []byte
+		)
+		baseCfg = new(BaseConfig)
+		baseBuf, err = ioutil.ReadFile("config/base-config.json")
+		if err != nil {
+				log.Fatal("read base config fail. error: ", err.Error())
+			}
+		err = json.Unmarshal(baseBuf, baseCfg)
+		if err != nil {
+				log.Fatal("parse struct fail. error: ", err.Error())
+			}
+		BaseCfg = baseCfg
 	cfg = new(Config)
-	var err error
-	dial, err = mongodb.Dial(dbUrl, 1)
+	dial, err = mongodb.Dial(baseCfg.DBUrl, 1)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("Read config from mongodb fail. err: ", err.Error())
 		return
 	}
 	ret, err := ReadCfg(ModelDev)
 	if err != nil {
 		if err != mgo.ErrNotFound {
-			log.Fatal(err.Error())
+			log.Fatal("Read config from mongodb, but there was an unexpected error. the error is: ", err.Error())
 			return
 		}
 		b, err := ioutil.ReadFile("config/init-config.json")
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatal("Read config from config.json, the error is: error: ", err.Error())
 			return
 		}
 		ret = new(Config)
@@ -155,7 +170,7 @@ func ReadCfg(model int) (*Config, error) {
 	se := dial.Ref()
 	defer dial.UnRef(se)
 	cfgData := new(Config)
-	if err := se.DB(dbName).C(collection).Find(bson.M{"model": model}).One(cfgData); err != nil {
+	if err := se.DB(BaseCfg.DBName).C(BaseCfg.Collection).Find(bson.M{"model": model}).One(cfgData); err != nil {
 		log.Error(err.Error())
 		return nil, err
 	}

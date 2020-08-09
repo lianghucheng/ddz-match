@@ -8,6 +8,7 @@ const (
 
 const (
 	MerchantSportCentralAthketicAssociation = 1
+	ZrddzAliPay = 2
 )
 
 var MerchantPay = []int{MerchantSportCentralAthketicAssociation}
