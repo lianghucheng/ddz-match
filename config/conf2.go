@@ -3,11 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/name5566/leaf/db/mongodb"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 )
 
 type Config2 struct {

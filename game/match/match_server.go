@@ -58,17 +58,29 @@ func initMatchConfig() error {
 			if err := sConfig.CheckConfig(); err != nil {
 				continue
 			}
+			if sConfig.UseMatch >= sConfig.TotalMatch {
+				game.GetSkeleton().Go(func() {
+					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+				}, nil)
+				continue
+			}
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
 				sConfig.State = Cancel
 				sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
 					// NewScoreManager(sConfig)
-					sConfig.NewManager()
+					sConfig.Shelf()
 				})
 				MatchManagerList[sConfig.MatchID] = sConfig
 			} else {
 				// NewScoreManager(sConfig)
 				sConfig.NewManager()
+			}
+			if sConfig.DownShelfTime > time.Now().Unix() {
+				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+					// NewScoreManager(sConfig)
+					sConfig.DownShelf()
+				})
 			}
 		default:
 			log.Error("unknown match:%v", one)

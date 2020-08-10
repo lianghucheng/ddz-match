@@ -25,6 +25,7 @@ type Match interface {
 	GetRank(uid int)         // 获取排名情况
 	SendRoundResult(uid int) // 给玩家发送单局结算
 	SendFinalResult(uid int) // 给玩家发送总结算
+	SendMatchInfo(uid int)   // 发送赛事信息
 }
 
 // MatchManager 比赛配置接口
@@ -42,6 +43,11 @@ type MatchManager interface {
 	CheckNewConfig()
 	ClearLastMatch()
 	CloseMatch()
+	SetStartTimer(timer *timer.Timer)
+	SetDownShelfTimer(timer *timer.Timer)
+	DownShelf() // 下架
+	Shelf()     // 上架
+	Delete()    // 删除
 }
 
 // MatchPlayer 比赛玩家对象
@@ -61,30 +67,35 @@ type MatchPlayer struct {
 
 // NormalCofig 需要返回给客户端的通用配置
 type NormalCofig struct {
-	MatchID                string
-	MatchName              string
-	MatchType              string // 赛事类型
-	MatchDesc              string
-	EnterFee               int64
-	State                  int
-	Award                  []string
-	AwardDesc              string // 奖励描述
-	Recommend              string // 赛事推荐文字信息
-	MaxPlayer              int
-	AllSignInPlayers       []int        // 所有已报名该赛事的玩家
-	StartTime              int64        // 比赛开始时间或者比赛倒计时
-	StartType              int          // 比赛开赛种类
-	ReadyTime              int64        // 剩余时间
-	Sort                   int          // 赛事排序
-	ShowHall               bool         // 首页展示
-	MatchIcon              string       // 赛事图标
-	SonMatchID             string       // 自赛事id
-	TotalMatch             int          // 总赛事场次
-	Eliminate              []int        // 淘汰人数
-	AwardList              string       // 奖励
-	StartTimer             *timer.Timer // 上架倒计时
-	AllPlayingPlayersCount int          // 正在参与赛事的玩家总数
-	DownShelfTime          int64        // 下架时间
+	MatchSource      int // 赛事来源
+	MatchID          string
+	MatchName        string
+	MatchType        string // 赛事类型
+	MatchDesc        string
+	EnterFee         int64
+	State            int
+	Award            []string
+	AwardDesc        string // 奖励描述
+	Recommend        string // 赛事推荐文字信息
+	MaxPlayer        int
+	AllSignInPlayers []int  // 所有已报名该赛事的玩家
+	StartTime        int64  // 比赛开始时间或者比赛倒计时
+	StartType        int    // 比赛开赛种类
+	ReadyTime        int64  // 剩余时间
+	Sort             int    // 赛事排序
+	ShowHall         bool   // 首页展示
+	MatchIcon        string // 赛事图标
+	SonMatchID       string // 自赛事id
+	TotalMatch       int    // 总赛事场次
+	Eliminate        []int  // 淘汰人数
+	AwardList        string // 奖励
+	// StartTimer             *timer.Timer // 上架倒计时
+	AllPlayingPlayersCount int   // 正在参与赛事的玩家总数
+	ShelfTime              int64 // 上架时间
+	DownShelfTime          int64 // 下架时间
+	Round                  int   // 几局制 '添加赛事时的必填字段'
+	Card                   int   // 几副制 '添加赛事时的必填字段'
+	LimitPlayer            int   // 比赛开始的最少人数 '添加赛事时的必填字段'
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
@@ -124,6 +135,110 @@ type MatchData struct {
 	WeekCount  int   // 周局数
 	MonthCount int   // 月局数
 	RecordTime int64 // 记录时间
+}
+
+// SportsCenterReportRobot 人机对局结果上报
+type SportsCenterReportRobot struct {
+	Cp_id                string `json:"cp_id"`
+	Match_id             string `json:"match_id"`
+	Player_id            string `json:"player_id"`
+	Card_player_id       string `json:"card_player_id"`
+	Card_numerical_order string `json:"card_numerical_order"`
+	Card_group_id        string `json:"card_group_id"`
+	Card_desk_id         string `json:"card_desk_id"`
+	Card_score           string `json:"card_score"`
+	Mp_score             string `json:"mp_score"`
+	Mp_ratio             string `json:"mp_ratio"`
+	Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type            string `json:"card_type"`
+	Call_score           string `json:"call_score"`
+	Spring               string `json:"spring"`
+	Raise                string `json:"raise"`
+	Card_hole            string `json:"card_hole"`
+	Status               string `json:"status"`
+	Passive              string `json:"passive"`
+}
+
+// SportsCenterReportPersonal 人人对局结果上报
+type SportsCenterReportPersonal struct {
+	Cp_id    string `json:"cp_id"`
+	Match_id string `json:"match_id"`
+	// Result_list []SportsCenterRoundResult `json:"result_list"`
+	Round_id             string `json:"round_id"`
+	Player_id            string `json:"player_id"`
+	Card_player_id       string `json:"card_player_id"`
+	Card_numerical_order string `json:"card_numerical_order"`
+	Card_group_id        string `json:"card_group_id"`
+	Card_desk_id         string `json:"card_desk_id"`
+	Card_score           string `json:"card_score"`
+	Mp_score             string `json:"mp_score"`
+	Mp_ratio             string `json:"mp_ratio"`
+	Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type            string `json:"card_type"`
+	Call_score           string `json:"call_score"`
+	Spring               string `json:"spring"`
+	Raise                string `json:"raise"`
+	Card_hole            string `json:"card_hole"`
+	Card_rival           string `json:"card_rival"`
+	Player_position      string `json:"player_position"`
+	Status               string `json:"status"`
+	Passive              string `json:"passive"`
+}
+
+// SportsCenterRoundResult 人人对局单条结果
+type SportsCenterRoundResult struct {
+	Round_id             string `json:"round_id"`
+	Player_id            string `json:"player_id"`
+	Card_player_id       string `json:"card_player_id"`
+	Card_numerical_order string `json:"card_numerical_order"`
+	Card_group_id        string `json:"card_group_id"`
+	Card_desk_id         string `json:"card_desk_id"`
+	Card_score           string `json:"card_score"`
+	Mp_score             string `json:"mp_score"`
+	Mp_ratio             string `json:"mp_ratio"`
+	Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type            string `json:"card_type"`
+	Call_score           string `json:"call_score"`
+	Spring               string `json:"spring"`
+	Raise                string `json:"raise"`
+	Card_hole            string `json:"card_hole"`
+	Card_rival           string `json:"card_rival"`
+	Player_position      string `json:"player_position"`
+	Status               string `json:"status"`
+	Passive              string `json:"passive"`
+}
+
+// SportsCenterRankResult 轮次排名上报
+type SportsCenterRankResult struct {
+	Cp_id     string                `json:"cp_id"`
+	Match_id  string                `json:"match_id"`
+	Round_id  string                `json:"round_id"`
+	Rank_list []SportsCenterOneRank `json:"rank_list"`
+}
+
+// SportsCenterOneRank 单条排名信息
+type SportsCenterOneRank struct {
+	Player_id string `json:"player_id"`
+	Card_rank string `json:"card_rank"`
+	Status    string `json:"status"`
+}
+
+// SportsCenterFinalRankResult 最终排名上报
+type SportsCenterFinalRankResult struct {
+	Cp_id    string                     `json:"cp_id"`
+	Match_id string                     `json:"match_id"`
+	Ranks    []SportsCenterOneFinalRank `json:"ranks"`
+}
+
+// SportsCenterOneFinalRank 单条最终排名信息
+type SportsCenterOneFinalRank struct {
+	Player_id          string `json:"player_id"`
+	Ranking            string `json:"ranking"`
+	Average_mp_ratio   string `json:"average_mp_ratio"`
+	Rival_avg_mp_ratio string `json:"rival_avg_mp_ratio"`
+	Rank_count         string `json:"rank_count"`
+	Total_time         string `json:"total_time"`
+	Status             string `json:"status"`
 }
 
 // GetAwardType 获取奖励类型

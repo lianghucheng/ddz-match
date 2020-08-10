@@ -1,6 +1,7 @@
 package match
 
 import (
+	"ddz/edy_api"
 	"ddz/game/db"
 	. "ddz/game/player"
 	. "ddz/game/room"
@@ -9,6 +10,7 @@ import (
 	"ddz/msg"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -31,6 +33,12 @@ const (
 	Delete         // 删除赛事
 )
 
+// 赛事来源
+const (
+	MatchSourceSportsCenter = iota + 1 // 体总
+	MatchSourceBackstage               // 后台
+)
+
 // BaseMatch 通用的比赛对象
 type BaseMatch struct {
 	myMatch Match // 不同的赛事
@@ -44,14 +52,16 @@ type BaseMatch struct {
 	Round         int    // 几局制
 	CreateTime    int64  // 比赛创建时间
 
-	AllPlayers       map[int]*User // 比赛剩余玩家对象
-	Rooms            []*Room       // 所有比赛房间对象
-	IsClosing        bool          // 是否正在关闭的赛事
-	CurrentRound     int           // 当前轮次
-	CurrentCardCount int           // 当前牌副数
-	Award            []string      // 赛事奖励
-	Manager          MatchManager  // 隶属于哪个管理下的赛事
-	NormalCofig      *NormalCofig  // 一些通用配置
+	AllPlayers map[int]*User // 比赛剩余玩家对象
+	Rooms      []*Room       // 所有比赛房间对象
+	// IsClosing               bool                             // 是否正在关闭的赛事
+	CurrentRound            int                              // 当前轮次
+	CurrentCardCount        int                              // 当前牌副数
+	Award                   []string                         // 赛事奖励
+	Manager                 MatchManager                     // 隶属于哪个管理下的赛事
+	NormalCofig             *NormalCofig                     // 一些通用配置
+	SportsCenterRoundResult []values.SportsCenterRoundResult // 体总数据
+	OptMatchType            int                              // 操作赛事的类型
 }
 
 func (base *BaseMatch) SignIn(uid int) error {
@@ -128,12 +138,6 @@ func (base *BaseMatch) SignOut(uid int) error {
 
 	delete(UserIDMatch, uid)
 	delete(base.AllPlayers, uid)
-	// 清理赛事
-	if len(base.SignInPlayers) == 0 && base.IsClosing {
-		base.Manager.End(base.SonMatchID)
-		base.Manager.ClearLastMatch()
-		delete(MatchList, base.SonMatchID)
-	}
 	return nil
 }
 
@@ -181,6 +185,21 @@ func (base *BaseMatch) End() {
 }
 
 func (base *BaseMatch) SplitTable() {
+	// 体总赛事上传报名人数
+	if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+		matchID := []byte(base.SonMatchID)
+		currentRound := []byte(fmt.Sprintf("%02d", base.CurrentRound))
+		matchID[len(matchID)-8] = currentRound[0]
+		matchID[len(matchID)-7] = currentRound[1]
+		for _, p := range base.AllPlayers {
+			if _, err := edy_api.SignMatch(string(matchID), p.BaseData.UserData.RealName, strconv.Itoa(p.BaseData.UserData.AccountID)); err != nil {
+				log.Error("err:%v", err)
+				// base.CloseMatch()
+				// base.Manager.CreateOneMatch()
+				// return
+			}
+		}
+	}
 	if base.myMatch != nil {
 		base.myMatch.SplitTable()
 	}
@@ -234,11 +253,20 @@ func (base *BaseMatch) SendFinalResult(uid int) {
 
 // CloseMatch 关闭当前赛事
 func (base *BaseMatch) CloseMatch() {
-	base.IsClosing = true
+	// base.IsClosing = true
 	// log.Debug("check,%v", base.SignInPlayers)
 	// log.Debug("check2:%v", MatchList[base.MatchID].SignInPlayers)
-	for _, uid := range base.SignInPlayers {
+
+	for uid := range base.AllPlayers {
 		base.Manager.SignOut(uid, base.SonMatchID)
+	}
+
+	// 清理赛事
+	// if len(base.SignInPlayers) == 0 && base.IsClosing {
+	if len(base.SignInPlayers) == 0 {
+		base.Manager.End(base.SonMatchID)
+		base.Manager.ClearLastMatch()
+		delete(MatchList, base.SonMatchID)
 	}
 }
 
@@ -255,5 +283,12 @@ func (base *BaseMatch) GetMatchTypeField() string {
 		return "quickmatch"
 	default:
 		return ""
+	}
+}
+
+// SendMatchInfo 广播赛事信息
+func (base *BaseMatch) SendMatchInfo(uid int) {
+	if base.myMatch != nil {
+		base.myMatch.SendMatchInfo(uid)
 	}
 }

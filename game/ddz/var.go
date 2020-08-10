@@ -60,7 +60,7 @@ const (
 type LandlordMatchPlayerData struct {
 	User              *User
 	state             int
-	position          int // 用户在桌子上的位置，从 0 开始
+	Position          int // 用户在桌子上的位置，从 0 开始
 	dealer            bool
 	wins              int     // 赢的次数
 	hands             []int   // 手牌
@@ -74,10 +74,10 @@ type LandlordMatchPlayerData struct {
 	// roundResult       *poker.LandlordPlayerRoundResult
 
 	hosted      bool // 是否被托管
-	originHands []int
+	OriginHands []int
 	Sort        int // 报名排序
 	Level       int //玩家排名
-	score       int //叫分大小
+	Score       int //叫分大小
 	DealerScore int //叫分
 	Ming        int //明牌
 	Public      int //公共
@@ -151,7 +151,7 @@ func (game *LandlordMatchRoom) initRoom() {
 	dealerPlayerData := game.UserIDPlayerDatas[game.dealerUserID]
 	dealerPlayerData.dealer = true
 	// 确定闲家(注：闲家的英文单词也为player)
-	dealerPos := dealerPlayerData.position
+	dealerPos := dealerPlayerData.Position
 	for i := 1; i < game.rule.MaxPlayers; i++ {
 		playerPos := (dealerPos + i) % game.rule.MaxPlayers
 		playerUserID := game.PositionUserIDs[playerPos]
@@ -186,7 +186,7 @@ func (game *LandlordMatchRoom) initplayerData() {
 		playerData.discards = [][]int{}
 		playerData.actionTimestamp = 0
 		playerData.hosted = false
-		playerData.score = 0
+		playerData.Score = 0
 		playerData.DealerScore = 0 //叫分
 		playerData.Ming = 0        //明牌
 		playerData.Public = 0      //公共
@@ -220,7 +220,7 @@ func (game *LandlordMatchRoom) showHand() {
 		playerData := game.UserIDPlayerDatas[userID]
 		if len(playerData.hands) > 0 {
 			game.broadcast(&msg.S2C_UpdatePokerHands{
-				Position:      playerData.position,
+				Position:      playerData.Position,
 				Hands:         playerData.hands,
 				NumberOfHands: len(playerData.hands),
 			}, game.PositionUserIDs, -1)
@@ -323,7 +323,7 @@ func (game *LandlordMatchRoom) calScore() {
 		}
 		// 记录当前局的所有加倍信息
 		player.User.BaseData.MatchPlayer.Multiples = fmt.Sprintf("春天:%v,炸弹:%v,底分:%v,叫分:%v,明牌:%v,公共:%v,庄家:%v,防守方:%v,总倍数:%v",
-			player.Spring, player.Boom, game.rule.BaseScore, player.DealerScore, player.Ming, player.Public, player.Dealer, player.Xian,
+			player.Spring, player.Boom, game.rule.BaseScore, player.Score, player.Ming, player.Public, player.Dealer, player.Xian,
 			player.Public*player.Dealer*player.Xian)
 	}
 }

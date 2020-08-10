@@ -5,7 +5,6 @@ import (
 	"ddz/game/poker"
 	. "ddz/game/room"
 	"ddz/msg"
-	"fmt"
 	"sort"
 	"time"
 
@@ -62,7 +61,7 @@ func (game *LandlordMatchRoom) Enter(User *User) bool {
 		//房间信息返回需要重新规划字段
 		User.WriteMsg(&msg.S2C_EnterRoom{
 			Error:      msg.S2C_EnterRoom_OK,
-			Position:   playerData.position,
+			Position:   playerData.Position,
 			BaseScore:  game.rule.BaseScore,
 			MaxPlayers: game.rule.MaxPlayers,
 		})
@@ -106,7 +105,7 @@ func (game *LandlordMatchRoom) Exit(userId int) {
 	}
 	playerData.state = 0
 
-	delete(game.PositionUserIDs, playerData.position)
+	delete(game.PositionUserIDs, playerData.Position)
 	delete(game.UserIDPlayerDatas, userId)
 }
 func (game *LandlordMatchRoom) SitDown(User *User, pos int) {
@@ -117,7 +116,7 @@ func (game *LandlordMatchRoom) SitDown(User *User, pos int) {
 	if playerData == nil {
 		playerData = new(LandlordMatchPlayerData)
 		playerData.User = User
-		playerData.position = pos
+		playerData.Position = pos
 		playerData.analyzer = new(poker.LandlordAnalyzer)
 		// playerData.roundResult = new(poker.LandlordPlayerRoundResult)
 
@@ -143,7 +142,7 @@ func (game *LandlordMatchRoom) GetAllPlayers(User *User) {
 			playerData.Sort = pos + 1
 
 			msgTemp := &msg.S2C_SitDown{
-				Position:   playerData.position,
+				Position:   playerData.Position,
 				AccountID:  playerData.User.BaseData.UserData.AccountID,
 				LoginIP:    playerData.User.BaseData.UserData.LoginIP,
 				Nickname:   playerData.User.BaseData.UserData.Nickname,
@@ -180,20 +179,22 @@ func (game *LandlordMatchRoom) StartGame() {
 	game.prepare()
 	game.count++
 	game.broadcast(&msg.S2C_GameStart{}, game.PositionUserIDs, -1)
+
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.UserIDPlayerDatas[userID]
-		info := msg.S2C_MatchInfo{
-			RoundNum:       game.rule.RoundNum,
-			Process:        fmt.Sprintf("第%v局 第1副", game.count),
-			Level:          fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
-			Competition:    "前3晋级",
-			AwardList:      game.rule.AwardList,
-			MatchName:      game.rule.MatchName,
-			Duration:       playerData.User.BaseData.MatchPlayer.OpTime,
-			WinCnt:         playerData.User.BaseData.MatchPlayer.Wins,
-			AwardPersonCnt: len(game.rule.Awards),
-		}
-		playerData.User.WriteMsg(&info)
+		game.Match.SendMatchInfo(userID)
+		// 	playerData := game.UserIDPlayerDatas[userID]
+		// 	info := msg.S2C_MatchInfo{
+		// 		RoundNum:       game.rule.RoundNum,
+		// 		Process:        fmt.Sprintf("第%v局 第1副", game.count),
+		// 		Level:          fmt.Sprintf("%v/%v", playerData.User.BaseData.MatchPlayer.Rank, game.rule.AllPlayers),
+		// 		Competition:    "前3晋级",
+		// 		AwardList:      game.rule.AwardList,
+		// 		MatchName:      game.rule.MatchName,
+		// 		Duration:       playerData.User.BaseData.MatchPlayer.OpTime,
+		// 		WinCnt:         playerData.User.BaseData.MatchPlayer.Wins,
+		// 		AwardPersonCnt: len(game.rule.Awards),
+		// 	}
+		// 	playerData.User.WriteMsg(&info)
 	}
 
 	// 所有玩家都发十七张牌
@@ -202,7 +203,7 @@ func (game *LandlordMatchRoom) StartGame() {
 		playerData.state = landlordWaiting
 		// 手牌有十七张
 		playerData.hands = append(playerData.hands, game.rests[:17]...)
-		playerData.originHands = playerData.hands
+		playerData.OriginHands = playerData.hands
 		// 排序
 		sort.Sort(sort.Reverse(sort.IntSlice(playerData.hands)))
 		log.Debug("userID %v 手牌: %v", userID, poker.ToCardsString(playerData.hands))
@@ -212,17 +213,17 @@ func (game *LandlordMatchRoom) StartGame() {
 
 		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
 			playerData.User.WriteMsg(&msg.S2C_UpdatePokerHands{
-				Position:      playerData.position,
+				Position:      playerData.Position,
 				Hands:         playerData.hands,
 				NumberOfHands: len(playerData.hands),
 			})
 		}
 
 		game.broadcast(&msg.S2C_UpdatePokerHands{
-			Position:      playerData.position,
+			Position:      playerData.Position,
 			Hands:         []int{},
 			NumberOfHands: len(playerData.hands),
-		}, game.PositionUserIDs, playerData.position)
+		}, game.PositionUserIDs, playerData.Position)
 		// game.gameRecords[userID].Result[game.count-1].Count = game.count
 		// game.gameRecords[userID].Result[game.count-1].HandCards = playerData.hands
 		// // 目前只有1副牌,todo..

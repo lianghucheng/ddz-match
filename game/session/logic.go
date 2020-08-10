@@ -174,10 +174,6 @@ func logout(user *User) {
 	if user.BaseData == nil {
 		return
 	}
-
-	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: CalcOnlineCnt(UserIDUsers),
-	})
 	if existUser, ok := UserIDUsers[user.BaseData.UserData.UserID]; ok {
 		if existUser == user {
 			log.Debug("userID: %v 登出", user.BaseData.UserData.UserID)
@@ -186,6 +182,9 @@ func logout(user *User) {
 			SaveUserData(user.BaseData.UserData)
 		}
 	}
+	Broadcast(&msg.S2C_OnlineUserNum{
+		Num: CalcOnlineCnt(UserIDUsers),
+	})
 }
 
 func onLogin(user *User, firstLogin bool, anotherLogin bool) {

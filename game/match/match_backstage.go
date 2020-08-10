@@ -60,11 +60,11 @@ func addMatch(args []interface{}) {
 			return
 		}
 		// 上架时间
-		if sConfig.ShelfTime > time.Now().Unix() {
-			sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
+		if sConfig.ShelfTime > time.Now().Unix() && sConfig.StartType >= 2 {
+			sConfig.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
 				// NewScoreManager(sConfig)
 				sConfig.NewManager()
-			})
+			}))
 			MatchManagerList[sConfig.MatchID] = sConfig
 		} else {
 			// NewScoreManager(sConfig)
@@ -170,8 +170,8 @@ func editMatch(args []interface{}) {
 		desc = "操作的赛事不存在！"
 		return
 	}
+
 	c := m.GetNormalConfig()
-	utils.StructCopy(c, data)
 
 	if c.State > Cancel {
 		code = 1
@@ -179,16 +179,76 @@ func editMatch(args []interface{}) {
 		return
 	}
 
-	// 当前赛事没人，且处于正常状态则直接修改
-	if len(c.AllSignInPlayers) == 0 {
-		m.SetNormalConfig(c)
-		m.Save()
-		// 通知客户端
-		BroadcastMatchInfo()
-	} else {
-		c.AllSignInPlayers = []int{}
-		MatchConfigQueue[data.MatchID] = c
+	if c.State != Cancel {
+		code = 1
+		desc = "请先下架赛事再进行编辑!"
+		return
 	}
+
+	if c.MatchSource == MatchSourceSportsCenter {
+		tmp := struct {
+			TotalMatch    int
+			ShelfTime     int64
+			DownShelfTime int64
+			StartTime     int64
+		}{
+			data.TotalMatch,
+			data.ShelfTime,
+			data.DownShelfTime,
+			data.StartTime,
+		}
+		utils.StructCopy(c, &tmp)
+	} else {
+		tmp := struct {
+			MatchName     string // 赛事名称
+			Card          int    // 赛制几副
+			LimitPlayer   int    // 比赛开始的最少人数 '添加赛事时的必填字段'
+			StartTime     int64  // 比赛开始时间
+			Eliminate     []int  // 每轮淘汰人数
+			EnterFee      int64  // 报名费
+			ShelfTime     int64
+			DownShelfTime int64
+			TotalMatch    int
+		}{
+			data.MatchName,
+			data.Card,
+			data.LimitPlayer,
+			data.StartTime,
+			data.Eliminate,
+			*data.EnterFee,
+			data.ShelfTime,
+			data.DownShelfTime,
+			data.TotalMatch,
+		}
+		utils.StructCopy(c, &tmp)
+	}
+
+	if data.ShelfTime > time.Now().Unix() {
+		m.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.Shelf()
+		}))
+	} else if data.ShelfTime <= time.Now().Unix() && data.ShelfTime != 0 {
+		m.Shelf()
+	}
+
+	if data.DownShelfTime > time.Now().Unix() {
+		m.SetDownShelfTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.DownShelf()
+		}))
+	}
+
+	// 当前赛事没人，且处于正常状态则直接修改
+	// if len(c.AllSignInPlayers) == 0 {
+	m.SetNormalConfig(c)
+	m.Save()
+
+	// 通知客户端
+	// BroadcastMatchInfo()
+	// } else {
+	// 	MatchConfigQueue[data.MatchID] = c
+	// }
 }
 
 func optMatch(args []interface{}) {
@@ -224,50 +284,25 @@ func optMatch(args []interface{}) {
 			desc = "赛事已上架!"
 			return
 		}
-		c.State = Signing
-		if c.StartTimer != nil {
-			c.StartTimer.Stop()
-			switch c.MatchType {
-			case ScoreMatch, MoneyMatch, DoubleMatch, QuickMatch:
-				m.NewManager()
-			default:
-				log.Error("unknown match:%+v", c)
-			}
-		}
+		m.Shelf()
 	case 2: // 下架
 		if c.State != Signing {
 			code = 1
 			desc = "赛事未上架!"
 			return
 		}
-		c.State = Cancel
-		if c.SonMatchID != "" {
-			match, ok := MatchList[c.SonMatchID]
-			if ok && match.State == Signing {
-				match.CloseMatch()
-			}
-		}
-		c.DownShelfTime = time.Now().Unix()
+		m.DownShelf()
 	case 3: // 删除
 		if c.State < Cancel {
 			code = 1
 			desc = "赛事未下架!"
 			return
 		}
-		if c.StartTimer != nil {
-			c.StartTimer.Stop()
-		}
-		c.State = Delete
-		delete(MatchManagerList, c.MatchID)
+		m.Delete()
 	default: // 未知
 		log.Error("unknown opt:%v", data)
 		code = 1
 		desc = "未知操作！"
 		return
 	}
-	m.SetNormalConfig(c)
-	// 刷新数据库
-	m.Save()
-	// 通知客户端
-	BroadcastMatchInfo()
 }
