@@ -62,8 +62,8 @@ type UserData struct {
 	SetNickNameCount  int
 	TakenFee          float64
 	FirstLogin        bool
-		IsWithdraw   	  bool
-		WithdrawDeadLine int64
+	IsWithdraw        bool
+	WithdrawDeadLine  int64
 }
 
 type User struct {
@@ -216,7 +216,7 @@ func (user *User) IsRobot() bool {
 
 func CalcOnlineCnt(userIDUsers map[int]*User) int {
 	cnt := 0
-	for _,user := range userIDUsers {
+	for _, user := range userIDUsers {
 		if !user.IsRobot() {
 			cnt++
 		}

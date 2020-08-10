@@ -60,6 +60,9 @@
       "AppID"     : 100001,
       "AppToken"  : "fddda32b4cb543babbf78a4ba955c05d",
       "AppSecret" : "51b793ef1b7e49cf8060e9c083cf17e5"
+    },
+    "2": {
+
     }
   },
   "CfgDB": {

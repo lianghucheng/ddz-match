@@ -43,12 +43,12 @@ type Config struct {
 	Model                int //配置模式
 	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
-	CfgPay map[string]*CfgPay
-	CfgDB *CfgDB
+	CfgPay               map[string]*CfgPay
+	CfgDB                *CfgDB
 }
 
-func (ctx *Config)print() {
-	buf ,err := json.Marshal(ctx)
+func (ctx *Config) print() {
+	buf, err := json.Marshal(ctx)
 	if err != nil {
 		log.Error(err.Error())
 		return
@@ -64,10 +64,10 @@ func (ctx *Config)print() {
 }
 
 type CfgMatchRobotMaxNum struct {
-	MatchID string //
-	PerMaxNum  int
-	Total   int
-	JoinNum int
+	MatchID   string //
+	PerMaxNum int
+	Total     int
+	JoinNum   int
 }
 
 type CfgDailySignItem struct {
@@ -79,30 +79,30 @@ type CfgDailySignItem struct {
 }
 
 type CfgPay struct {
-	NotifyHost string
-	NotifyUrl string
-	PayHost string
+	NotifyHost       string
+	NotifyUrl        string
+	PayHost          string
 	CreatePaymentUrl string
-	AppID     int
-	AppToken  string
-	AppSecret string
+	AppID            int
+	AppToken         string
+	AppSecret        string
 }
 
 type CfgDB struct {
-	GameDBName string
+	GameDBName      string
 	BackstageDBName string
-	BkDBUrl string
-	ConnNum int
+	BkDBUrl         string
+	ConnNum         int
 }
 
 var cfg *Config
 var BaseCfg *BaseConfig
 
 type BaseConfig struct {
-		DBUrl string//mongodb服务地址
-		DBName string//数据库名称
-		Collection string//集合名称
-	}
+	DBUrl      string //mongodb服务地址
+	DBName     string //数据库名称
+	Collection string //集合名称
+}
 
 var (
 	dial *mongodb.DialContext
@@ -110,20 +110,20 @@ var (
 
 func init() {
 	var (
-			err error
-			baseCfg *BaseConfig
-			baseBuf []byte
-		)
-		baseCfg = new(BaseConfig)
-		baseBuf, err = ioutil.ReadFile("config/base-config.json")
-		if err != nil {
-				log.Fatal("read base config fail. error: ", err.Error())
-			}
-		err = json.Unmarshal(baseBuf, baseCfg)
-		if err != nil {
-				log.Fatal("parse struct fail. error: ", err.Error())
-			}
-		BaseCfg = baseCfg
+		err     error
+		baseCfg *BaseConfig
+		baseBuf []byte
+	)
+	baseCfg = new(BaseConfig)
+	baseBuf, err = ioutil.ReadFile("config/base-config.json")
+	if err != nil {
+		log.Fatal("read base config fail. error: ", err.Error())
+	}
+	err = json.Unmarshal(baseBuf, baseCfg)
+	if err != nil {
+		log.Fatal("parse struct fail. error: ", err.Error())
+	}
+	BaseCfg = baseCfg
 	cfg = new(Config)
 	dial, err = mongodb.Dial(baseCfg.DBUrl, 1)
 	if err != nil {

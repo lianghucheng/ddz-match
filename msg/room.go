@@ -76,7 +76,7 @@ type GameRecord struct {
 	MatchType string  //赛事类型
 	Desc      string  //赛事
 	Level     int     //名次
-	Award     float64 //奖励
+	Award     string //奖励
 	Count     int     //完成局数
 	Total     int64   //总得分
 	Last      int64   //尾副得分
@@ -98,7 +98,7 @@ type GameAllRecord struct {
 	MatchType string       //赛事类型
 	Desc      string       //赛事
 	Level     int          //名次
-	Award     float64      //奖励
+	Award     string      //奖励
 	Count     int          //完成局数
 	Total     int64        //总得分
 	Last      int64        //尾副得分

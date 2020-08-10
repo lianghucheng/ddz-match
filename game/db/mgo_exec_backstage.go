@@ -52,7 +52,7 @@ func GetInterQuery(cond interface{}) bson.M {
 	if len(cond_map) == 0 {
 		return nil
 	}
-	for k,v := range cond_map {
+	for k, v := range cond_map {
 		bson_arr = append(bson_arr, bson.M{k: v})
 	}
 	return bson.M{"$or": bson_arr}

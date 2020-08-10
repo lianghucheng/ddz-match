@@ -94,5 +94,4 @@ type RPC_AddCouponFrag struct {
 }
 
 type RPC_SendPayAccount struct {
-
 }

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -601,11 +602,10 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		return
 	}
 	player := user.BaseData.MatchPlayer
-	var award string
 	var moneyAwardCount float64
 	if player.Rank-1 < len(base.Award) {
-		award = base.Award[player.Rank-1]
-		one := strings.Split(award, ",")
+		awardStr := base.Award[player.Rank-1]
+		one := strings.Split(awardStr, ",")
 		for _, oneAward := range one {
 			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
 			// 现金奖励
@@ -656,6 +656,10 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 				})
 			}
 		}
+	}
+	award := "道具奖励"
+	if sc.myConfig.MoneyAward > 0 {
+		award = strconv.FormatFloat(sc.myConfig.MoneyAward, 'f', -1, 64) + "元"
 	}
 	// 写入战绩
 	record := values.DDZGameRecord{

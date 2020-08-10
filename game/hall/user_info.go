@@ -131,7 +131,7 @@ func SendKnapsack(user *player.User) {
 	knapsack := new(KnapsackProp)
 	knapsack.Accountid = user.AcountID()
 	knapsacks := knapsack.ReadAllByAid()
-	log.Debug("%+v",*knapsack2Msg(knapsacks))
+	log.Debug("%+v", *knapsack2Msg(knapsacks))
 	user.WriteMsg(&msg.S2C_Knapsack{
 		Props: *knapsack2Msg(knapsacks),
 	})
@@ -188,13 +188,13 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 				knapsackProp.Save()
 			}, func() {
 				UpdateUserCoupon(user, int64(m.Amount), before, ud.Coupon, db.FragChangeOpt, db.CouponFrag)
-				cpItem :=config.PropList[config.PropIDCoupon]
+				cpItem := config.PropList[config.PropIDCoupon]
 				user.WriteMsg(&msg.S2C_UseProp{
 					Error:  values.SuccessS2C_UseProp,
 					ErrMsg: values.ErrMsg[values.SuccessS2C_UseProp],
-					Amount:m.Amount,
-					Name:cpItem.Name,
-					PropID:cpItem.ID,
+					Amount: m.Amount,
+					Name:   cpItem.Name,
+					PropID: cpItem.ID,
 				})
 			})
 		}

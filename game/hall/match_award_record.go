@@ -9,7 +9,7 @@ import (
 )
 
 type MatchAwardRecord struct {
-	MatchName string
+	MatchName    string
 	AwardContent string
 	ID           int `bson:"_id"`
 	Userid       int
@@ -21,7 +21,7 @@ type MatchAwardRecord struct {
 	Desc         string
 }
 
-func (ctx *MatchAwardRecord)save(){
+func (ctx *MatchAwardRecord) save() {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	_, err := se.DB(db.DB).C("matchawardrecord").Upsert(bson.M{"_id": ctx.ID}, ctx)

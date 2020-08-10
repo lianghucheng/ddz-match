@@ -8,7 +8,6 @@ func init() {
 }
 
 type C2S_Knapsack struct {
-
 }
 
 type KnapsackProp struct {
@@ -33,7 +32,7 @@ type C2S_UseProp struct {
 type S2C_UseProp struct {
 	Error  int    //错误码
 	ErrMsg string //错误信息
-	Name string
+	Name   string
 	PropID int
 	Amount int
 }

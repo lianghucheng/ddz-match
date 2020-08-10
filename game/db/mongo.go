@@ -26,7 +26,7 @@ func init() {
 
 	bkDB, err := mongodb.Dial(config.GetCfgDB().BkDBUrl, config.GetCfgDB().ConnNum)
 	if err != nil {
-		log.Fatal("the db url is: %v. dial backstage mongodb error: %v. ",config.GetCfgDB().BkDBUrl, err)
+		log.Fatal("the db url is: %v. dial backstage mongodb error: %v. ", config.GetCfgDB().BkDBUrl, err)
 	}
 	BackstageDB = bkDB
 	initCollection()

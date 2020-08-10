@@ -14,15 +14,15 @@ import (
 )
 
 func WithDraw(user *player.User) {
-		checkWithdraw(user)
-		if user.GetUserData().IsWithdraw {
-				user.WriteMsg(&msg.S2C_WithDraw{
-						Amount: utils.Decimal(FeeAmount(user.UID())),
-						Error:  msg.ErrWithDrawMore,
-						ErrMsg: "每天只能提奖一次哦～",
-					})
-				return
-			}
+	//checkWithdraw(user)
+	//if user.GetUserData().IsWithdraw {
+	//	user.WriteMsg(&msg.S2C_WithDraw{
+	//		Amount: utils.Decimal(FeeAmount(user.UID())),
+	//		Error:  msg.ErrWithDrawMore,
+	//		ErrMsg: "每天只能提奖一次哦～",
+	//	})
+	//	return
+	//}
 	withDraw(user, edy_api.WithDrawAPI)
 }
 
@@ -113,19 +113,19 @@ func FeeAmount(id int) (changeAmount float64) {
 }
 
 func checkWithdraw(user *player.User) {
-		dead := user.GetUserData().WithdrawDeadLine
-		if dead < time.Now().Unix() {
-				//week := time.Unix(dead, 0).Weekday()
-					//dist := 0
-						//if week > time.Sunday {
-							//	dist = 7 - int(week)
-								//}
-									//if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
-										//	user.GetUserData().SignTimes = 0
-											//}
+	dead := user.GetUserData().WithdrawDeadLine
+	if dead < time.Now().Unix() {
+		//week := time.Unix(dead, 0).Weekday()
+		//dist := 0
+		//if week > time.Sunday {
+		//	dist = 7 - int(week)
+		//}
+		//if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
+		//	user.GetUserData().SignTimes = 0
+		//}
 
-													user.GetUserData().WithdrawDeadLine = utils.OneDay0ClockTimestamp(time.Now().Add(24 * time.Hour))
-				user.GetUserData().IsWithdraw = false
-				player.SaveUserData(user.GetUserData())
-			}
+		user.GetUserData().WithdrawDeadLine = utils.OneDay0ClockTimestamp(time.Now().Add(24 * time.Hour))
+		user.GetUserData().IsWithdraw = false
+		player.SaveUserData(user.GetUserData())
 	}
+}

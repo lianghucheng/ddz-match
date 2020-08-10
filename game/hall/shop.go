@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	SendSingle = 1
+	SendSingle   = 1
 	SendBroacast = 2
 )
 
@@ -78,13 +78,13 @@ func GetPriceMenu(goodsTypeID int) *[]msg.PriceItem {
 	goodses := db.ReadGoodses(bson.M{"goodstypeid": goodsTypeID})
 	for _, v := range *goodses {
 		*rt = append(*rt, msg.PriceItem{
-			PriceID: v.ID,
-			Fee:     int64(v.Price),
-			Name:    values.PropTypeStr[v.PropType],
-			Amount:  v.GetAmount,
-			GiftAmount:v.GiftAmount,
-			ImgUrl: v.ImgUrl,
-			TakenType:v.TakenType,
+			PriceID:    v.ID,
+			Fee:        int64(v.Price),
+			Name:       values.PropTypeStr[v.PropType],
+			Amount:     v.GetAmount,
+			GiftAmount: v.GiftAmount,
+			ImgUrl:     v.ImgUrl,
+			TakenType:  v.TakenType,
 		})
 	}
 	return rt
@@ -116,8 +116,66 @@ func SendPriceMenu(user *player.User, model int) {
 			PriceItems: *GetPriceMenu(v.ID),
 		})
 	}
+	//m := &msg.S2C_PriceMenu{
+	//	PriceItems: *msgGoodsTypes,
+	//}
+	prices := []msg.PriceItem{
+		{
+			PriceID:    1,
+			Fee:        500,
+			Name:       "点券",
+			Amount:     5,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		{
+			PriceID:    2,
+			Fee:        1000,
+			Name:       "点券",
+			Amount:     10,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		{
+			PriceID:    3,
+			Fee:        2000,
+			Name:       "点券",
+			Amount:     20,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		{
+			PriceID:    4,
+			Fee:        5000,
+			Name:       "点券",
+			Amount:     50,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		{
+			PriceID:    5,
+			Fee:        10000,
+			Name:       "点券",
+			Amount:     100,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+	}
+	data := []msg.GoodsType{
+		{
+			ID:         0,
+			TypeName:   "点券",
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_dianquan.png",
+			PriceItems: prices,
+		},
+	}
 	m := &msg.S2C_PriceMenu{
-		PriceItems: *msgGoodsTypes,
+		PriceItems: data,
 	}
 	if model == 1 {
 		log.Debug("price menu single %v   %v", *m, (m.PriceItems))
@@ -126,4 +184,55 @@ func SendPriceMenu(user *player.User, model int) {
 		log.Debug("price menu broadcast %v   %v", *m, (m.PriceItems))
 		player.Broadcast(m)
 	}
+}
+
+func GetTempPrice() map[int]msg.PriceItem {
+	data := map[int]msg.PriceItem{
+		1: {
+			PriceID:    1,
+			Fee:        500,
+			Name:       "点券",
+			Amount:     5,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		2: {
+			PriceID:    2,
+			Fee:        1000,
+			Name:       "点券",
+			Amount:     10,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		3: {
+			PriceID:    3,
+			Fee:        2000,
+			Name:       "点券",
+			Amount:     20,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		4: {
+			PriceID:    4,
+			Fee:        5000,
+			Name:       "点券",
+			Amount:     50,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+		5: {
+			PriceID:    5,
+			Fee:        10000,
+			Name:       "点券",
+			Amount:     100,
+			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			TakenType:  1,
+			GiftAmount: 0,
+		},
+	}
+	return data
 }

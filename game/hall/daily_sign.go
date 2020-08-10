@@ -22,7 +22,7 @@ func DailySign(user *player.User) {
 	item := (*cfgDs)[ud.SignTimes]
 	ud.SignTimes++
 	game.GetSkeleton().Go(func() {
-		log.Debug("签到，类型：%v，数量：%v. ",item.ID, item.Amount)
+		log.Debug("签到，类型：%v，数量：%v. ", item.ID, item.Amount)
 		switch item.ID {
 		case config.PropIDAward:
 			WriteFlowData(ud.UserID, item.Amount, FlowTypeSign, "", "", []int{})
