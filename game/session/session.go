@@ -411,7 +411,7 @@ func rpcAddCouponFrag(args []interface{}) {
 		log.Debug("非法请求")
 		return
 	}
-	hall.AddPropAmount(config.PropIDCouponFrag, m.Accountid, m.Amount)
+	hall.AddPropAmount(config.PropTypeCouponFrag, m.Accountid, m.Amount)
 	log.Debug("成功！！！远程调用加点券碎片")
 }
 

@@ -19,7 +19,6 @@ func init() {
 }
 
 func addMatch(args []interface{}) {
-	log.Debug("addMatch:%v", args)
 	if len(args) != 1 {
 		log.Error("error req:%v", args)
 		return
@@ -29,6 +28,7 @@ func addMatch(args []interface{}) {
 		log.Error("error req:%v", args)
 		return
 	}
+	log.Debug("addMatch:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {

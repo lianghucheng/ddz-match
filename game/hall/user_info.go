@@ -155,7 +155,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 
 func UseProp(user *player.User, m *msg.C2S_UseProp) {
 	ud := user.GetUserData()
-	if m.PropID == config.PropIDCouponFrag {
+	if m.PropID == config.PropTypeCouponFrag {
 		item, ok := config.PropList[m.PropID]
 		if !ok {
 			log.Error("no exist prop. ")
@@ -188,7 +188,7 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 				knapsackProp.Save()
 			}, func() {
 				UpdateUserCoupon(user, int64(m.Amount), before, ud.Coupon, db.FragChangeOpt, db.CouponFrag)
-				cpItem := config.PropList[config.PropIDCoupon]
+				cpItem := config.PropList[config.PropTypeCoupon]
 				user.WriteMsg(&msg.S2C_UseProp{
 					Error:  values.SuccessS2C_UseProp,
 					ErrMsg: values.ErrMsg[values.SuccessS2C_UseProp],

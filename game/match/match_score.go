@@ -744,9 +744,10 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		return
 	}
 	player := user.BaseData.MatchPlayer
+	var awardStr string
 	var moneyAwardCount float64
 	if player.Rank-1 < len(base.Award) {
-		awardStr := base.Award[player.Rank-1]
+		awardStr = base.Award[player.Rank-1]
 		one := strings.Split(awardStr, ",")
 		for _, oneAward := range one {
 			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
@@ -777,14 +778,14 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 			} else if values.GetAwardType(oneAward) == values.Fragment { // 碎片奖励
 				data := hall.KnapsackProp{}
 				data.Accountid = user.BaseData.UserData.AccountID
-				data.PropID = config.PropIDCouponFrag
+				data.PropID = config.PropTypeCouponFrag
 				data.ReadByAidPid()
 				amount := values.ParseAward(oneAward)
 				before := int64(data.Num)
 				data.Num += int(amount)
 				after := int64(data.Num)
 				data.Save()
-				// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
+				// hall.AddPropAmount(config.PropTypeCouponFrag, user.BaseData.UserData.AccountID, int(amount))
 				db.InsertItemLog(db.ItemLog{
 					UID:        user.BaseData.UserData.AccountID,
 					Item:       values.Fragment,
@@ -924,7 +925,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		Wins:     player.Wins,
 		Period:   player.OpTime,
 		Sort:     player.SignSort,
-		Award:    award,
+		Award:    awardStr,
 	})
 
 	// 淘汰后清除比赛数据

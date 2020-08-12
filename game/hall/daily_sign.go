@@ -24,15 +24,15 @@ func DailySign(user *player.User) {
 	game.GetSkeleton().Go(func() {
 		log.Debug("签到，类型：%v，数量：%v. ", item.ID, item.Amount)
 		switch item.ID {
-		case config.PropIDAward:
+		case config.PropTypeAward:
 			WriteFlowData(ud.UserID, item.Amount, FlowTypeSign, "", "", []int{})
 			ud.Fee = FeeAmount(ud.UserID)
 			player.SaveUserData(ud)
 			UpdateUserAfterTaxAward(user)
-		case config.PropIDCoupon:
+		case config.PropTypeCoupon:
 			ud.Coupon += int64(item.Amount)
 			player.SaveUserData(user.GetUserData())
-		case config.PropIDCouponFrag:
+		case config.PropTypeCouponFrag:
 			AddPropAmount(item.ID, ud.AccountID, int(item.Amount))
 		}
 	}, func() {

@@ -193,13 +193,13 @@ type TempProp struct {
 }
 
 const (
-	PropIDAward      = 10001
-	PropIDCoupon     = 10002
-	PropIDCouponFrag = 10003
+	PropTypeAward      = 10001
+	PropTypeCoupon     = 10002
+	PropTypeCouponFrag = 10003
 )
 
 var PropList = map[int]TempProp{
-	PropIDAward: {
+	PropTypeAward: {
 		ID:               10001,
 		Name:             "奖金",
 		IsAdd:            true,
@@ -208,7 +208,7 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropIDCoupon: {
+	PropTypeCoupon: {
 		ID:               10002,
 		Name:             "点券",
 		IsAdd:            true,
@@ -217,7 +217,7 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropIDCouponFrag: {
+	PropTypeCouponFrag: {
 		ID:               10003,
 		Name:             "碎片",
 		IsAdd:            true,

@@ -137,7 +137,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	secret := r.FormValue("secret")
 	aid := r.FormValue("aid")
 	fee := r.FormValue("fee")
-
+	log.Debug("真人美女斗地主，远程调用支付", aid, fee)
 	f, _ := strconv.Atoi(fee)
 	a, _ := strconv.Atoi(aid)
 	if secret != "123456" {
@@ -153,6 +153,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	order.ID, _ = MongoDBNextSeq("edyorder")
 	order.Accountid = a
 	order.Merchant = values.ZrddzAliPay
+	order.PayStatus = 1
 	Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
 		TotalFee:  f,
@@ -433,7 +434,7 @@ func giveCouponFrag(w http.ResponseWriter, r *http.Request) {
 	log.Debug("后台发放点券:aid:%v   amount:%v", accountid, amount)
 	aid, _ := strconv.Atoi(accountid)
 	a, _ := strconv.Atoi(amount)
-	propid := config.PropIDCouponFrag
+	propid := config.PropTypeCouponFrag
 	prop, ok := config.PropList[propid]
 	if !ok {
 		log.Error("没有这个道具配置")

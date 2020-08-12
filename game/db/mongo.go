@@ -10,10 +10,11 @@ import (
 
 var MongoDB, BackstageDB *mongodb.DialContext
 
-var DB string
+var DB,BkDBName string
 
 func init() {
 	DB = conf.GetCfgLeafSrv().DBName
+	BkDBName = config.GetCfgDB().BackstageDBName
 	// mongodb
 	if conf.GetCfgLeafSrv().DBMaxConnNum <= 0 {
 		conf.GetCfgLeafSrv().DBMaxConnNum = 100
@@ -71,6 +72,12 @@ func initCollection() {
 		log.Fatal("ensure counter error: %v", err)
 	}
 	err = db.EnsureCounter(DB, "counters", "usermail")
+
+	err = db.EnsureCounter(BkDBName, "counters", "feedback")
+	if err != nil {
+		log.Fatal("ensure counter error: %v", err)
+	}
+
 	err = db.EnsureUniqueIndex(DB, "users", []string{"accountid"})
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)
@@ -96,4 +103,8 @@ func MongoDBDestroy() {
 
 func MongoDBNextSeq(id string) (int, error) {
 	return MongoDB.NextSeq(DB, "counters", id)
+}
+
+func MongoBkDBNextSeq(id string) (int, error) {
+	return MongoDB.NextSeq(BkDBName, "counters", id)
 }
