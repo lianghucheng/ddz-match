@@ -11,6 +11,7 @@ import (
 	"ddz/game/server"
 	"ddz/game/values"
 	"ddz/msg"
+	"ddz/utils"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -183,6 +184,19 @@ func rpcTempPayOK(args []interface{}) {
 		log.Error("不存在该用户")
 		return
 	}
+
+	// 充值返利
+	game.GetSkeleton().Go(func() {
+		if err := utils.PostToAgentServer(struct {
+			AccountID int
+			Amount    int64
+		}{
+			AccountID: m.AccountID,
+			Amount:    int64(m.TotalFee),
+		}, "/rebate"); err != nil {
+			log.Error("rebate err:%v", err)
+		}
+	}, nil)
 
 	addCoupon := m.TotalFee / 100
 
