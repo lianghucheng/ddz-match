@@ -950,7 +950,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 					}
 				}
 				if awardAmount <= 0 {
-					hall.GamePushMail(uid, "发奖失败", "发奖失败")
+					hall.GamePushMail(uid, "比赛通知", "您在【入门快速赛】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作")
 					continue
 				}
 				// moneyAwardCount += utils.Decimal(awardAmount * 0.8)

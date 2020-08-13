@@ -1,7 +1,6 @@
 package msg
 
 import (
-	"ddz/config"
 	"github.com/name5566/leaf/network/json"
 )
 
@@ -123,8 +122,8 @@ type C2S_FeedBack struct {
 }
 
 const (
-	S2C_FeedBaock_OK   = 1
-	S2C_FeedBaock_Fail = 2
+	S2C_FeedBaock_OK   = 0
+	S2C_FeedBaock_Fail = 1
 )
 
 type S2C_FeedBack struct {
@@ -144,6 +143,7 @@ type UserMail struct {
 	Content   string  //内容
 	Annexes   []Annex //附件
 	Status    int64   //邮件状态
+	MailServiceType int //0是系统邮件，1是赛事邮件，2是活动邮件
 }
 
 type S2C_SendMail struct {
@@ -275,16 +275,13 @@ const (
 	ErrWithDrawLack    = 2
 	ErrWithDrawNoAuth  = 3
 	ErrWithDrawNoBank  = 4
+	ErrWithDrawMore    = 5
 )
 
 type S2C_WithDraw struct {
 	Amount float64
 	Error  int
 	ErrMsg string
-}
-
-type S2C_PriceMenu struct {
-	PriceItems *[]config.PriceItem
 }
 
 type S2C_OnlineUserNum struct {

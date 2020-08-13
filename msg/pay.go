@@ -21,11 +21,11 @@ type C2S_CreateEdyOrder struct {
 }
 
 type S2C_CreateEdyOrder struct {
-	Error            int
-	AppID            int
-	AppToken         string
-	Amount           int
-	PayType          int
+	Error    int
+	AppID    int
+	AppToken string
+	Amount   int
+	PayType  int
 	//DefPayType	string
 	Subject          string
 	Description      string

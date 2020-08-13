@@ -67,6 +67,8 @@ type UserData struct {
 	TakenFee          float64
 	FirstLogin        bool
 	SportCenter       SportCenterData // 体总数据
+	IsWithdraw        bool
+	WithdrawDeadLine  int64
 }
 
 type SportCenterData struct {

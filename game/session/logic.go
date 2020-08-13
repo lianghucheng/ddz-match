@@ -248,7 +248,8 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendFirstRecharge(user)
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)
-	hall.SendPriceMenu(user)
+	hall.SendPriceMenu(user, hall.SendSingle)
+	hall.SendPayAccount(user, hall.SendSingle)
 	Broadcast(&msg.S2C_OnlineUserNum{
 		Num: CalcOnlineCnt(UserIDUsers),
 	})

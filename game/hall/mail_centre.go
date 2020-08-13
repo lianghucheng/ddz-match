@@ -31,7 +31,13 @@ type MailBox struct {
 	Annexes     []Annex `json:"annexes"`      //附件
 	Status      int64   `json:"status"`       //邮箱邮件状态
 	ExpireValue int64   `json:"expire_value"` //有效时长
+	MailServiceType int //邮件服务类型
 }
+
+const (
+	AnnexTypeCoupon = 1
+	AnnexTypeCouponFrag = 2
+)
 
 type Annex struct {
 	Type int    `json:"type"`
@@ -46,6 +52,12 @@ const (
 	DeleteUserMail  = 3
 )
 
+const (
+	MailServiceTypeOfficial = 0
+	MailServiceTypeMatch = 1
+	MailServiceTypeActivity = 2
+)
+
 type UserMail struct {
 	ID          int64 `bson:"_id"` //唯一主键
 	UserID      int64
@@ -56,6 +68,7 @@ type UserMail struct {
 	Status      int64   //用户邮件状态
 	ExpireValue int64   //有效时长
 	ExpiredAt   int64   //有效期
+	MailServiceType int //邮件服务类型
 }
 
 func ReadMail(mid int64) {
@@ -148,6 +161,7 @@ func GamePushMail(userid int, title, content string) {
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
+	mailBox.MailServiceType = MailServiceTypeMatch
 	mailBox.Title = title
 	mailBox.Content = content
 
@@ -159,6 +173,7 @@ func MatchEndPushMail(userid int, matchName string, order int, award string) {
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = 30
 	mailBox.MailType = MailTypeText
+	mailBox.MailServiceType = MailServiceTypeMatch
 	mailBox.Title = "比赛通知"
 	mailBox.Content = fmt.Sprintf("恭喜您在【%v】比赛中获得第【%v】名。", matchName, order)
 	if len(award) > 0 {
@@ -173,6 +188,7 @@ func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
+	mailBox.MailServiceType = MailServiceTypeMatch
 	mailBox.Title = "退赛通知"
 	mailBox.Content = fmt.Sprintf("很抱歉，您报名的【%v】赛事因为人数不足而取消，"+
 		"您的报名费【%v点券】已经返回至您的账户，请注意查收！感谢您的支持，祝您下次获得好成绩！",
@@ -186,6 +202,7 @@ func PrizePresentationPushMail(userid int, bankName string, fee float64) {
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
+	mailBox.MailServiceType = MailServiceTypeOfficial
 	mailBox.Title = "提奖通知"
 	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已下发到您的【%v】，如有问题请联系客服微信：wkxjingjipingtai", fee, bankName)
 
@@ -197,6 +214,7 @@ func RefundPushMail(userid int, fee float64) {
 	mailBox.TargetID = int64(userid)
 	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
+	mailBox.MailServiceType = MailServiceTypeOfficial
 	mailBox.Title = "退款通知"
 	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已被官方退回，请联系客服进行处理；客服QQ：wkxjingjipingtai", fee)
 
@@ -257,6 +275,7 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.CreatedAt = v.CreatedAt
 		temp.ID = v.ID
 		temp.Status = v.Status
+		temp.MailServiceType = v.MailServiceType
 
 		*rt = append(*rt, *temp)
 	}
@@ -285,6 +304,7 @@ func DeleteMail(mid int64) {
 type MailBoxParam struct {
 	TargetID    int64   `json:"target_id"`    //目标用户， -1表示所有用户
 	MailType    int     `json:"mail_type"`    //邮箱邮件类型
+	MailServiceType int `json:"mail_service_type"`//邮件服务类型
 	Title       string  `json:"title"`        //主题
 	Content     string  `json:"content"`      //内容
 	Annexes     []Annex `json:"annexes"`      //附件
@@ -292,6 +312,26 @@ type MailBoxParam struct {
 }
 
 func HandlePushMail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 10000
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
 	data := r.FormValue("data")
 	fmt.Println(data)
 	param := new(MailBoxParam)
@@ -301,6 +341,7 @@ func HandlePushMail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	param.pushMailBox()
+	w.Write([]byte(`0`))
 }
 
 func (ctx *MailBoxParam) pushMailBox() {
@@ -308,6 +349,7 @@ func (ctx *MailBoxParam) pushMailBox() {
 	mailBox.TargetID = ctx.TargetID
 	mailBox.ExpireValue = ctx.ExpireValue
 	mailBox.MailType = ctx.MailType
+	mailBox.MailServiceType = ctx.MailServiceType
 	mailBox.Title = ctx.Title
 	mailBox.Content = ctx.Content
 	mailBox.Annexes = ctx.Annexes

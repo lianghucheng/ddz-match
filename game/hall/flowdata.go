@@ -5,6 +5,7 @@ import (
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
+	"ddz/utils"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -100,7 +101,7 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID str
 	flowData := new(FlowData)
 	flowData.Userid = ud.UserID
 
-	flowData.ChangeAmount = amount
+	flowData.ChangeAmount = utils.Decimal(amount)
 	flowData.FlowType = flowType
 	flowData.MatchType = matchType
 	flowData.MatchID = matchID

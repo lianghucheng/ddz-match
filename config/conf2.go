@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/name5566/leaf/db/mongodb"
-	"github.com/name5566/leaf/log"
+	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -14,13 +14,6 @@ import (
 type Config2 struct {
 	RmbCouponRate int
 	NewGiftCoupon int
-}
-
-type PriceItem struct {
-	PriceID int
-	Fee     int64
-	Name    string
-	Amount  int
 }
 
 var dbcfg Config2
@@ -42,48 +35,6 @@ func GetGiftCoupon() int {
 	return dbcfg.RmbCouponRate
 }
 
-func GetPriceMenu() *[]PriceItem {
-	rt := new([]PriceItem)
-	//*rt = append(*rt, PriceItem{
-	//	PriceID: 1,
-	//	Fee:     20000,
-	//	Name:    "点券",
-	//	Amount:  200,
-	//})
-	//*rt = append(*rt, PriceItem{
-	//	PriceID: 2,
-	//	Fee:     10000,
-	//	Name:    "点券",
-	//	Amount:  100,
-	//})
-	//*rt = append(*rt, PriceItem{
-	//	PriceID: 3,
-	//	Fee:     5000,
-	//	Name:    "点券",
-	//	Amount:  50,
-	//})
-	*rt = append(*rt, PriceItem{
-		PriceID: 4,
-		Fee:     2000,
-		Name:    "点券",
-		Amount:  20,
-	})
-	// *rt = append(*rt, PriceItem{
-	// 	PriceID: 5,
-	// 	Fee:     1000,
-	// 	Name:    "点券",
-	// 	Amount:  10,
-	// })
-	// *rt = append(*rt, PriceItem{
-	// 	PriceID: 6,
-	// 	Fee:      500,
-	// 	Name:    "点券",
-	// 	Amount:  5,
-	// })
-
-	return rt
-}
-
 const (
 	ModelDev = 1 //开发环境模式
 	ModelPro = 2 //生产环境模式
@@ -93,14 +44,24 @@ type Config struct {
 	Model                int //配置模式
 	CfgMatchRobotMaxNums map[string]int
 	CfgDailySignItems    *[]CfgDailySignItem
-	CfgPay               *CfgPay
+	CfgPay               map[string]*CfgPay
+	CfgDB                *CfgDB
 }
 
 func (ctx *Config) print() {
-	fmt.Printf("Model:%+v\n", ctx.Model)
-	fmt.Printf("CfgMatchRobotMaxNums:%+v\n", ctx.CfgMatchRobotMaxNums)
-	fmt.Printf("CfgDailySignItems:%+v\n", *ctx.CfgDailySignItems)
-	fmt.Printf("CfgPay:%+v\n", *ctx.CfgPay)
+	buf, err := json.Marshal(ctx)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(buf, &m); err != nil {
+		log.Error(err.Error())
+		return
+	}
+	for k, v := range m {
+		fmt.Println(k, v)
+	}
 }
 
 type CfgMatchRobotMaxNum struct {
@@ -119,39 +80,66 @@ type CfgDailySignItem struct {
 }
 
 type CfgPay struct {
-	Host             string
+	NotifyHost       string
+	NotifyUrl        string
+	PayHost          string
 	CreatePaymentUrl string
+	AppID            int
+	AppToken         string
+	AppSecret        string
+}
+
+type CfgDB struct {
+	GameDBName      string
+	BackstageDBName string
+	BkDBUrl         string
+	ConnNum         int
 }
 
 var cfg *Config
+var BaseCfg *BaseConfig
 
-const (
-	dbUrl      = "mongodb://localhost" //mongodb服务地址
-	dbName     = "ddz-match"           //数据库名称
-	collection = "config"              //集合名称
-)
+type BaseConfig struct {
+	DBUrl      string //mongodb服务地址
+	DBName     string //数据库名称
+	Collection string //集合名称
+}
 
 var (
 	dial *mongodb.DialContext
 )
 
 func init() {
-	cfg = new(Config)
-	var err error
-	dial, err = mongodb.Dial(dbUrl, 1)
+	var (
+		err     error
+		baseCfg *BaseConfig
+		baseBuf []byte
+	)
+	baseCfg = new(BaseConfig)
+	baseBuf, err = ioutil.ReadFile("config/base-config.json")
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("read base config fail. error: ", err.Error())
+	}
+	err = json.Unmarshal(baseBuf, baseCfg)
+	if err != nil {
+		log.Fatal("parse struct fail. error: ", err.Error())
+	}
+	BaseCfg = baseCfg
+	cfg = new(Config)
+	dial, err = mongodb.Dial(baseCfg.DBUrl, 1)
+	if err != nil {
+		log.Fatal("Read config from mongodb fail. err: ", err.Error())
 		return
 	}
 	ret, err := ReadCfg(ModelDev)
 	if err != nil {
 		if err != mgo.ErrNotFound {
-			log.Fatal(err.Error())
+			log.Fatal("Read config from mongodb, but there was an unexpected error. the error is: ", err.Error())
 			return
 		}
 		b, err := ioutil.ReadFile("config/init-config.json")
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatal("Read config from config.json, the error is: error: ", err.Error())
 			return
 		}
 		ret = new(Config)
@@ -183,7 +171,7 @@ func ReadCfg(model int) (*Config, error) {
 	se := dial.Ref()
 	defer dial.UnRef(se)
 	cfgData := new(Config)
-	if err := se.DB(dbName).C(collection).Find(bson.M{"model": model}).One(cfgData); err != nil {
+	if err := se.DB(BaseCfg.DBName).C(BaseCfg.Collection).Find(bson.M{"model": model}).One(cfgData); err != nil {
 		log.Error(err.Error())
 		return nil, err
 	}
@@ -205,13 +193,13 @@ type TempProp struct {
 }
 
 const (
-	PropIDAward      = 10001
-	PropIDCoupon     = 10002
-	PropIDCouponFrag = 10003
+	PropTypeAward      = 10001
+	PropTypeCoupon     = 10002
+	PropTypeCouponFrag = 10003
 )
 
 var PropList = map[int]TempProp{
-	PropIDAward: {
+	PropTypeAward: {
 		ID:               10001,
 		Name:             "奖金",
 		IsAdd:            true,
@@ -220,7 +208,7 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropIDCoupon: {
+	PropTypeCoupon: {
 		ID:               10002,
 		Name:             "点券",
 		IsAdd:            true,
@@ -229,7 +217,7 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropIDCouponFrag: {
+	PropTypeCouponFrag: {
 		ID:               10003,
 		Name:             "碎片",
 		IsAdd:            true,
@@ -244,6 +232,10 @@ func GetCfgMatchRobotMaxNums() map[string]int {
 	return cfg.CfgMatchRobotMaxNums
 }
 
-func GetCfgPay() *CfgPay {
+func GetCfgPay() map[string]*CfgPay {
 	return cfg.CfgPay
+}
+
+func GetCfgDB() *CfgDB {
+	return cfg.CfgDB
 }

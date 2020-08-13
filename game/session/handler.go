@@ -74,6 +74,7 @@ func handleHeartbeat(args []interface{}) {
 	}
 	agentInfo.User.HeartbeatStop = false
 }
+
 func handleCoupon(args []interface{}) {
 	m := args[0].(*msg.C2S_GetCoupon)
 	a := args[1].(gate.Agent)

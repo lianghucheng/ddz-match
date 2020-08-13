@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -218,4 +219,17 @@ func GetLastDateOfMonth(d time.Time) time.Time {
 // GetZeroTime 获取某一天的0点时间
 func GetZeroTime(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+}
+
+func Transfer(src interface{}, dir interface{}) error {
+	b, err := json.Marshal(src)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	if err := json.Unmarshal(b, dir); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	return nil
 }

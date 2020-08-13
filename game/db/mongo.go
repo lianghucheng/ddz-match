@@ -2,17 +2,19 @@ package db
 
 import (
 	"ddz/conf"
+	"ddz/config"
 
 	"github.com/name5566/leaf/db/mongodb"
 	"github.com/szxby/tools/log"
 )
 
-var MongoDB *mongodb.DialContext
+var MongoDB, BackstageDB *mongodb.DialContext
 
-var DB string
+var DB,BkDBName string
 
 func init() {
 	DB = conf.GetCfgLeafSrv().DBName
+	BkDBName = config.GetCfgDB().BackstageDBName
 	// mongodb
 	if conf.GetCfgLeafSrv().DBMaxConnNum <= 0 {
 		conf.GetCfgLeafSrv().DBMaxConnNum = 100
@@ -22,6 +24,12 @@ func init() {
 		log.Fatal("dial mongodb error: %v", err)
 	}
 	MongoDB = db
+
+	bkDB, err := mongodb.Dial(config.GetCfgDB().BkDBUrl, config.GetCfgDB().ConnNum)
+	if err != nil {
+		log.Fatal("the db url is: %v. dial backstage mongodb error: %v. ", config.GetCfgDB().BkDBUrl, err)
+	}
+	BackstageDB = bkDB
 	initCollection()
 }
 
@@ -64,6 +72,12 @@ func initCollection() {
 		log.Fatal("ensure counter error: %v", err)
 	}
 	err = db.EnsureCounter(DB, "counters", "usermail")
+
+	err = db.EnsureCounter(BkDBName, "counters", "feedback")
+	if err != nil {
+		log.Fatal("ensure counter error: %v", err)
+	}
+
 	err = db.EnsureUniqueIndex(DB, "users", []string{"accountid"})
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)
@@ -89,4 +103,8 @@ func MongoDBDestroy() {
 
 func MongoDBNextSeq(id string) (int, error) {
 	return MongoDB.NextSeq(DB, "counters", id)
+}
+
+func MongoBkDBNextSeq(id string) (int, error) {
+	return MongoDB.NextSeq(BkDBName, "counters", id)
 }

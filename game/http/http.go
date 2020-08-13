@@ -55,9 +55,12 @@ func startHTTPServer() {
 	mux.HandleFunc("/update-headimg", updateHeadImg)
 	mux.HandleFunc("/give-coupon-frag", giveCouponFrag)
 	//电竞二打一支付回调
-	mux.HandleFunc(edy_api.EdyBackCall, edyPayBackCall)
+	mux.HandleFunc("/edy/pay-bc", edyPayBackCall)
 	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
 	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
+	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
+	mux.HandleFunc("/notify/pricemenu", notidyPriceMenu)
+	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
 		log.Fatal("%v", err)
@@ -134,7 +137,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	secret := r.FormValue("secret")
 	aid := r.FormValue("aid")
 	fee := r.FormValue("fee")
-
+	log.Debug("真人美女斗地主，远程调用支付", aid, fee)
 	f, _ := strconv.Atoi(fee)
 	a, _ := strconv.Atoi(aid)
 	if secret != "123456" {
@@ -142,6 +145,16 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("0"))
+	order := new(values.EdyOrder)
+	order.TradeNo = utils.GetOutTradeNo()
+	order.Fee = int64(f)
+	order.Amount = f / 100
+	order.Createdat = time.Now().Unix()
+	order.ID, _ = MongoDBNextSeq("edyorder")
+	order.Accountid = a
+	order.Merchant = values.ZrddzAliPay
+	order.PayStatus = 1
+	Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
 		TotalFee:  f,
 		AccountID: a,
@@ -409,7 +422,7 @@ func giveCouponFrag(w http.ResponseWriter, r *http.Request) {
 	log.Debug("后台发放点券:aid:%v   amount:%v", accountid, amount)
 	aid, _ := strconv.Atoi(accountid)
 	a, _ := strconv.Atoi(amount)
-	propid := config.PropIDCouponFrag
+	propid := config.PropTypeCouponFrag
 	prop, ok := config.PropList[propid]
 	if !ok {
 		log.Error("没有这个道具配置")
@@ -461,4 +474,69 @@ func addCouponFrag(w http.ResponseWriter, r *http.Request) {
 	}
 	game.GetSkeleton().ChanRPCServer.Go("AddCouponFrag", data)
 	w.Write([]byte(`1`))
+}
+
+func notifyPayAccount(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 10000
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	hall.SendPayAccount(nil, hall.SendBroacast)
+}
+
+func notidyPriceMenu(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 10000
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	hall.SendPriceMenu(nil, hall.SendBroacast)
+}
+
+func handleTest(w http.ResponseWriter, r *http.Request) {
+	log.Debug("the http test")
+	m := map[string]interface{}{}
+	query := bson.M{"merchantid": 7, "paybranch": 1}
+	query["deletedat"] = -1
+	se := BackstageDB.Ref()
+	defer BackstageDB.UnRef(se)
+	dbName := config.GetCfgDB().BackstageDBName
+	var err error
+	err = se.DB(dbName).C("shoppayaccount").Find(query).All(&m)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	log.Debug("%v", m)
 }

@@ -46,6 +46,7 @@ func init() {
 	skeleton.RegisterChanRPC("UpdateCoupon", rpcUpdateCoupon)
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
+	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -424,7 +425,7 @@ func rpcAddCouponFrag(args []interface{}) {
 		log.Debug("非法请求")
 		return
 	}
-	hall.AddPropAmount(config.PropIDCouponFrag, m.Accountid, m.Amount)
+	hall.AddPropAmount(config.PropTypeCouponFrag, m.Accountid, m.Amount)
 	log.Debug("成功！！！远程调用加点券碎片")
 }
 
@@ -532,4 +533,13 @@ func getOnline(args []interface{}) {
 	}()
 	onlinePlayer = len(UserIDUsers)
 	matchPlayer = len(UserIDMatch)
+}
+
+func rpcSendPayAccount(args []interface{}) {
+	if len(args) != 1 {
+		return
+	}
+	m := args[0].(*msg.RPC_SendPayAccount)
+	_ = m
+	hall.SendPayAccount(nil, hall.SendBroacast)
 }

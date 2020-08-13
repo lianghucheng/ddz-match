@@ -6,19 +6,31 @@ import (
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
+	"ddz/utils"
 	"fmt"
+	"time"
 
 	"github.com/szxby/tools/log"
 )
 
 func WithDraw(user *player.User) {
+	//checkWithdraw(user)
+	//if user.GetUserData().IsWithdraw {
+	//	user.WriteMsg(&msg.S2C_WithDraw{
+	//		Amount: utils.Decimal(FeeAmount(user.UID())),
+	//		Error:  msg.ErrWithDrawMore,
+	//		ErrMsg: "每天只能提奖一次哦～",
+	//	})
+	//	return
+	//}
 	withDraw(user, edy_api.WithDrawAPI)
 }
 
 func withDraw(user *player.User, callWithDraw func(userid int, amount float64) error) {
+	fee := utils.Decimal(FeeAmount(user.UID()))
 	if callWithDraw == nil {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: user.Fee(),
+			Amount: fee,
 			Error:  msg.ErrWithDrawFail,
 		})
 		return
@@ -26,7 +38,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 
 	if user.RealName() == "" && !user.IsTest() {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: user.Fee(),
+			Amount: fee,
 			Error:  msg.ErrWithDrawNoAuth,
 			ErrMsg: "未实名认证",
 		})
@@ -35,7 +47,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 
 	if user.BankCardNo() == "" && !user.IsTest() {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: user.Fee(),
+			Amount: fee,
 			Error:  msg.ErrWithDrawNoBank,
 			ErrMsg: "未绑定银行卡",
 		})
@@ -45,7 +57,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	flowIDs, changeAmount := flowIDAndAmount(user.UID())
 	if changeAmount < conf.GetCfgHall().WithDrawMin {
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: user.Fee(),
+			Amount: fee,
 			Error:  msg.ErrWithDrawLack,
 			ErrMsg: fmt.Sprintln("最低提奖", conf.GetCfgHall().WithDrawMin, "元"),
 		})
@@ -55,7 +67,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
 		log.Error(err.Error())
 		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: user.Fee(),
+			Amount: fee,
 			Error:  msg.ErrWithDrawFail,
 			ErrMsg: "三方接口失败",
 		})
@@ -64,7 +76,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
 	user.WriteMsg(&msg.S2C_WithDraw{
-		Amount: user.Fee(),
+		Amount: fee,
 		Error:  msg.ErrWithDrawSuccess,
 		ErrMsg: "成功",
 	})
@@ -98,4 +110,22 @@ func FeeAmount(id int) (changeAmount float64) {
 		changeAmount += v.ChangeAmount
 	}
 	return changeAmount
+}
+
+func checkWithdraw(user *player.User) {
+	dead := user.GetUserData().WithdrawDeadLine
+	if dead < time.Now().Unix() {
+		//week := time.Unix(dead, 0).Weekday()
+		//dist := 0
+		//if week > time.Sunday {
+		//	dist = 7 - int(week)
+		//}
+		//if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
+		//	user.GetUserData().SignTimes = 0
+		//}
+
+		user.GetUserData().WithdrawDeadLine = utils.OneDay0ClockTimestamp(time.Now().Add(24 * time.Hour))
+		user.GetUserData().IsWithdraw = false
+		player.SaveUserData(user.GetUserData())
+	}
 }

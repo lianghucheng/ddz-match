@@ -1,37 +1,36 @@
 package pay
 
 import (
-	"ddz/config"
-	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
+	"ddz/game/hall"
 	"ddz/game/player"
 	"ddz/game/values"
 	"ddz/msg"
-	"ddz/utils"
-	"strconv"
-	"time"
-
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
 )
 
+//todo: 支付下架，引导支付失败？处理方式人工处理，或程序不做拦截。
 func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
-	order := new(values.EdyOrder)
-	order.TradeNo = utils.GetOutTradeNo()
-	pm := config.PriceItem{}
-	for _, v := range *config.GetPriceMenu() {
-		if v.PriceID == m.PriceID {
-			pm = v
-			order.Fee = v.Fee
-			order.Amount = v.Amount
-			break
-		}
-	}
-	order.Createdat = time.Now().Unix()
-	order.ID, _ = db.MongoDBNextSeq("edyorder")
-	order.Accountid = user.AcountID()
-	order.Merchant = values.MerchantSportCentralAthketicAssociation
-	db.Save("edyorder", order, bson.M{"_id": order.ID})
+	//order := new(values.EdyOrder)
+	//order.TradeNo = utils.GetOutTradeNo()
+	//pm := msg.PriceItem{}
+
+	//goods := db.ReadGoodsById(m.PriceID)
+	//
+	//pm.GiftAmount = goods.GiftAmount
+	//pm.Amount = goods.GetAmount
+	//pm.Fee = int64(goods.Price)
+	//pm.Name = values.PropTypeStr[goods.PropType]
+	//pm.PriceID = goods.ID
+	//order.Createdat = time.Now().Unix()
+	//order.ID, _ = db.MongoDBNextSeq("edyorder")
+	//order.Accountid = user.AcountID()
+	//order.Merchant = values.MerchantSportCentralAthketicAssociation
+	//order.Fee = pm.Fee
+	//order.Amount = pm.Amount + pm.GiftAmount
+	//db.Save("edyorder", order, bson.M{"_id": order.ID})
 	//payType := -1
 	//if m.DefPayType == "alipay" {
 	//	payType = 5
@@ -39,28 +38,49 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	//	payType = 10
 	//}
 
+	//todo: 暂时的支付
+	pm := hall.GetTempPrice()[m.PriceID]
+
+	//shopMerchant := db.ReadShopMerchant()
+	//merType := strconv.Itoa(shopMerchant.MerchantType)
+	//cfgPay := config.GetCfgPay()[merType]
+	//user.WriteMsg(&msg.S2C_CreateEdyOrder{
+	//	AppID:            cfgPay.AppID,
+	//	AppToken:         cfgPay.AppToken,
+	//	Amount:           int(pm.Fee),
+	//	//todo: payType要修改
+	//	PayType:          1,
+	//	//DefPayType:m.DefPayType,
+	//	Subject:          pm.Name,
+	//	Description:      strconv.Itoa(int(pm.Fee/100)) + pm.Name,
+	//	OpenOrderID:      order.TradeNo,
+	//	OpenNotifyUrl:    cfgPay.NotifyHost + cfgPay.NotifyUrl,
+	//	CreatePaymentUrl: cfgPay.PayHost + cfgPay.CreatePaymentUrl,
+	//})
+
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
-		AppID:    edy_api.AppID,
-		AppToken: edy_api.AppToken,
-		Amount:   int(order.Fee),
-		PayType:  11,
+		AppID:    0,
+		AppToken: "",
+		Amount:   int(pm.Fee),
+		//todo: payType要修改
+		PayType: 1,
 		//DefPayType:m.DefPayType,
 		Subject:          pm.Name,
-		Description:      strconv.Itoa(int(order.Fee/100)) + pm.Name,
-		OpenOrderID:      order.TradeNo,
-		OpenNotifyUrl:    config.GetCfgPay().Host + edy_api.EdyBackCall,
-		CreatePaymentUrl: config.GetCfgPay().CreatePaymentUrl + "/api/payment/create",
+		Description:      strconv.Itoa(int(pm.Fee/100)) + pm.Name,
+		OpenOrderID:      "",
+		OpenNotifyUrl:    "",
+		CreatePaymentUrl: "",
 	})
 
 	//若干时间后，判定为支付失败
-	game.GetSkeleton().AfterFunc(5*time.Minute, func() {
-		data := new(values.EdyOrder)
-		db.Read("edyorder", data, bson.M{"tradeno": order.TradeNo})
-		if data.PayStatus != 1 {
-			data.PayStatus = 2
-			db.Save("edyorder", data, bson.M{"_id": order.ID})
-		}
-	})
+	//game.GetSkeleton().AfterFunc(5*time.Minute, func(){
+	//	data := new(values.EdyOrder)
+	//	db.Read("edyorder", data, bson.M{"tradeno": order.TradeNo})
+	//	if data.PayStatus != 1 {
+	//		data.PayStatus = 2
+	//		db.Save("edyorder", data, bson.M{"_id": order.ID})
+	//	}
+	//})
 }
 
 func CreateOrderSuccess(user *player.User, m *msg.C2S_CreateOrderSuccess) {

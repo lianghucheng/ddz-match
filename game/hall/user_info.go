@@ -128,7 +128,7 @@ func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
 func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID string) {
 	data := KnapsackProp{}
 	data.Accountid = accountID
-	data.PropID = config.PropIDCouponFrag
+	data.PropID = config.PropTypeCouponFrag
 	data.ReadByAidPid()
 	before := int64(data.Num)
 	data.Num += int(amount)
@@ -197,6 +197,9 @@ func UpdateUserAfterTaxAward(user *player.User) {
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(user.GetUserData())
 	}, nil)
+	log.Debug("$$$$$$$$$$$$   %v", msg.S2C_UpdateUserAfterTaxAward{
+		AfterTaxAward: utils.Decimal(changeAmount),
+	})
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
 		AfterTaxAward: utils.Decimal(changeAmount),
 	})
@@ -236,12 +239,6 @@ func TakenFirstCoupon(user *player.User) {
 	}, func() {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
 		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
-	})
-}
-
-func SendPriceMenu(user *player.User) {
-	user.WriteMsg(&msg.S2C_PriceMenu{
-		PriceItems: config.GetPriceMenu(),
 	})
 }
 
@@ -301,7 +298,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 
 func UseProp(user *player.User, m *msg.C2S_UseProp) {
 	ud := user.GetUserData()
-	if m.PropID == config.PropIDCouponFrag {
+	if m.PropID == config.PropTypeCouponFrag {
 		item, ok := config.PropList[m.PropID]
 		if !ok {
 			log.Error("no exist prop. ")
@@ -334,7 +331,7 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 				knapsackProp.Save()
 			}, func() {
 				UpdateUserCoupon(user, int64(m.Amount), before, ud.Coupon, db.FragChangeOpt, db.CouponFrag)
-				cpItem := config.PropList[config.PropIDCoupon]
+				cpItem := config.PropList[config.PropTypeCoupon]
 				user.WriteMsg(&msg.S2C_UseProp{
 					Error:  values.SuccessS2C_UseProp,
 					ErrMsg: values.ErrMsg[values.SuccessS2C_UseProp],
