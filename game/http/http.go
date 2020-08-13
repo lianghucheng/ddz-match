@@ -338,18 +338,6 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 		AccountID: order.Accountid,
 	})
 	log.Debug("【发货成功】")
-	// 充值返利
-	game.GetSkeleton().Go(func() {
-		if err := utils.PostToAgentServer(struct {
-			AccountID int
-			Amount    int64
-		}{
-			AccountID: order.Accountid,
-			Amount:    order.Fee,
-		}, "/rebate"); err != nil {
-			log.Error("rebate err:%v", err)
-		}
-	}, nil)
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
 	edyPayNotifyResp.OrderResult = "success"
 	edyPayNotifyResp.OrderAmount = fmt.Sprintf("%v", order.Fee)

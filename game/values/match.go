@@ -26,6 +26,7 @@ type Match interface {
 	SendRoundResult(uid int) // 给玩家发送单局结算
 	SendFinalResult(uid int) // 给玩家发送总结算
 	SendMatchInfo(uid int)   // 发送赛事信息
+	AwardPlayer(uid int)     // 发奖
 }
 
 // MatchManager 比赛配置接口
@@ -62,7 +63,7 @@ type MatchPlayer struct {
 	OpTime     int64
 	SignSort   int
 	Result     []Result //牌局详细
-	Multiples  string   // 当局所有加倍详z
+	Multiples  string   // 当局所有加倍详
 }
 
 // NormalCofig 需要返回给客户端的通用配置
@@ -241,6 +242,35 @@ type SportsCenterOneFinalRank struct {
 	Status             string `json:"status"`
 }
 
+// SportsCenterAwardResultRet 发奖结果查询接口返回
+type SportsCenterAwardResultRet struct {
+	Resp_code   string                       `json:"resp_code"`
+	Resp_msg    string                       `json:"resp_msg"`
+	Match_id    string                       `json:"match_id"`
+	Result_list []SportsCenterAwardOneResult `json:"result_list"`
+}
+
+// SportsCenterAwardOneResult 单个发奖结果查询接口返回
+type SportsCenterAwardOneResult struct {
+	Player_id string `json:"player_id"`
+	Status    string `json:"status"`
+	Error_msg string `json:"error_msg"`
+	Bonous    string `json:"bonous"`
+}
+
+// PlayerMasterScoreRet 大师分查询返回接口
+type PlayerMasterScoreRet struct {
+	Resp_code   string `json:"resp_code"`
+	Resp_msg    string `json:"resp_msg"`
+	Ranking     int    `json:"ranking"`
+	Level_name  string `json:"level_name"`
+	G           string `json:"g"`
+	S           string `json:"s"`
+	R           string `json:"r"`
+	B           string `json:"b"`
+	Player_name string `json:"player_name"`
+}
+
 // GetAwardType 获取奖励类型
 func GetAwardType(award string) string {
 	if strings.Index(award, Money) != -1 {
@@ -251,6 +281,9 @@ func GetAwardType(award string) string {
 	}
 	if strings.Index(award, Fragment) != -1 {
 		return Fragment
+	}
+	if strings.Index(award, RedScore) != -1 {
+		return RedScore
 	}
 	return Unknown
 }

@@ -2,6 +2,7 @@ package match
 
 import (
 	"ddz/edy_api"
+	"ddz/game"
 	"ddz/game/db"
 	. "ddz/game/player"
 	. "ddz/game/room"
@@ -37,6 +38,23 @@ const (
 const (
 	MatchSourceSportsCenter = iota + 1 // 体总
 	MatchSourceBackstage               // 后台
+)
+
+// 赛事来源
+const (
+	MatchLevelBase          = iota + 1 // 海选赛事
+	MatchLevelC                        // c级赛事
+	MatchLevelB                        // B级赛事
+	MatchLevelA                        // A级赛事
+	MatchLevelOpen                     // 全国公开赛
+	MatchLevelChampionships            // 全国锦标赛
+)
+
+// 参赛条件
+const (
+	LevelBSignScore   = 300 // 红分
+	LevelASignScore   = 10  // 银分
+	WaitSportCenterCB = 5   // 等待体总回调时间
 )
 
 // BaseMatch 通用的比赛对象
@@ -187,18 +205,20 @@ func (base *BaseMatch) End() {
 func (base *BaseMatch) SplitTable() {
 	// 体总赛事上传报名人数
 	if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
-		matchID := []byte(base.SonMatchID)
-		currentRound := []byte(fmt.Sprintf("%02d", base.CurrentRound))
-		matchID[len(matchID)-8] = currentRound[0]
-		matchID[len(matchID)-7] = currentRound[1]
-		for _, p := range base.AllPlayers {
-			if _, err := edy_api.SignMatch(string(matchID), p.BaseData.UserData.RealName, strconv.Itoa(p.BaseData.UserData.AccountID)); err != nil {
-				log.Error("err:%v", err)
-				// base.CloseMatch()
-				// base.Manager.CreateOneMatch()
-				// return
+		game.GetSkeleton().Go(func() {
+			matchID := []byte(base.SonMatchID)
+			currentRound := []byte(fmt.Sprintf("%02d", base.CurrentRound))
+			matchID[len(matchID)-8] = currentRound[0]
+			matchID[len(matchID)-7] = currentRound[1]
+			for _, p := range base.AllPlayers {
+				if _, err := edy_api.SignMatch(string(matchID), p.BaseData.UserData.RealName, strconv.Itoa(p.BaseData.UserData.AccountID)); err != nil {
+					log.Error("err:%v", err)
+					// base.CloseMatch()
+					// base.Manager.CreateOneMatch()
+					// return
+				}
 			}
-		}
+		}, nil)
 	}
 	if base.myMatch != nil {
 		base.myMatch.SplitTable()
@@ -290,5 +310,12 @@ func (base *BaseMatch) GetMatchTypeField() string {
 func (base *BaseMatch) SendMatchInfo(uid int) {
 	if base.myMatch != nil {
 		base.myMatch.SendMatchInfo(uid)
+	}
+}
+
+// AwardPlayer 发奖
+func (base *BaseMatch) AwardPlayer(uid int) {
+	if base.myMatch != nil {
+		base.myMatch.AwardPlayer(uid)
 	}
 }

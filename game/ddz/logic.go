@@ -89,6 +89,12 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 			userID = nextUserID
 
 		}
+		// 如果都不叫则直接游戏结束
+		if max == 0 {
+			game.EndGame()
+			return
+		}
+
 		skeleton.AfterFunc(1*time.Second, func() {
 			game.decideLandlord(userID)
 		})
@@ -131,7 +137,7 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 		Position: playerData.Position,
 	}, game.PositionUserIDs, -1)
 	// 最后三张
-	game.lastThree = game.rests[:3]
+	// game.lastThree = game.rests[:3]
 	game.rests = []int{}
 	sort.Sort(sort.Reverse(sort.IntSlice(game.lastThree)))
 	log.Debug("三张: %v", poker.ToCardsString(game.lastThree))
@@ -196,60 +202,102 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 	lable := 1
 	if double {
 		lable = 2
+		playerData.double = true
 	}
 	// game.gameRecords[userID].Result[game.count-1].Multiple = lable
 	// game.gameRecords[userID].Result[game.count-1].ThreeCards = game.lastThree
 	playerData.User.BaseData.MatchPlayer.Result[game.count-1].Multiple = lable
-	playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
+	// playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
 
 	game.broadcast(&msg.S2C_LandlordDouble{
 		Position: playerData.Position,
 		Double:   double,
 	}, game.PositionUserIDs, -1)
-	if userID == game.landlordUserID {
-		for i := 0; i < len(game.PositionUserIDs); i++ {
-			if game.PositionUserIDs[i] != game.landlordUserID {
-				if double {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
-				} else {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
-				}
-				game.sendRoomPanel(game.PositionUserIDs[i])
-			}
-		}
-		if double {
-			playerData.Dealer = 2
-		} else {
-			playerData.Dealer = 1
-		}
-		game.sendRoomPanel(userID)
-	}
-	if userID != game.landlordUserID {
-		for i := 0; i < len(game.PositionUserIDs); i++ {
-			if game.PositionUserIDs[i] == game.landlordUserID {
-				if double {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
-				} else {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
-				}
-				game.sendRoomPanel(game.PositionUserIDs[i])
-			}
-		}
-		if double {
-			playerData.Xian = 2
-		} else {
-			playerData.Xian = 1
-		}
-		game.sendRoomPanel(userID)
-	}
+	// if userID == game.landlordUserID {
+	// 	for i := 0; i < len(game.PositionUserIDs); i++ {
+	// 		if game.PositionUserIDs[i] != game.landlordUserID {
+	// 			if double {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
+	// 			} else {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
+	// 			}
+	// 			game.sendRoomPanel(game.PositionUserIDs[i])
+	// 		}
+	// 	}
+	// 	if double {
+	// 		playerData.Dealer = 2
+	// 	} else {
+	// 		playerData.Dealer = 1
+	// 	}
+	// 	game.sendRoomPanel(userID)
+	// }
+	// if userID != game.landlordUserID {
+	// 	for i := 0; i < len(game.PositionUserIDs); i++ {
+	// 		if game.PositionUserIDs[i] == game.landlordUserID {
+	// 			if double {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
+	// 			} else {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
+	// 			}
+	// 			game.sendRoomPanel(game.PositionUserIDs[i])
+	// 		}
+	// 	}
+	// 	if double {
+	// 		playerData.Xian = 2
+	// 	} else {
+	// 		playerData.Xian = 1
+	// 	}
+	// 	game.sendRoomPanel(userID)
+	// }
 
 	if game.allWaiting() {
+		game.calDouble()
 		game.doubleTimer.Stop()
 		skeleton.AfterFunc(1500*time.Millisecond, func() {
 			game.broadcast(&msg.S2C_ClearAction{}, game.PositionUserIDs, -1)
 			game.discard(game.landlordUserID, poker.ActionLandlordDiscardMust)
 		})
 	}
+}
+
+func (game *LandlordMatchRoom) calDouble() {
+	farmerDoubleCount := 0
+	dealerDoubleCount := 0
+	for _, p := range game.UserIDPlayerDatas {
+		if !p.double {
+			continue
+		}
+		if p.User.BaseData.UserData.UserID != game.landlordUserID {
+			farmerDoubleCount++
+		} else {
+			dealerDoubleCount++
+		}
+	}
+	for _, p := range game.UserIDPlayerDatas {
+		if p.User.BaseData.UserData.UserID == game.landlordUserID {
+			p.Xian += 2 + farmerDoubleCount
+			if p.double && farmerDoubleCount > 0 {
+				p.Dealer = 2
+			} else {
+				p.Dealer = 1
+			}
+			game.sendRoomPanel(p.User.BaseData.UserData.UserID)
+		} else {
+			if p.double {
+				p.Xian = 2
+				if dealerDoubleCount > 0 {
+					p.Dealer = 2
+				} else {
+					p.Dealer = 1
+				}
+			} else {
+				p.Dealer = 1
+				p.Xian = 1
+			}
+			game.sendRoomPanel(p.User.BaseData.UserData.UserID)
+		}
+	}
+
 }
 
 // 出牌

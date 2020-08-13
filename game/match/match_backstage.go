@@ -19,7 +19,6 @@ func init() {
 }
 
 func addMatch(args []interface{}) {
-	log.Debug("addMatch:%v", args)
 	if len(args) != 1 {
 		log.Error("error req:%v", args)
 		return
@@ -29,6 +28,7 @@ func addMatch(args []interface{}) {
 		log.Error("error req:%v", args)
 		return
 	}
+	log.Debug("addMatch:%+v", data)
 	code := 0
 	desc := "OK"
 	defer func() {
@@ -185,6 +185,23 @@ func editMatch(args []interface{}) {
 		return
 	}
 
+	if data.ShelfTime > time.Now().Unix() {
+		m.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.Shelf()
+		}))
+	}
+
+	if data.DownShelfTime > time.Now().Unix() {
+		m.SetDownShelfTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.DownShelf()
+		}))
+	}
+
+	// 重新获取配置
+	c = m.GetNormalConfig()
+
 	if c.MatchSource == MatchSourceSportsCenter {
 		tmp := struct {
 			TotalMatch    int
@@ -221,22 +238,6 @@ func editMatch(args []interface{}) {
 			data.TotalMatch,
 		}
 		utils.StructCopy(c, &tmp)
-	}
-
-	if data.ShelfTime > time.Now().Unix() {
-		m.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
-			// NewScoreManager(sConfig)
-			m.Shelf()
-		}))
-	} else if data.ShelfTime <= time.Now().Unix() && data.ShelfTime != 0 {
-		m.Shelf()
-	}
-
-	if data.DownShelfTime > time.Now().Unix() {
-		m.SetDownShelfTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
-			// NewScoreManager(sConfig)
-			m.DownShelf()
-		}))
 	}
 
 	// 当前赛事没人，且处于正常状态则直接修改

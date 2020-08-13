@@ -2,7 +2,6 @@ package match
 
 import (
 	"ddz/conf"
-	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
@@ -32,6 +31,7 @@ import (
 type ScoreConfig struct {
 	// base配置
 	MatchSource   int      `bson:"matchsource"`   // 比赛来源,1体总,2自己后台
+	MatchLevel    int      `bson:"matchlevel"`    // 体总赛事级别
 	MatchID       string   `bson:"matchid"`       // 赛事管理id号 '添加赛事时的必填字段'
 	SonMatchID    string   `bson:"sonmatchid"`    // 子赛事id
 	State         int      `bson:"state"`         // 赛事状态
@@ -69,6 +69,7 @@ type ScoreConfig struct {
 	OfficalIDs    []string `bson:"officalIDs"`    // 后台配置的可用比赛id号
 	ShelfTime     int64    `bson:"shelftime"`     // 上架时间
 	DownShelfTime int64    `bson:"downshelftime"` // 下架时间
+	EndTime       int64    `bson:"endtime"`       // 结束时间
 	Sort          int      `bson:"sort"`          // 赛事排序 '添加赛事时的必填字段'
 	ShowHall      bool     `bson:"showhall"`      // 是否首页展示
 	MatchIcon     string   `bson:"matchicon"`     // 赛事图标
@@ -98,11 +99,13 @@ type sConfig struct {
 }
 
 type scoreMatch struct {
-	base          Match
-	myConfig      *sConfig
-	matchPlayers  []*matchPlayer
-	OverRoomCount int                               // 已结束对局并完成上报的房间数
-	AllResults    []poker.LandlordPlayerRoundResult // 所有房间打完后，发送给客户端的单轮总结算
+	base                 Match
+	myConfig             *sConfig
+	matchPlayers         []*matchPlayer
+	OverRoomCount        int                               // 已结束对局并完成上报的房间数
+	AllResults           []poker.LandlordPlayerRoundResult // 所有房间打完后，发送给客户端的单轮总结算
+	AwardResults         SportsCenterAwardResultRet        // 单局发奖结果
+	WaitSportCenterTimer *timer.Timer                      // 等待体总回调计时器
 }
 
 type matchPlayer struct {
@@ -115,6 +118,7 @@ type matchPlayer struct {
 	wins       int
 	opTime     int64
 	signSort   int
+	awardTimer *timer.Timer
 }
 
 // NewScoreMatch 创建一个新的赛事
@@ -270,45 +274,41 @@ func (sc *scoreMatch) End() {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			award := values.GetMoneyAward(base.Award[p.rank-1])
-			if award != 0 {
-				hall.WriteFlowData(p.uid, utils.Decimal(award*0.8), hall.FlowTypeAward, cfg.MatchType, cfg.SonMatchID, []int{})
-			}
 			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
 	}
 
-	// if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
-	// 	ranks := []SportsCenterOneFinalRank{}
-	// 	for _, p := range sc.matchPlayers {
-	// 		one := SportsCenterOneFinalRank{
-	// 			Player_id:          strconv.Itoa(p.accountID),
-	// 			Ranking:            strconv.Itoa(p.rank),
-	// 			Average_mp_ratio:   "null",
-	// 			Rival_avg_mp_ratio: "null",
-	// 			Rank_count:         "null",
-	// 			Total_time:         strconv.FormatInt(p.opTime, 10),
-	// 			Status:             "0",
-	// 		}
-	// 		ranks = append(ranks, one)
-	// 	}
-	// 	matchID := []byte(base.SonMatchID)
-	// 	currentRound := []byte(fmt.Sprintf("%02d", base.CurrentRound))
-	// 	matchID[len(matchID)-8] = currentRound[0]
-	// 	matchID[len(matchID)-7] = currentRound[1]
-	// 	if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
-	// 		Match_id: string(matchID),
-	// 		Ranks:    ranks,
-	// 	}); err != nil {
-	// 		log.Error("err:%v", err)
-	// 	} else { // 结果上传完毕
-	// 		if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
-	// 			log.Error("err:%v", err)
-	// 		}
-	// 	}
-	// }
+	game.GetSkeleton().Go(func() {
+		if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+			ranks := []SportsCenterOneFinalRank{}
+			for _, p := range sc.matchPlayers {
+				one := SportsCenterOneFinalRank{
+					Player_id:          strconv.Itoa(p.accountID),
+					Ranking:            strconv.Itoa(p.rank),
+					Average_mp_ratio:   "null",
+					Rival_avg_mp_ratio: "null",
+					Rank_count:         "null",
+					Total_time:         strconv.FormatInt(p.opTime, 10),
+					Status:             "0",
+				}
+				ranks = append(ranks, one)
+			}
+			matchID := []byte(base.SonMatchID)
+			matchID = append(matchID[:12], matchID[14:]...)
+			if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
+				Match_id: string(matchID),
+				Ranks:    ranks,
+			}); err != nil {
+				log.Error("err:%v", err)
+			} else { // 结果上传完毕
+				if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+					log.Error("err:%v", err)
+				}
+			}
+		}
+	}, nil)
 
 	// 踢出所有玩家
 	for _, p := range base.AllPlayers {
@@ -323,6 +323,7 @@ func (sc *scoreMatch) End() {
 	utils.StructCopy(record, base.NormalCofig)
 	utils.StructCopy(record, base)
 	utils.StructCopy(record, sc.myConfig)
+	record.EndTime = time.Now().Unix()
 	game.GetSkeleton().Go(func() {
 		s := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(s)
@@ -378,15 +379,39 @@ func (sc *scoreMatch) SplitTable() {
 			n := len(base.Rooms) - num // 需要拆开的房间数
 			base.Rooms = base.Rooms[:len(base.Rooms)-n]
 		}
-		for _, room := range base.Rooms {
-			// 随机分配桌子
-			for i := 0; i < sc.myConfig.TablePlayer; i++ {
-				uid := sc.matchPlayers[indexs[index]].uid
-				user := base.AllPlayers[uid]
-				if lable := room.Game.Enter(user); lable {
-					UserIDRooms[uid] = room.Game
+		if base.CurrentRound == 1 {
+			for _, room := range base.Rooms {
+				// 随机分配桌子
+				for i := 0; i < sc.myConfig.TablePlayer; i++ {
+					uid := sc.matchPlayers[indexs[index]].uid
+					user := base.AllPlayers[uid]
+					if lable := room.Game.Enter(user); lable {
+						UserIDRooms[uid] = room.Game
+					}
+					index++
 				}
-				index++
+			}
+		} else {
+			// 按排名蛇形分配桌子
+			for n, room := range base.Rooms {
+				if (n+1)%2 != 0 {
+					for i := 0; i < sc.myConfig.TablePlayer; i++ {
+						uid := sc.matchPlayers[index+i].uid
+						user := base.AllPlayers[uid]
+						if lable := room.Game.Enter(user); lable {
+							UserIDRooms[uid] = room.Game
+						}
+					}
+				} else {
+					for i := sc.myConfig.TablePlayer - 1; i >= 0; i-- {
+						uid := sc.matchPlayers[index+i].uid
+						user := base.AllPlayers[uid]
+						if lable := room.Game.Enter(user); lable {
+							UserIDRooms[uid] = room.Game
+						}
+					}
+				}
+				index += sc.myConfig.TablePlayer
 			}
 		}
 	})
@@ -467,6 +492,10 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 			}
 			sort.Sort(poker.LstPoker(results))
 			// 发送单局结算信息
+			notice := "本局所有牌打完将进入下一局"
+			if base.CurrentRound >= base.Round {
+				notice = "赛事结果上报中，请稍后..."
+			}
 			for _, playerData := range game.UserIDPlayerDatas {
 				player := playerData.User.BaseData.MatchPlayer
 				tempMsg := &msg.S2C_LandlordRoundResult{
@@ -478,6 +507,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 					Process:      sc.GetProcess(),
 					Tables:       len(base.Rooms) - sc.OverRoomCount,
 					MatchName:    base.NormalCofig.MatchName,
+					Notice:       notice,
 				}
 				playerData.User.WriteMsg(tempMsg)
 			}
@@ -498,14 +528,41 @@ func (sc *scoreMatch) NextRound() {
 	log.Debug("start next round:%v", base.CurrentRound)
 	// 发送体总数据
 	if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+		ranks := []SportsCenterOneFinalRank{}
+		for i := 0; i < len(base.AllPlayers); i++ {
+			one := SportsCenterOneFinalRank{
+				Player_id:          strconv.Itoa(sc.matchPlayers[i].accountID),
+				Ranking:            strconv.Itoa(sc.matchPlayers[i].rank),
+				Average_mp_ratio:   "null",
+				Rival_avg_mp_ratio: "null",
+				Rank_count:         "null",
+				Total_time:         strconv.FormatInt(sc.matchPlayers[i].opTime, 10),
+				Status:             "0",
+			}
+			ranks = append(ranks, one)
+		}
+		roundIndex := len(base.AllPlayers)
+
+		// 轮次排名上报
+		rankList := []SportsCenterOneRank{}
+		for i := 0; i < len(base.AllPlayers); i++ {
+			one := SportsCenterOneRank{
+				Player_id: strconv.Itoa(sc.matchPlayers[i].accountID),
+				Card_rank: strconv.Itoa(sc.matchPlayers[i].rank),
+				Status:    "0",
+			}
+			rankList = append(rankList, one)
+		}
+
 		matchID := []byte(base.SonMatchID)
 		currentRound := []byte(fmt.Sprintf("%02d", base.CurrentRound))
 		matchID[len(matchID)-8] = currentRound[0]
 		matchID[len(matchID)-7] = currentRound[1]
+
+		sportsCenterRoundResult := []values.SportsCenterRoundResult{}
 		for _, v := range base.SportsCenterRoundResult {
-			// 人人对局结果上报
-			if _, err := edy_api.SendMatchResultWithPerson(values.SportsCenterReportPersonal{
-				Match_id: string(matchID),
+			sportsCenterRoundResult = append(sportsCenterRoundResult, values.SportsCenterRoundResult{
+				// Match_id: string(matchID),
 				// Result_list: base.SportsCenterRoundResult,
 				Round_id:             v.Round_id,
 				Player_id:            v.Player_id,
@@ -526,55 +583,148 @@ func (sc *scoreMatch) NextRound() {
 				Player_position:      v.Player_position,
 				Status:               v.Status,
 				Passive:              v.Passive,
+			})
+		}
+
+		game.GetSkeleton().Go(func() {
+			// 版本1.0.24
+			for _, v := range sportsCenterRoundResult {
+				// 人人对局结果上报
+				if _, err := edy_api.SendMatchResultWithPerson(values.SportsCenterReportPersonal{
+					Match_id: string(matchID),
+					// Result_list: base.SportsCenterRoundResult,
+					Round_id:             v.Round_id,
+					Player_id:            v.Player_id,
+					Card_player_id:       v.Card_player_id,
+					Card_numerical_order: v.Card_numerical_order,
+					Card_group_id:        v.Card_group_id,
+					Card_desk_id:         v.Card_desk_id,
+					Card_score:           v.Card_score,
+					Mp_score:             v.Mp_score,
+					Mp_ratio:             v.Mp_ratio,
+					Mp_ratio_rank:        v.Mp_ratio_rank,
+					Card_type:            v.Card_type,
+					Call_score:           v.Call_score,
+					Spring:               v.Spring,
+					Raise:                v.Raise,
+					Card_hole:            v.Card_hole,
+					Card_rival:           v.Card_rival,
+					Player_position:      v.Player_position,
+					Status:               v.Status,
+					Passive:              v.Passive,
+				}); err != nil {
+					log.Error("err:%v", err)
+				}
+			}
+
+			// 版本1.0.25
+			// edy_api.SendMatchResultWithPerson(values.SportsCenterReportPersonal{
+			// 	Match_id:    string(matchID),
+			// 	Result_list: base.SportsCenterRoundResult,
+			// })
+
+			roundRankResult := values.SportsCenterRankResult{
+				Match_id:  string(matchID),
+				Round_id:  strconv.Itoa(base.CurrentRound),
+				Rank_list: rankList,
+			}
+			if _, err := edy_api.RoundRankReport(roundRankResult); err != nil {
+				log.Error("err:%v", err)
+			}
+
+			// 最终排名上报
+			if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
+				Match_id: string(matchID),
+				Ranks:    ranks,
 			}); err != nil {
 				log.Error("err:%v", err)
+			} else { // 结果上传完毕
+				if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+					log.Error("err:%v", err)
+				}
 			}
-		}
 
-		// 轮次排名上报
-		rankList := []SportsCenterOneRank{}
-		for i := 0; i < len(base.AllPlayers); i++ {
-			one := SportsCenterOneRank{
-				Player_id: strconv.Itoa(sc.matchPlayers[i].accountID),
-				Card_rank: strconv.Itoa(sc.matchPlayers[i].rank),
-				Status:    "0",
+			// 最后一轮
+			if base.CurrentRound >= base.Round {
+				// 最终排名上报
+				if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
+					Match_id: string(matchID),
+					Ranks:    ranks,
+				}); err != nil {
+					log.Error("err:%v", err)
+				} else { // 结果上传完毕
+					if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+						log.Error("err:%v", err)
+					}
+				}
 			}
-			rankList = append(rankList, one)
-		}
-		roundRankResult := values.SportsCenterRankResult{
-			Match_id:  string(matchID),
-			Round_id:  strconv.Itoa(base.CurrentRound),
-			Rank_list: rankList,
-		}
-		if _, err := edy_api.RoundRankReport(roundRankResult); err != nil {
-			log.Error("err:%v", err)
-		}
 
-		// 最终排名上报
-		ranks := []SportsCenterOneFinalRank{}
-		for i := 0; i < len(base.AllPlayers); i++ {
-			one := SportsCenterOneFinalRank{
-				Player_id:          strconv.Itoa(sc.matchPlayers[i].accountID),
-				Ranking:            strconv.Itoa(sc.matchPlayers[i].rank),
-				Average_mp_ratio:   "null",
-				Rival_avg_mp_ratio: "null",
-				Rank_count:         "null",
-				Total_time:         strconv.FormatInt(sc.matchPlayers[i].opTime, 10),
-				Status:             "0",
-			}
-			ranks = append(ranks, one)
-		}
-		if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
-			Match_id: string(matchID),
-			Ranks:    ranks,
-		}); err != nil {
-			log.Error("err:%v", err)
-		} else { // 结果上传完毕
-			if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
-				log.Error("err:%v", err)
-			}
-		}
+			// 清理数据
+			// sc.AwardResults = values.SportsCenterAwardResultRet{}
+			// 拉取体总发奖结果
+			sc.getSportsAwardResult(string(matchID), roundIndex)
+			// if msg, err := edy_api.AwardResult(string(matchID), 1, roundIndex); err == nil {
+			// 	sc.AwardResults = msg
+			// }
+		}, func() {
+			// 等发送完再开下一轮
+			sc.onNextRound()
+			// if len(sc.AwardResults.Result_list) == 0 {
+			// 	return
+			// }
+			// for _, v := range sc.AwardResults.Result_list {
+			// 	// 未发奖
+			// 	if v.Status != "2" {
+			// 		log.Debug("sports award err:%+v", v)
+			// 		continue
+			// 	}
+			// 	oneUID, err := strconv.Atoi(v.Player_id)
+			// 	if err != nil {
+			// 		log.Debug("sports award err:%+v", v)
+			// 		continue
+			// 	}
+			// 	base.AwardPlayer(oneUID)
+			// }
+		})
+		return
 	}
+	sc.onNextRound()
+}
+
+func (sc *scoreMatch) getSportsAwardResult(matchID string, num int) {
+	base := sc.base.(*BaseMatch)
+	sc.WaitSportCenterTimer = game.GetSkeleton().AfterFunc(1*time.Second, func() {
+		game.GetSkeleton().Go(func() {
+			// 清理数据
+			sc.AwardResults = values.SportsCenterAwardResultRet{}
+			// 拉取体总发奖结果
+			if msg, err := edy_api.AwardResult(string(matchID), 1, num); err == nil {
+				sc.AwardResults = msg
+			}
+		}, func() {
+			if len(sc.AwardResults.Result_list) == 0 {
+				sc.getSportsAwardResult(matchID, num)
+				return
+			}
+			for _, v := range sc.AwardResults.Result_list {
+				// 未发奖
+				if v.Status != "2" {
+					log.Debug("sports award err:%+v", v)
+					continue
+				}
+				oneUID, err := strconv.Atoi(v.Player_id)
+				if err != nil {
+					log.Debug("sports award err:%+v", v)
+					continue
+				}
+				base.AwardPlayer(oneUID)
+			}
+		})
+	})
+}
+
+func (sc *scoreMatch) onNextRound() {
+	base := sc.base.(*BaseMatch)
 	if base.CurrentRound < base.Round {
 		// 广播单局总结算
 		sort.Sort(poker.LstPoker(sc.AllResults))
@@ -712,11 +862,23 @@ func (sc *scoreMatch) eliminatePlayers() {
 func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 	log.Debug("eliminate player:%v", uid)
 	base := sc.base.(*BaseMatch)
-	// 给玩家发送比赛结算总界面
-	sc.SendFinalResult(uid)
+	// 非体总赛事直接发奖
+	if base.NormalCofig.MatchSource != MatchSourceSportsCenter {
+		// 给玩家发送比赛结算总界面
+		// sc.SendFinalResult(uid)
 
-	// 发奖并记录玩家数据
-	sc.awardPlayer(uid)
+		// 发奖并记录玩家数据
+		base.AwardPlayer(uid)
+	} else { // 等待5s体总结果,超时直接结算
+		player := sc.getMatchPlayer(uid)
+		if player != nil {
+			player.awardTimer = game.GetSkeleton().AfterFunc(WaitSportCenterCB*time.Second, func() {
+				base.AwardPlayer(uid)
+			})
+		}
+	}
+
+	sc.recordPlayer(uid)
 
 	if room, ok := UserIDRooms[uid]; ok {
 		room.Exit(uid)
@@ -736,69 +898,100 @@ func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 	}
 }
 
-func (sc *scoreMatch) awardPlayer(uid int) {
+// AwardPlayer 发奖
+func (sc *scoreMatch) AwardPlayer(uid int) {
+	// 发送总结算
+	sc.SendFinalResult(uid)
+
+	base := sc.base.(*BaseMatch)
+	// user, ok := UserIDUsers[uid]
+	// if !ok {
+	// 	log.Error("unknown user:%v", uid)
+	// 	return
+	// }
+	// player := user.BaseData.MatchPlayer
+	player := sc.getMatchPlayer(uid)
+	if player == nil {
+		return
+	}
+	if player.awardTimer != nil {
+		player.awardTimer.Stop()
+		player.awardTimer = nil
+	}
+	if sc.WaitSportCenterTimer != nil {
+		sc.WaitSportCenterTimer.Stop()
+		sc.WaitSportCenterTimer = nil
+	}
+	// var moneyAwardCount float64
+	if player.rank-1 < len(base.Award) {
+		awardStr := base.Award[player.rank-1]
+		one := strings.Split(awardStr, ",")
+		for _, oneAward := range one {
+			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
+			awardAmount := values.ParseAward(oneAward)
+			// 现金奖励
+			if values.GetAwardType(oneAward) == values.Money {
+				// 体总赛事需要对方给了发奖状态才会发奖
+				if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+					awardAmount = 0
+					for _, v := range sc.AwardResults.Result_list {
+						if v.Player_id == strconv.Itoa(player.accountID) {
+							if v.Status != "2" {
+								log.Error("err award :%+v", v)
+								break
+							}
+							var err error
+							awardAmount, err = strconv.ParseFloat(v.Bonous, 64)
+							if err != nil {
+								log.Error("err award :%+v", v)
+							}
+							break
+						}
+					}
+				}
+				if awardAmount <= 0 {
+					hall.GamePushMail(uid, "发奖失败", "发奖失败")
+					continue
+				}
+				// moneyAwardCount += utils.Decimal(awardAmount * 0.8)
+				hall.WriteFlowData(uid, utils.Decimal(awardAmount*0.8), hall.FlowTypeAward,
+					base.NormalCofig.MatchType, base.NormalCofig.SonMatchID, []int{})
+				hall.AddFee(uid, player.accountID, utils.Decimal(awardAmount*0.8),
+					db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
+			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
+				// awardAmount := values.ParseAward(oneAward)
+				hall.AddCoupon(player.uid, player.accountID, int64(awardAmount),
+					db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
+			} else if values.GetAwardType(oneAward) == values.Fragment { // 碎片奖励
+				hall.AddFragment(uid, player.accountID, int64(awardAmount),
+					db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
+			} else if values.GetAwardType(oneAward) == values.RedScore && base.NormalCofig.MatchSource == MatchSourceSportsCenter { // 红分奖励,体总赛事才有分
+				// for _, v := range sc.AwardResults.Result_list {
+				// 	if v.Player_id == strconv.Itoa(player.accountID) {
+				// 		if v.Status != "2" {
+				// 			log.Error("err award :%+v", v)
+				// 			break
+				// 		}
+				hall.AddRedScore(uid, player.accountID, awardAmount, db.MatchOpt,
+					db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
+				// }
+				// }
+			}
+		}
+	}
+}
+
+// 写入战绩,记录等
+func (sc *scoreMatch) recordPlayer(uid int) {
 	base := sc.base.(*BaseMatch)
 	user, ok := base.AllPlayers[uid]
 	if !ok {
-		log.Error("unknown user:%v", uid)
 		return
 	}
 	player := user.BaseData.MatchPlayer
-	var award string
-	var moneyAwardCount float64
-	if player.Rank-1 < len(base.Award) {
-		award = base.Award[player.Rank-1]
-		one := strings.Split(award, ",")
-		for _, oneAward := range one {
-			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
-			// 现金奖励
-			if values.GetAwardType(oneAward) == values.Money {
-				awardAmount := values.ParseAward(oneAward)
-				moneyAwardCount += utils.Decimal(awardAmount * 0.8)
-				user.BaseData.UserData.Fee += utils.Decimal(awardAmount * 0.8)
-				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Fee}})
-				hall.UpdateUserAfterTaxAward(user)
-				db.InsertItemLog(db.ItemLog{
-					UID:        user.BaseData.UserData.AccountID,
-					Item:       "奖金",
-					Amount:     int64(awardAmount*100) * 8 / 10,
-					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
-					CreateTime: time.Now().Unix(),
-					Before:     int64(user.BaseData.UserData.Fee*100) - int64(awardAmount*100)*8/10,
-					After:      int64(user.BaseData.UserData.Fee * 100),
-					OptType:    db.MatchOpt,
-					MatchID:    base.SonMatchID,
-				})
-			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
-				awardAmount := values.ParseAward(oneAward)
-				user.BaseData.UserData.Coupon += int64(awardAmount)
-				UpdateUserData(user.BaseData.UserData.UserID, bson.M{"$set": bson.M{"fee": user.BaseData.UserData.Coupon}})
-				hall.UpdateUserCoupon(user, int64(values.ParseAward(oneAward)), user.BaseData.UserData.Coupon-int64(awardAmount),
-					user.BaseData.UserData.Coupon, db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName))
-			} else if values.GetAwardType(oneAward) == values.Fragment { // 碎片奖励
-				data := hall.KnapsackProp{}
-				data.Accountid = user.BaseData.UserData.AccountID
-				data.PropID = config.PropIDCouponFrag
-				data.ReadByAidPid()
-				amount := values.ParseAward(oneAward)
-				before := int64(data.Num)
-				data.Num += int(amount)
-				after := int64(data.Num)
-				data.Save()
-				// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
-				db.InsertItemLog(db.ItemLog{
-					UID:        user.BaseData.UserData.AccountID,
-					Item:       values.Fragment,
-					Amount:     int64(amount),
-					Way:        db.MatchAward + fmt.Sprintf("-%v", base.NormalCofig.MatchName),
-					CreateTime: time.Now().Unix(),
-					Before:     before,
-					After:      after,
-					OptType:    db.MatchOpt,
-					MatchID:    base.SonMatchID,
-				})
-			}
-		}
+	award := "道具奖励"
+	if sc.myConfig.MoneyAward > 0 {
+		award = strconv.FormatFloat(sc.myConfig.MoneyAward, 'f', -1, 64) + "元"
 	}
 	// 写入战绩
 	record := values.DDZGameRecord{
@@ -820,11 +1013,15 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 	userMatchReview := values.UserMatchReview{}
 	wins := 0
 	fails := 0
-	if len(award) > 0 {
+
+	var moneyAwardCount float64
+	if player.Rank-1 < len(base.Award) {
 		wins = 1
+		moneyAwardCount = values.GetMoneyAward(base.Award[player.Rank-1])
 	} else {
 		fails = 1
 	}
+
 	update := values.UserMatchReview{
 		UID:            uid,
 		AccountID:      user.BaseData.UserData.AccountID,
@@ -911,6 +1108,10 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 			}
 		})
 
+	awardStr := ""
+	if player.Rank-1 < len(base.Award) {
+		awardStr = base.Award[player.Rank-1]
+	}
 	// 将单个玩家的数据写入rank中
 	sc.myConfig.Rank = append(sc.myConfig.Rank, Rank{
 		Level:    player.Rank,
@@ -921,7 +1122,7 @@ func (sc *scoreMatch) awardPlayer(uid int) {
 		Wins:     player.Wins,
 		Period:   player.OpTime,
 		Sort:     player.SignSort,
-		Award:    award,
+		Award:    awardStr,
 	})
 
 	// 淘汰后清除比赛数据
@@ -1039,6 +1240,7 @@ func (sc *scoreMatch) ClearRoundData() {
 	sc.OverRoomCount = 0
 	sc.AllResults = []poker.LandlordPlayerRoundResult{}
 	base.SportsCenterRoundResult = []SportsCenterRoundResult{}
+	// sc.AwardResults = SportsCenterAwardResultRet{}
 }
 
 // SendRoundResult 给玩家发送单局结算
@@ -1083,20 +1285,41 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 
 // SendFinalResult 给玩家发送总结算
 func (sc *scoreMatch) SendFinalResult(uid int) {
-	base := sc.base.(*BaseMatch)
-	user := base.AllPlayers[uid]
-	player := user.BaseData.MatchPlayer
+	// base := sc.base.(*BaseMatch)
+	// user := base.AllPlayers[uid]
+	// player := user.BaseData.MatchPlayer
 
-	var award []string
-	if player.Rank-1 < len(base.Award) {
-		for _, one := range strings.Split(base.Award[player.Rank-1], ",") {
-			award = append(award, one)
+	// var award []string
+	// if player.Rank-1 < len(base.Award) {
+	// 	for _, one := range strings.Split(base.Award[player.Rank-1], ",") {
+	// 		award = append(award, one)
+	// 	}
+	// }
+	// user.WriteMsg(&msg.S2C_MineRoundRank{
+	// 	RankOrder: player.Rank,
+	// 	Award:     award,
+	// })
+	base := sc.base.(*BaseMatch)
+	user, ok := UserIDUsers[uid]
+	// 玩家不在线
+	if !ok {
+		return
+	}
+	for _, player := range sc.matchPlayers {
+		if player.uid == uid {
+			var award []string
+			if player.rank-1 < len(base.Award) {
+				for _, one := range strings.Split(base.Award[player.rank-1], ",") {
+					award = append(award, one)
+				}
+			}
+			user.WriteMsg(&msg.S2C_MineRoundRank{
+				RankOrder: player.rank,
+				Award:     award,
+			})
+			break
 		}
 	}
-	user.WriteMsg(&msg.S2C_MineRoundRank{
-		RankOrder: player.Rank,
-		Award:     award,
-	})
 }
 
 // SendMatchInfo 广播赛事信息
@@ -1122,4 +1345,13 @@ func (sc *scoreMatch) SendMatchInfo(uid int) {
 		}
 		p.WriteMsg(&info)
 	}
+}
+
+func (sc *scoreMatch) getMatchPlayer(uid int) *matchPlayer {
+	for _, v := range sc.matchPlayers {
+		if v.uid == uid {
+			return v
+		}
+	}
+	return nil
 }

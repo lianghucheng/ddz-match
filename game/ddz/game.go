@@ -196,6 +196,8 @@ func (game *LandlordMatchRoom) StartGame() {
 		// 	}
 		// 	playerData.User.WriteMsg(&info)
 	}
+	// 最后三张
+	game.lastThree = game.rests[len(game.rests)-3:]
 
 	// 所有玩家都发十七张牌
 	for _, userID := range game.PositionUserIDs {
@@ -231,6 +233,7 @@ func (game *LandlordMatchRoom) StartGame() {
 		playerData.User.BaseData.MatchPlayer.Result[game.count-1].Count = game.count
 		playerData.User.BaseData.MatchPlayer.Result[game.count-1].HandCards = playerData.hands
 		playerData.User.BaseData.MatchPlayer.Result[game.count-1].CardCount = 1
+		playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
 	}
 	// 庄家叫分
 	game.score(game.dealerUserID)

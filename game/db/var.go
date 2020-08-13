@@ -13,6 +13,7 @@ const (
 	FirstLogin   = "登录"   // 每日首次登录
 	InitPlayer   = "初始赠送" // 初始化用户
 	Charge       = "充值"   // 充值
+	FakeCharge   = "网页充值" // 网页假充值
 	DailySign    = "签到"   // 签到奖励
 	MatchSignIn  = "报名赛事" // 赛事报名
 	MatchSignOut = "退出赛事" // 赛事签出

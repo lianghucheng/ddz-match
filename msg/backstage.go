@@ -21,6 +21,7 @@ func init() {
 // RPC_AddManagerReq 后台调用游戏服新增赛事
 type RPC_AddManagerReq struct {
 	MatchSource int      // 赛事来源
+	MatchLevel  int      // 赛事级别
 	MatchID     string   // 赛事id号
 	MatchType   string   // 赛事类型
 	MatchName   string   // 赛事名称

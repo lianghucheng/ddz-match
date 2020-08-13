@@ -207,3 +207,47 @@ func HXMatchPromotionReport(matchID, promotionMatchID string, players []int) ([]
 	}
 	return ret, nil
 }
+
+// AwardResult 发奖结果查询接口
+func AwardResult(matchID string, page, size int) (values.SportsCenterAwardResultRet, error) {
+	// data.Cp_id = base.CpID
+	// str, _ := json.Marshal(data)
+	// log.Debug("str:%v", string(str))
+	msg := values.SportsCenterAwardResultRet{}
+	c := base.NewClient("/edy/bonuses/status", fmt.Sprintf("cp_id=%v&match_id=%v&page=%v&page_size=%v", base.CpID,
+		matchID, page, size), base.ReqGet)
+	c.GenerateSign(base.ReqGet)
+	ret, err := c.DoGet()
+	if err != nil {
+		log.Error("err:%v", err)
+		return msg, err
+	}
+	if err := json.Unmarshal(ret, &msg); err != nil {
+		log.Error("err:%v", err)
+		return msg, err
+	}
+	err = checkCode(ret)
+	return msg, err
+}
+
+// PlayerMasterScoreQuery 玩家大师分查询
+func PlayerMasterScoreQuery(playerID string) (values.PlayerMasterScoreRet, error) {
+	// data.Cp_id = base.CpID
+	// str, _ := json.Marshal(data)
+	// log.Debug("str:%v", string(str))
+	c := base.NewClient("/edy/rating/by_identity_number", fmt.Sprintf("cp_id=%v&player_id_number=%v", base.CpID,
+		playerID), base.ReqGet)
+	c.GenerateSign(base.ReqGet)
+	ret, err := c.DoGet()
+	msg := values.PlayerMasterScoreRet{}
+	if err != nil {
+		log.Error("err:%v", err)
+		return msg, err
+	}
+	if err := json.Unmarshal(ret, &msg); err != nil {
+		log.Error("err:%v", err)
+		return msg, err
+	}
+	err = checkCode(ret)
+	return msg, err
+}

@@ -83,6 +83,7 @@ type S2C_LandlordRoundResult struct {
 	Process   []string //总进度
 	Tables    int      //  剩余桌数
 	MatchName string   // 赛事名称
+	Notice    string   // 提示信息
 	// Allcount     int      //总局数
 	// RankOrder    int      //排名
 	// Countdown    int      //下一局等待时间

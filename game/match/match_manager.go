@@ -38,6 +38,9 @@ import (
 func (sc *ScoreConfig) NewManager() {
 	sc.GetAwardItem()
 	MatchManagerList[sc.MatchID] = sc
+	if sc.State != Signing {
+		return
+	}
 	// 如果是倒计时开赛的赛事，一开始直接创建出子比赛
 	if sc.StartType >= 2 {
 		sc.CreateOneMatch()
@@ -76,17 +79,38 @@ func (sc *ScoreConfig) SignIn(uid int) {
 		}
 	}
 
-	// 体总赛事,首先验证赛事是否合法
+	// 体总赛事判断分数
 	if sc.MatchSource == MatchSourceSportsCenter {
-		if _, err := edy_api.CheckMatch(sc.LastMatch.SonMatchID); err != nil {
-			user.WriteMsg(&msg.S2C_Apply{
-				Error:  msg.S2C_Error_MatchId,
-				RaceID: sc.MatchID,
-				Action: 1,
-				Count:  len(sc.AllSignInPlayers),
-			})
-			return
+		switch sc.MatchLevel {
+		case MatchLevelB:
+			if user.BaseData.UserData.SportCenter.RedScore < LevelBSignScore {
+				user.WriteMsg(&msg.S2C_Apply{
+					Error:  msg.S2C_Error_NotEnoughScore,
+					RaceID: sc.MatchID,
+					Action: 1,
+					Count:  len(sc.AllSignInPlayers),
+				})
+				return
+			}
+		case MatchLevelA:
+			if user.BaseData.UserData.SportCenter.SilverScore < LevelASignScore {
+				user.WriteMsg(&msg.S2C_Apply{
+					Error:  msg.S2C_Error_NotEnoughScore,
+					RaceID: sc.MatchID,
+					Action: 1,
+					Count:  len(sc.AllSignInPlayers),
+				})
+				return
+			}
 		}
+	}
+	sc.onSign(uid)
+}
+
+func (sc *ScoreConfig) onSign(uid int) {
+	user, ok := UserIDUsers[uid]
+	if !ok {
+		return
 	}
 
 	//log.Debug("####机器人报名：%v   %v   %v", user.IsRobot(), sc.RobotNum(), config.GetCfgMatchRobotMaxNums()[sc.MatchID])
@@ -381,6 +405,17 @@ func (sc *ScoreConfig) CreateOneMatch() {
 	sc.CurrentIDIndex++
 
 	BroadcastMatchInfo()
+
+	if sc.MatchSource == MatchSourceSportsCenter {
+		var createErr error
+		game.GetSkeleton().Go(func() {
+			_, createErr = edy_api.CheckMatch(sc.LastMatch.SonMatchID)
+		}, func() {
+			if createErr != nil {
+				sc.DownShelf()
+			}
+		})
+	}
 }
 
 // Save 保存赛事
@@ -531,6 +566,7 @@ func (sc *ScoreConfig) Shelf() {
 		log.Error("shelf not cancel matchID:%v", sc.MatchID)
 		return
 	}
+	sc.State = Signing
 
 	if sc.StartTimer != nil {
 		sc.StartTimer.Stop()
@@ -541,7 +577,6 @@ func (sc *ScoreConfig) Shelf() {
 			log.Error("unknown match:%+v", sc)
 		}
 	}
-	sc.State = Signing
 
 	// 刷新数据库
 	sc.Save()

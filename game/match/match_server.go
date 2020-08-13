@@ -64,21 +64,16 @@ func initMatchConfig() error {
 				}, nil)
 				continue
 			}
+			sConfig.NewManager()
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
 				sConfig.State = Cancel
 				sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-					// NewScoreManager(sConfig)
 					sConfig.Shelf()
 				})
-				MatchManagerList[sConfig.MatchID] = sConfig
-			} else {
-				// NewScoreManager(sConfig)
-				sConfig.NewManager()
 			}
 			if sConfig.DownShelfTime > time.Now().Unix() {
-				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-					// NewScoreManager(sConfig)
+				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.DownShelfTime-time.Now().Unix())*time.Second, func() {
 					sConfig.DownShelf()
 				})
 			}

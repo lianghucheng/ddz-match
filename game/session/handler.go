@@ -1,6 +1,7 @@
 package session
 
 import (
+	"ddz/game/db"
 	"ddz/game/hall"
 	. "ddz/game/match"
 	"ddz/game/pay"
@@ -57,6 +58,7 @@ func init() {
 	handler(&msg.C2S_CreateOrderSuccess{}, handleCreateOrderSuccess)
 	handler(&msg.C2S_UseProp{}, handleUseProp)
 	handler(&msg.C2S_Knapsack{}, handleKnapsack)
+	handler(&msg.C2S_UserInfo{}, handleGetUserInfo)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -81,7 +83,7 @@ func handleCoupon(args []interface{}) {
 		return
 	}
 	user := agentInfo.User
-	hall.AddCoupon(user, m.Count)
+	hall.AddCoupon(user.BaseData.UserData.UserID, user.BaseData.UserData.AccountID, m.Count, db.NormalOpt, db.FakeCharge, "")
 }
 
 func handleGetGameRecordAll(args []interface{}) {
@@ -616,4 +618,18 @@ func handleKnapsack(args []interface{}) {
 		return
 	}
 	hall.SendKnapsack(user)
+}
+
+func handleGetUserInfo(args []interface{}) {
+	m := args[0].(*msg.C2S_UserInfo)
+	_ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	user.SendUserInfo()
 }
