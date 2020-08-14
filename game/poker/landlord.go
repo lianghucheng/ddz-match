@@ -75,13 +75,14 @@ type LandlordPlayerRoundResult struct {
 
 // LandlordRankData 比赛排行榜信息
 type LandlordRankData struct {
-	Position int    // 玩家位置
-	Nickname string // 昵称(用户绑定的真实姓名)
-	Wins     int    // 获胜次数
-	Total    int64  // 总得分
-	Last     int64  // 尾副牌得分
-	Time     int64  // 累计用时(单位毫秒)
-	Sort     int    // 报名排序
+	AccountID int
+	Position  int    // 玩家位置
+	Nickname  string // 昵称(用户绑定的真实姓名)
+	Wins      int    // 获胜次数
+	Total     int64  // 总得分
+	Last      int64  // 尾副牌得分
+	Time      int64  // 累计用时(单位毫秒)
+	Sort      int    // 报名排序
 }
 
 // 斗地主所有的扑克牌

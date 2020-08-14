@@ -106,19 +106,22 @@ type scoreMatch struct {
 	AllResults           []poker.LandlordPlayerRoundResult // 所有房间打完后，发送给客户端的单轮总结算
 	AwardResults         SportsCenterAwardResultRet        // 单局发奖结果
 	WaitSportCenterTimer *timer.Timer                      // 等待体总回调计时器
+	WaitSportCenterCount int                               // 重复调用次数
 }
 
 type matchPlayer struct {
-	uid        int
-	accountID  int
-	rank       int
-	nickname   string
-	totalScore int64
-	lastScore  int64
-	wins       int
-	opTime     int64
-	signSort   int
-	awardTimer *timer.Timer
+	uid            int
+	accountID      int
+	rank           int
+	nickname       string
+	totalScore     int64
+	lastScore      int64
+	wins           int
+	opTime         int64
+	signSort       int
+	awardTimer     *timer.Timer
+	result         []Result //牌局详细
+	eliminateRound int      // 被淘汰的轮次
 }
 
 // NewScoreMatch 创建一个新的赛事
@@ -280,16 +283,16 @@ func (sc *scoreMatch) End() {
 		}
 	}
 
-	game.GetSkeleton().Go(func() {
-		if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+	if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
+		game.GetSkeleton().Go(func() {
 			ranks := []SportsCenterOneFinalRank{}
 			for _, p := range sc.matchPlayers {
 				one := SportsCenterOneFinalRank{
 					Player_id:          strconv.Itoa(p.accountID),
 					Ranking:            strconv.Itoa(p.rank),
-					Average_mp_ratio:   "null",
-					Rival_avg_mp_ratio: "null",
-					Rank_count:         "null",
+					Average_mp_ratio:   "",
+					Rival_avg_mp_ratio: "",
+					Rank_count:         "",
 					Total_time:         strconv.FormatInt(p.opTime, 10),
 					Status:             "0",
 				}
@@ -307,8 +310,8 @@ func (sc *scoreMatch) End() {
 					log.Error("err:%v", err)
 				}
 			}
-		}
-	}, nil)
+		}, nil)
+	}
 
 	// 踢出所有玩家
 	for _, p := range base.AllPlayers {
@@ -434,6 +437,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 						p.totalScore = player.TotalScore
 						p.opTime = player.OpTime
 						p.wins = player.Wins
+						p.result = player.Result
 						break
 					}
 				}
@@ -475,13 +479,13 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 						Card_group_id:        "1",
 						Card_desk_id:         strconv.Itoa(n + 1),
 						Card_score:           strconv.FormatInt(player.LastScore, 10),
-						Mp_score:             "1",
-						Mp_ratio:             "1",
-						Mp_ratio_rank:        "1",
+						Mp_score:             "",
+						Mp_ratio:             "",
+						Mp_ratio_rank:        "",
 						Card_type:            changeCardsToSportsCenter(playerData.OriginHands),
 						Call_score:           strconv.Itoa(playerData.Score),
 						Spring:               getSpring(playerData.Spring, playerData.LSpring),
-						Raise:                getDouble(playerData.Public),
+						Raise:                getDouble(playerData.Double),
 						Card_hole:            changeCardsToSportsCenter(player.Result[base.CurrentRound-1].ThreeCards),
 						Card_rival:           getTablePlayerID(game.UserIDPlayerDatas, player.UID),
 						Player_position:      strconv.Itoa(playerData.Position),
@@ -492,7 +496,7 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 			}
 			sort.Sort(poker.LstPoker(results))
 			// 发送单局结算信息
-			notice := "本局所有牌打完将进入下一局"
+			notice := "本轮所有牌打完将进入下一轮"
 			if base.CurrentRound >= base.Round {
 				notice = "赛事结果上报中，请稍后..."
 			}
@@ -533,9 +537,9 @@ func (sc *scoreMatch) NextRound() {
 			one := SportsCenterOneFinalRank{
 				Player_id:          strconv.Itoa(sc.matchPlayers[i].accountID),
 				Ranking:            strconv.Itoa(sc.matchPlayers[i].rank),
-				Average_mp_ratio:   "null",
-				Rival_avg_mp_ratio: "null",
-				Rank_count:         "null",
+				Average_mp_ratio:   "",
+				Rival_avg_mp_ratio: "",
+				Rank_count:         "",
 				Total_time:         strconv.FormatInt(sc.matchPlayers[i].opTime, 10),
 				Status:             "0",
 			}
@@ -552,6 +556,17 @@ func (sc *scoreMatch) NextRound() {
 				Status:    "0",
 			}
 			rankList = append(rankList, one)
+		}
+
+		// 是否发奖
+		isAward := false
+		if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
+			eliminate := sc.myConfig.Eliminate[base.CurrentRound-1]
+			if eliminate < len(base.AllPlayers) {
+				isAward = true
+			}
+		} else if base.CurrentRound >= base.Round {
+			isAward = true
 		}
 
 		matchID := []byte(base.SonMatchID)
@@ -645,24 +660,26 @@ func (sc *scoreMatch) NextRound() {
 			}
 
 			// 最后一轮
-			if base.CurrentRound >= base.Round {
-				// 最终排名上报
-				if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
-					Match_id: string(matchID),
-					Ranks:    ranks,
-				}); err != nil {
-					log.Error("err:%v", err)
-				} else { // 结果上传完毕
-					if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
-						log.Error("err:%v", err)
-					}
-				}
-			}
+			// if base.CurrentRound >= base.Round {
+			// 	// 最终排名上报
+			// 	if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
+			// 		Match_id: string(matchID),
+			// 		Ranks:    ranks,
+			// 	}); err != nil {
+			// 		log.Error("err:%v", err)
+			// 	} else { // 结果上传完毕
+			// 		if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+			// 			log.Error("err:%v", err)
+			// 		}
+			// 	}
+			// }
 
 			// 清理数据
 			// sc.AwardResults = values.SportsCenterAwardResultRet{}
-			// 拉取体总发奖结果
-			sc.getSportsAwardResult(string(matchID), roundIndex)
+			if isAward {
+				// 拉取体总发奖结果
+				sc.getSportsAwardResult(string(matchID), roundIndex)
+			}
 			// if msg, err := edy_api.AwardResult(string(matchID), 1, roundIndex); err == nil {
 			// 	sc.AwardResults = msg
 			// }
@@ -693,6 +710,11 @@ func (sc *scoreMatch) NextRound() {
 
 func (sc *scoreMatch) getSportsAwardResult(matchID string, num int) {
 	base := sc.base.(*BaseMatch)
+	// 最多请求5次
+	if sc.WaitSportCenterCount > 5 {
+		sc.WaitSportCenterCount = 0
+		return
+	}
 	sc.WaitSportCenterTimer = game.GetSkeleton().AfterFunc(1*time.Second, func() {
 		game.GetSkeleton().Go(func() {
 			// 清理数据
@@ -703,6 +725,7 @@ func (sc *scoreMatch) getSportsAwardResult(matchID string, num int) {
 			}
 		}, func() {
 			if len(sc.AwardResults.Result_list) == 0 {
+				sc.WaitSportCenterCount++
 				sc.getSportsAwardResult(matchID, num)
 				return
 			}
@@ -756,13 +779,14 @@ func (sc *scoreMatch) GetRank(uid int) {
 	data := []poker.LandlordRankData{}
 	for _, p := range sc.matchPlayers {
 		data = append(data, poker.LandlordRankData{
-			Position: p.rank,
-			Nickname: p.nickname,
-			Wins:     p.wins,
-			Total:    p.totalScore,
-			Last:     p.lastScore,
-			Time:     p.opTime,
-			Sort:     p.signSort,
+			AccountID: p.accountID,
+			Position:  p.rank,
+			Nickname:  p.nickname,
+			Wins:      p.wins,
+			Total:     p.totalScore,
+			Last:      p.lastScore,
+			Time:      p.opTime,
+			Sort:      p.signSort,
 		})
 	}
 	user.WriteMsg(&msg.S2C_LandlordMatchRound{
@@ -862,6 +886,8 @@ func (sc *scoreMatch) eliminatePlayers() {
 func (sc *scoreMatch) eliminateOnePlayer(uid int) {
 	log.Debug("eliminate player:%v", uid)
 	base := sc.base.(*BaseMatch)
+	player := sc.getMatchPlayer(uid)
+	player.eliminateRound = base.CurrentRound
 	// 非体总赛事直接发奖
 	if base.NormalCofig.MatchSource != MatchSourceSportsCenter {
 		// 给玩家发送比赛结算总界面
@@ -922,6 +948,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 		sc.WaitSportCenterTimer.Stop()
 		sc.WaitSportCenterTimer = nil
 	}
+	status := AwardStatusNormal
 	// var moneyAwardCount float64
 	if player.rank-1 < len(base.Award) {
 		awardStr := base.Award[player.rank-1]
@@ -950,7 +977,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 					}
 				}
 				if awardAmount <= 0 {
-					hall.GamePushMail(uid, "比赛通知", "您在【入门快速赛】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作")
+					status = AwardStatusBonusFail
 					continue
 				}
 				// moneyAwardCount += utils.Decimal(awardAmount * 0.8)
@@ -979,16 +1006,6 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 			}
 		}
 	}
-}
-
-// 写入战绩,记录等
-func (sc *scoreMatch) recordPlayer(uid int) {
-	base := sc.base.(*BaseMatch)
-	user, ok := base.AllPlayers[uid]
-	if !ok {
-		return
-	}
-	player := user.BaseData.MatchPlayer
 	award := "道具奖励"
 	if sc.myConfig.MoneyAward > 0 {
 		award = strconv.FormatFloat(sc.myConfig.MoneyAward, 'f', -1, 64) + "元"
@@ -999,16 +1016,60 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 		MatchId:   base.SonMatchID,
 		MatchType: base.NormalCofig.MatchType,
 		Desc:      base.NormalCofig.MatchName,
-		Level:     player.Rank,
+		Level:     player.rank,
 		Award:     award,
-		Count:     base.CurrentRound,
-		Total:     player.TotalScore,
-		Last:      player.LastScore,
-		Wins:      player.Wins,
-		Period:    player.OpTime,
-		Result:    player.Result[:base.CurrentRound],
+		Count:     player.eliminateRound,
+		Total:     player.totalScore,
+		Last:      player.lastScore,
+		Wins:      player.wins,
+		Period:    player.opTime,
+		Result:    player.result[:player.eliminateRound],
 		CreateDat: time.Now().Unix(),
+		Status:    status,
 	}
+	// 自己的奖励
+	awardStr := ""
+	if player.rank-1 < len(base.Award) {
+		awardStr = base.Award[player.rank-1]
+	}
+	game.GetSkeleton().Go(func() {
+		if status == AwardStatusNormal {
+			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.rank, awardStr)
+		} else {
+			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
+		}
+		db.InsertMatchRecord(record)
+	}, nil)
+}
+
+// 写入战绩,记录等
+func (sc *scoreMatch) recordPlayer(uid int) {
+	base := sc.base.(*BaseMatch)
+	user, ok := base.AllPlayers[uid]
+	if !ok {
+		return
+	}
+	player := user.BaseData.MatchPlayer
+	// award := "道具奖励"
+	// if sc.myConfig.MoneyAward > 0 {
+	// 	award = strconv.FormatFloat(sc.myConfig.MoneyAward, 'f', -1, 64) + "元"
+	// }
+	// // 写入战绩
+	// record := values.DDZGameRecord{
+	// 	UserId:    uid,
+	// 	MatchId:   base.SonMatchID,
+	// 	MatchType: base.NormalCofig.MatchType,
+	// 	Desc:      base.NormalCofig.MatchName,
+	// 	Level:     player.Rank,
+	// 	Award:     award,
+	// 	Count:     base.CurrentRound,
+	// 	Total:     player.TotalScore,
+	// 	Last:      player.LastScore,
+	// 	Wins:      player.Wins,
+	// 	Period:    player.OpTime,
+	// 	Result:    player.Result[:base.CurrentRound],
+	// 	CreateDat: time.Now().Unix(),
+	// }
 
 	userMatchReview := values.UserMatchReview{}
 	wins := 0
@@ -1037,11 +1098,12 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 	var err error
 	gameData := &values.GameData{}
 	accountID := user.BaseData.UserData.AccountID
+
 	// 赛事总览以及玩家数据记录
 	game.GetSkeleton().Go(
 		func() {
-			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.Rank, award)
-			db.InsertMatchRecord(record)
+			// hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.Rank, awardStr)
+			// db.InsertMatchRecord(record)
 			userMatchReview, err = db.GetUserMatchReview(uid, base.NormalCofig.MatchType, base.NormalCofig.MatchID)
 			gameData = db.GetUserGameData(uid)
 		}, func() {
@@ -1108,21 +1170,27 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 			}
 		})
 
-	awardStr := ""
+	// 自己的奖励
+	var awardStr, scoreStr, otherStr string
 	if player.Rank-1 < len(base.Award) {
 		awardStr = base.Award[player.Rank-1]
+		if len(awardStr) > 0 {
+			scoreStr, otherStr = values.SplitScoreAward(awardStr)
+		}
 	}
+
 	// 将单个玩家的数据写入rank中
 	sc.myConfig.Rank = append(sc.myConfig.Rank, Rank{
-		Level:    player.Rank,
-		NickName: user.BaseData.UserData.Nickname,
-		Count:    base.CurrentRound,
-		Total:    player.TotalScore,
-		Last:     player.LastScore,
-		Wins:     player.Wins,
-		Period:   player.OpTime,
-		Sort:     player.SignSort,
-		Award:    awardStr,
+		Level:      player.Rank,
+		NickName:   user.BaseData.UserData.Nickname,
+		Count:      base.CurrentRound,
+		Total:      player.TotalScore,
+		Last:       player.LastScore,
+		Wins:       player.Wins,
+		Period:     player.OpTime,
+		Sort:       player.SignSort,
+		Award:      otherStr,
+		ScoreAward: scoreStr,
 	})
 
 	// 淘汰后清除比赛数据
@@ -1178,7 +1246,7 @@ func (sc *scoreMatch) GetProcess() []string {
 				n = len(base.AllPlayers)
 			}
 			if i == 0 {
-				s = fmt.Sprintf("首局:%v人", n)
+				s = fmt.Sprintf("首轮:%v人", n)
 			} else if i == 1 {
 				s = fmt.Sprintf("决赛:%v人", n)
 			} else if i == 2 {
@@ -1200,9 +1268,9 @@ func (sc *scoreMatch) GetProcess() []string {
 				n = len(base.AllPlayers)
 			}
 			if i == 0 {
-				s = fmt.Sprintf("首局:%v人", n)
+				s = fmt.Sprintf("首轮:%v人", n)
 			} else if i == 1 {
-				s = fmt.Sprintf("次局:%v人", n)
+				s = fmt.Sprintf("次轮:%v人", n)
 			} else if i == 2 {
 				s = fmt.Sprintf("决赛:%v人", 1)
 			} else if i == 3 {
@@ -1226,7 +1294,7 @@ func (sc *scoreMatch) GetProcess() []string {
 			if i == base.Round-1 {
 				s = fmt.Sprintf("冠军:%v人", n)
 			} else {
-				s = fmt.Sprintf("第%v局:%v人", i+1, n)
+				s = fmt.Sprintf("第%v轮:%v人", i+1, n)
 			}
 			ret[i] = s
 		}
@@ -1334,7 +1402,7 @@ func (sc *scoreMatch) SendMatchInfo(uid int) {
 	for _, p := range base.AllPlayers {
 		info := msg.S2C_MatchInfo{
 			RoundNum:       sc.myConfig.RoundNum,
-			Process:        fmt.Sprintf("第%v局 第1副", base.CurrentRound),
+			Process:        fmt.Sprintf("第%v轮 第1副", base.CurrentRound),
 			Level:          fmt.Sprintf("%v/%v", p.BaseData.MatchPlayer.Rank, len(base.AllPlayers)),
 			Competition:    fmt.Sprintf("前%v晋级", eliminate),
 			AwardList:      base.AwardList,

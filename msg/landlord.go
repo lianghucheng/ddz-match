@@ -29,6 +29,8 @@ type S2C_LandlordBid struct {
 // 加倍动作（只发给自己）
 type S2C_ActionLandlordDouble struct {
 	Countdown int // 倒计时
+	UIDs      []int
+	Notice    string
 }
 
 type C2S_LandlordDouble struct {
@@ -36,8 +38,9 @@ type C2S_LandlordDouble struct {
 }
 
 type S2C_LandlordDouble struct {
-	Position int
-	Double   bool
+	Position   int
+	Double     bool
+	ShowNotice bool
 }
 
 type S2C_DecideLandlord struct {

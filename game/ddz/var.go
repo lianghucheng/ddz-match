@@ -62,7 +62,7 @@ type LandlordMatchPlayerData struct {
 	state             int
 	Position          int // 用户在桌子上的位置，从 0 开始
 	dealer            bool
-	double            bool    // 是否加倍
+	Double            uint    // 0未选择,1不加倍,2加倍
 	wins              int     // 赢的次数
 	hands             []int   // 手牌
 	discards          [][]int // 打出的牌
@@ -158,7 +158,7 @@ func (game *LandlordMatchRoom) initRoom() {
 		playerUserID := game.PositionUserIDs[playerPos]
 		playerPlayerData := game.UserIDPlayerDatas[playerUserID]
 		playerPlayerData.dealer = false
-		playerPlayerData.double = false
+		playerPlayerData.Double = 0
 	}
 	game.lastThree = []int{}
 	game.discards = []int{}
@@ -212,6 +212,10 @@ func (game *LandlordMatchRoom) allWaiting() bool {
 		}
 	}
 	if count == game.rule.MaxPlayers {
+		return true
+	}
+	// 无人加倍地主直接出牌
+	if len(game.getFarmerDouble()) == 0 && game.getDoublePlayers() == 2 {
 		return true
 	}
 	return false
@@ -403,13 +407,13 @@ func (ctx *LandlordMatchPlayerData) sendRoomPanel(baseScore int) {
 
 func (game *LandlordMatchRoom) GetProcess() []string {
 	if game.rule.Round == 2 {
-		return []string{"首局", "决赛", "冠军"}
+		return []string{"首轮", "决赛", "冠军"}
 	} else if game.rule.Round == 3 {
-		return []string{"首局", "次局", "决赛", "冠军"}
+		return []string{"首轮", "次轮", "决赛", "冠军"}
 	} else {
 		rt := []string{}
 		for i := 0; i < game.rule.Round; i++ {
-			rt = append(rt, fmt.Sprintf("第%v局", i+1))
+			rt = append(rt, fmt.Sprintf("第%v轮", i+1))
 		}
 		//todo: 根据具体需求修改
 		rt = append(rt, "冠军")

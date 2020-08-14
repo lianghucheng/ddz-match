@@ -64,7 +64,6 @@ func initMatchConfig() error {
 				}, nil)
 				continue
 			}
-			sConfig.NewManager()
 			// 上架时间
 			if sConfig.ShelfTime > time.Now().Unix() {
 				sConfig.State = Cancel
@@ -77,6 +76,7 @@ func initMatchConfig() error {
 					sConfig.DownShelf()
 				})
 			}
+			sConfig.NewManager()
 		default:
 			log.Error("unknown match:%v", one)
 		}
@@ -190,9 +190,9 @@ func sortMatch(list []values.MatchManager) {
 // BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
 func BroadcastMatchInfo() {
 	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-	if len(RaceInfo) == 0 {
-		return
-	}
+	// if len(RaceInfo) == 0 {
+	// 	return
+	// }
 	for uid, user := range player.UserIDUsers {
 		if ma, ok := UserIDMatch[uid]; ok {
 			myMatchID := ma.NormalCofig.MatchID

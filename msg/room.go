@@ -83,6 +83,7 @@ type GameRecord struct {
 	Wins      int    //获胜次数
 	Period    int64  //累计时长
 	CreateDat int64  //时间
+	Status    int    // 战绩发奖状态
 }
 
 type SaveAllGameRecord struct {
@@ -142,15 +143,16 @@ type S2C_GetGameResultRecord struct {
 }
 
 type Rank struct {
-	Level    int    //名次
-	NickName string //用户名
-	Count    int    //完成局数
-	Total    int64  //总得分
-	Last     int64  //尾副牌得分
-	Wins     int    //获胜次数
-	Period   int64  //累计时长
-	Sort     int    //报名次序
-	Award    string //奖励
+	Level      int    //名次
+	NickName   string //用户名
+	Count      int    //完成局数
+	Total      int64  //总得分
+	Last       int64  //尾副牌得分
+	Wins       int    //获胜次数
+	Period     int64  //累计时长
+	Sort       int    //报名次序
+	Award      string //奖励
+	ScoreAward string // 大师分奖励
 }
 
 type GameResult struct {

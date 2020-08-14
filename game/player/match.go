@@ -80,7 +80,49 @@ func (user *User) SendMatchRecord(page, num int, matchType string) {
 	oneRecord := []msg.GameRecord{}
 	record := &msg.S2C_GetGameRecord{}
 	if data == nil {
-		log.Error("请求顺序出错!")
+		game.GetSkeleton().Go(func() {
+			s := db.MongoDB.Ref()
+			defer db.MongoDB.UnRef(s)
+			// count, _ = s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).Limit(60).Count()
+			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
+				Sort("-createdat").Limit(60).All(&items)
+		}, func() {
+			for _, r := range items {
+				if r.MatchType != matchType {
+					continue
+				}
+				oneRecord = append(oneRecord, msg.GameRecord{
+					UserId:    r.UserId,
+					MatchId:   r.MatchId,
+					MatchType: r.MatchType,
+					Desc:      r.Desc,
+					Level:     r.Level,
+					Award:     r.Award,
+					Count:     r.Count,
+					Total:     r.Total,
+					Last:      r.Last,
+					Wins:      r.Wins,
+					Period:    r.Period,
+					CreateDat: r.CreateDat,
+				})
+			}
+
+			if (page-1)*num >= len(oneRecord) {
+				log.Error("invalid params:total:%v,rpage:%v,rnum:%v", len(oneRecord), page, num)
+				return
+			}
+			end := page * num
+			if end > len(oneRecord) {
+				end = len(oneRecord)
+			}
+			record.Total = len(oneRecord)
+			record.PageNumber = page
+			record.PageSize = num
+			record.Record = oneRecord[(page-1)*num : end]
+			record.MatchType = matchType
+			user.WriteMsg(record)
+			db.RedisMatchAll(uid, items)
+		})
 		return
 	}
 	err := json.Unmarshal(data, &items)
@@ -231,8 +273,36 @@ func (user *User) SendMatchResultRecord(matchID string, page, num int) {
 	var items []msg.GameAllRecord
 	result := []msg.GameResult{}
 	if redisData == nil {
-		log.Error("查询顺序出错!")
-		return
+		game.GetSkeleton().Go(func() {
+			s := db.MongoDB.Ref()
+			defer db.MongoDB.UnRef(s)
+			// count, _ = s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).Limit(60).Count()
+			s.DB(db.DB).C("gamerecord").Find(bson.M{"userid": user.BaseData.UserData.UserID}).
+				Sort("-createdat").Limit(60).All(&items)
+		}, func() {
+			for _, r := range items {
+				if r.MatchId == matchID {
+					result = r.Result
+					break
+				}
+			}
+			data := &msg.S2C_GetGameResultRecord{}
+			data.Total = len(result)
+			data.MatchID = matchID
+			data.PageNumber = page
+			data.PageSize = num
+			if (page-1)*num >= len(result) {
+				log.Error("invalid params:total:%v,rpage:%v,rnum:%v", len(result), page, num)
+				return
+			}
+			end := page * num
+			if end > len(result) {
+				end = len(result)
+			}
+			data.Result = result[(page-1)*num : end]
+			user.WriteMsg(data)
+			db.RedisMatchAll(uid, items)
+		})
 	}
 	err := json.Unmarshal(redisData, &items)
 	if err != nil {

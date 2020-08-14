@@ -50,6 +50,12 @@ const (
 	MatchLevelChampionships            // 全国锦标赛
 )
 
+// 发奖状态
+const (
+	AwardStatusNormal    = iota // 正常
+	AwardStatusBonusFail        // 奖金发放失败
+)
+
 // 参赛条件
 const (
 	LevelBSignScore   = 300 // 红分

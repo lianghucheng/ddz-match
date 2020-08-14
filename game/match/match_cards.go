@@ -38,8 +38,8 @@ func getSpring(spring, lSpring int) string {
 }
 
 // 获取加倍的string
-func getDouble(public int) string {
-	if public > 1 {
+func getDouble(double uint) string {
+	if double > 1 {
 		return "1"
 	}
 	return "0"

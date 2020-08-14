@@ -473,7 +473,7 @@ func (sc *ScoreConfig) CheckConfig() error {
 	}
 
 	// 刷新描述
-	sc.RoundNum = fmt.Sprintf("%v局%v副", sc.Round, sc.Card)
+	sc.RoundNum = fmt.Sprintf("%v轮%v副", sc.Round, sc.Card)
 	return nil
 }
 

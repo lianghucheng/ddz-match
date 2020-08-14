@@ -336,3 +336,17 @@ func GetFragmentAward(award string) float64 {
 	}
 	return amount
 }
+
+// SplitScoreAward 将奖励字段中的分数切分出来
+func SplitScoreAward(award string) (score, other string) {
+	var scoreStr, otherStr string
+	s := strings.Split(award, ",")
+	for _, one := range s {
+		if strings.Index(one, "分") != -1 {
+			scoreStr += one
+		} else {
+			otherStr += one
+		}
+	}
+	return scoreStr, otherStr
+}

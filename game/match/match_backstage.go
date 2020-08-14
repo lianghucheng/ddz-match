@@ -208,11 +208,13 @@ func editMatch(args []interface{}) {
 			ShelfTime     int64
 			DownShelfTime int64
 			StartTime     int64
+			Eliminate     []int // 每轮淘汰人数
 		}{
 			data.TotalMatch,
 			data.ShelfTime,
 			data.DownShelfTime,
 			data.StartTime,
+			data.Eliminate,
 		}
 		utils.StructCopy(c, &tmp)
 	} else {
