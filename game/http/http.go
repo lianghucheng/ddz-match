@@ -32,7 +32,7 @@ func startHTTPServer() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/code", handleCode)
-	mux.HandleFunc("/pushmail", hall.HandlePushMail)
+	mux.HandleFunc("/pushmail", handlePushMail)
 	mux.HandleFunc("/temppay", HandleTempPay)
 	mux.HandleFunc("/register", handleRegister)
 	mux.HandleFunc("/findpwd", handleFindPwd)
@@ -155,7 +155,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	order.Merchant = values.ZrddzAliPay
 	order.PayStatus = 1
 	Save("edyorder", order, bson.M{"_id": order.ID})
-	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
+	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
 		TotalFee:  f,
 		AccountID: a,
 	})
@@ -335,7 +335,7 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo:存订单，发货
+	//存订单
 	order := new(values.EdyOrder)
 	Read("edyorder", order, bson.M{"tradeno": edyPayNotifyReq.OpenOrderID, "status": false})
 	if order.PayStatus != values.PayStatusAction {
@@ -346,11 +346,12 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	order.Status = true
 	order.PayStatus = values.PayStatusSuccess
 	Save("edyorder", order, bson.M{"_id": order.ID})
-	game.GetSkeleton().ChanRPCServer.Go("TempPayOK", &msg.RPC_TempPayOK{
+	//通知完成支付，进行发货
+	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
 		TotalFee:  int(order.Fee),
 		AccountID: order.Accountid,
 	})
-	log.Debug("【发货成功】")
+	//通知第三方支付流程已完成，封装响应数据
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
 	edyPayNotifyResp.OrderResult = "success"
 	edyPayNotifyResp.OrderAmount = fmt.Sprintf("%v", order.Fee)
@@ -363,7 +364,6 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	edyPayNotifyResp.Sign = edy_api.GenerateSign(param2)
-	//todo:封装响应数据
 	b, err := json.Marshal(edyPayNotifyResp)
 	if err != nil {
 		log.Error(err.Error())
@@ -539,4 +539,37 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Debug("%v", m)
+}
+
+func handlePushMail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	data := r.FormValue("data")
+	param := new(hall.MailBoxParam)
+	if err := json.Unmarshal([]byte(data), param); err != nil {
+		log.Error(err.Error())
+		code = FORMAT_FAIL
+		errmsg = ErrMsg[code]
+		return
+	}
+
+	param.PushMailBox()
 }

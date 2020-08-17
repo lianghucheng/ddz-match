@@ -32,6 +32,11 @@ const (
 	PASSWORD_LACK        = 1012
 )
 
+var ErrMsg = map[int]string{
+	FORMAT_FAIL: "数据格式错误. ",
+
+}
+
 var success = NewError(SUCCESS, "成功")
 var systemError = NewError(SYSTEM_ERROR, "系统错误")
 

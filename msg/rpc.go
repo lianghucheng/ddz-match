@@ -7,7 +7,7 @@ func init() {
 	Processor.Register(&RPC_WriteAwardFlowData{})
 	Processor.Register(&RPC_SendMatchEndMail{})
 	Processor.Register(&RPC_SendInterruptMail{})
-	Processor.Register(&RPC_TempPayOK{})
+	Processor.Register(&RPC_NotifyPayOK{})
 	Processor.Register(&RPC_AddFee{})
 	Processor.Register(&RPC_AddAward{})
 	Processor.Register(&RPC_UpdateAwardInfo{})
@@ -50,7 +50,7 @@ type RPC_WriteAwardFlowData struct {
 	Matchid string
 }
 
-type RPC_TempPayOK struct {
+type RPC_NotifyPayOK struct {
 	TotalFee  int
 	AccountID int
 }

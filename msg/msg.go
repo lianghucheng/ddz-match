@@ -143,11 +143,12 @@ type UserMail struct {
 	Content   string  //内容
 	Annexes   []Annex //附件
 	Status    int64   //邮件状态
-	MailServiceType int //0是系统邮件，1是赛事邮件，2是活动邮件
 }
 
 type S2C_SendMail struct {
 	Datas []UserMail
+	Match []UserMail
+	Activity []UserMail
 }
 
 type C2S_ReadMail struct {

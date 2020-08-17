@@ -13,7 +13,6 @@ import (
 	"ddz/msg"
 	"ddz/utils"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -34,7 +33,7 @@ func init() {
 	skeleton.RegisterChanRPC("WriteAwardFlowData", rpcWriteAwardFlowData)
 	// skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
-	skeleton.RegisterChanRPC("TempPayOK", rpcTempPayOK)
+	skeleton.RegisterChanRPC("NotifyPayOK", rpcHttpNotifyPayOK)
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
 	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
@@ -171,13 +170,12 @@ func rpcSendInterruptMail(args []interface{}) {
 	hall.MatchInterruptPushMail(m.Userid, m.MatchName, m.Coupon)
 }
 
-func rpcTempPayOK(args []interface{}) {
+func rpcHttpNotifyPayOK(args []interface{}) {
 	if len(args) != 1 {
 		return
 	}
-	m := args[0].(*msg.RPC_TempPayOK)
+	m := args[0].(*msg.RPC_NotifyPayOK)
 
-	fmt.Println("【！！！！！！！！！】Accountid:", m.AccountID)
 	ud := ReadUserDataByAid(m.AccountID)
 
 	if ud == nil {
@@ -198,23 +196,8 @@ func rpcTempPayOK(args []interface{}) {
 		}
 	}, nil)
 
-	addCoupon := m.TotalFee / 100
-
-	if user, ok := UserIDUsers[ud.UserID]; ok {
-		user.GetUserData().Coupon += int64(addCoupon)
-		go func() {
-			SaveUserData(user.GetUserData())
-		}()
-		user.WriteMsg(&msg.S2C_GetCoupon{
-			Error: msg.ErrPaySuccess,
-		})
-		hall.UpdateUserCoupon(user, int64(addCoupon), user.GetUserData().Coupon-int64(addCoupon), user.GetUserData().Coupon, db.ChargeOpt, db.Charge)
-	} else {
-		ud.Coupon += int64(addCoupon)
-		go func() {
-			SaveUserData(ud)
-		}()
-	}
+	//发货
+	hall.SendGoods(ud.UserID, m.TotalFee / 100)
 }
 
 func rpcAccountLogin(args []interface{}) {

@@ -54,9 +54,6 @@ func UpdateUserAfterTaxAward(user *player.User) {
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(user.GetUserData())
 	}, nil)
-	log.Debug("$$$$$$$$$$$$   %v", msg.S2C_UpdateUserAfterTaxAward{
-		AfterTaxAward: utils.Decimal(changeAmount),
-	})
 	user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
 		AfterTaxAward: utils.Decimal(changeAmount),
 	})
@@ -237,5 +234,25 @@ func AddPropAmount(propid int, accountid int, amount int) {
 		knapsackProp.PropID = propid
 		knapsackProp.Num += int(amount)
 		knapsackProp.Save()
+	}
+}
+
+//todo:目前只有点券
+func SendGoods(userID , amount int) {
+	ud := player.ReadUserDataByID(userID)
+	if user, ok := player.UserIDUsers[userID]; ok {
+		user.GetUserData().Coupon += int64(amount)
+		go func() {
+			player.SaveUserData(user.GetUserData())
+		}()
+		user.WriteMsg(&msg.S2C_GetCoupon{
+			Error: msg.ErrPaySuccess,
+		})
+		UpdateUserCoupon(user, int64(amount), user.GetUserData().Coupon-int64(amount), user.GetUserData().Coupon, db.ChargeOpt, db.Charge)
+	} else {
+		ud.Coupon += int64(amount)
+		go func() {
+			player.SaveUserData(ud)
+		}()
 	}
 }

@@ -6,9 +6,7 @@ import (
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -69,6 +67,7 @@ type UserMail struct {
 	ExpireValue int64   //有效时长
 	ExpiredAt   int64   //有效期
 	MailServiceType int //邮件服务类型
+	MailType int
 }
 
 func ReadMail(mid int64) {
@@ -109,9 +108,13 @@ func SendMail(user *player.User) {
 	game.GetSkeleton().Go(func() {
 		pullMailBox(user, mails)
 	}, func() {
-		usermails := readUserMail(user.UID())
+		officialUsermails := readUserMail(user.UID(), MailServiceTypeOfficial)
+		matchUsermails := readUserMail(user.UID(), MailServiceTypeMatch)
+		activityUsermails := readUserMail(user.UID(), MailServiceTypeActivity)
 		user.WriteMsg(&msg.S2C_SendMail{
-			Datas: *transferMsgUserMail(usermails),
+			Datas: *transferMsgUserMail(officialUsermails),
+			Match: *transferMsgUserMail(matchUsermails),
+			Activity: *transferMsgUserMail(activityUsermails),
 		})
 	})
 }
@@ -152,6 +155,8 @@ func pullMailBox(user *player.User, mails *[]MailBox) {
 		userMail.Content = v.Content
 		userMail.Annexes = v.Annexes
 		userMail.ExpireValue = v.ExpireValue
+		userMail.MailServiceType = v.MailServiceType
+		userMail.MailType = v.MailType
 		userMail.save()
 	}
 }
@@ -236,7 +241,7 @@ func (ctx *MailBox) pushMailBox() {
 	})
 }
 
-func readUserMail(uid int) *[]UserMail {
+func readUserMail(uid, mailServiceType int) *[]UserMail {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	limit := conf.GetCfgHall().UserMailLimit
@@ -244,7 +249,7 @@ func readUserMail(uid int) *[]UserMail {
 
 	notRead := new([]UserMail)
 	err := se.DB(db.DB).C("usermail").
-		Find(bson.M{"status": NotReadUserMail, "userid": uid}).
+		Find(bson.M{"status": NotReadUserMail, "userid": uid, "mailservicetype": mailServiceType}).
 		Sort("-createdat").Limit(limit).All(notRead)
 	if err != nil {
 		log.Error(err.Error())
@@ -254,7 +259,7 @@ func readUserMail(uid int) *[]UserMail {
 		limit -= len(*notRead)
 		readed := new([]UserMail)
 		err = se.DB(db.DB).C("usermail").
-			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid}).
+			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid, "mailservicetype": mailServiceType}).
 			Sort("-createdat").Limit(limit).All(readed)
 		if err != nil {
 			log.Error(err.Error())
@@ -275,7 +280,6 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.CreatedAt = v.CreatedAt
 		temp.ID = v.ID
 		temp.Status = v.Status
-		temp.MailServiceType = v.MailServiceType
 
 		*rt = append(*rt, *temp)
 	}
@@ -311,40 +315,7 @@ type MailBoxParam struct {
 	ExpireValue int64   `json:"expire_value"` //有效时长
 }
 
-func HandlePushMail(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	code := 10000
-	errmsg := "success"
-	result := make(map[string]interface{})
-	defer func() {
-		result["code"] = code
-		result["errmsg"] = errmsg
-		b, err := json.Marshal(result)
-		if err != nil {
-			log.Error(err.Error())
-			return
-		}
-		i, err := w.Write(b)
-		if err != nil {
-			log.Error(err.Error())
-			return
-		}
-		log.Debug("success size:%v. ", i)
-	}()
-
-	data := r.FormValue("data")
-	fmt.Println(data)
-	param := new(MailBoxParam)
-	if err := json.Unmarshal([]byte(data), param); err != nil {
-		log.Error(err.Error())
-		return
-	}
-
-	param.pushMailBox()
-	w.Write([]byte(`0`))
-}
-
-func (ctx *MailBoxParam) pushMailBox() {
+func (ctx *MailBoxParam) PushMailBox() {
 	mailBox := new(MailBox)
 	mailBox.TargetID = ctx.TargetID
 	mailBox.ExpireValue = ctx.ExpireValue
