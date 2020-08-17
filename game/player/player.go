@@ -1,9 +1,13 @@
 package player
 
 import (
+	"ddz/edy_api"
+	"ddz/game"
 	"ddz/game/db"
 	. "ddz/game/db"
 	"ddz/game/values"
+	"ddz/msg"
+	"ddz/utils"
 	"fmt"
 	"strconv"
 	"time"
@@ -62,8 +66,26 @@ type UserData struct {
 	SetNickNameCount  int
 	TakenFee          float64
 	FirstLogin        bool
+	SportCenter       SportCenterData // 体总数据
 	IsWithdraw        bool
 	WithdrawDeadLine  int64
+}
+
+type SportCenterData struct {
+	BlueScore       float64 // 蓝分
+	RedScore        float64 // 红分
+	SilverScore     float64 // 银分
+	GoldScore       float64 // 金分
+	Level           string  // 等级称号
+	Ranking         int     // 排名
+	SyncTime        int64   // 与体总同步时间
+	LastBlueScore   float64 // 同步前蓝分
+	LastRedScore    float64 // 同步前红分
+	LastSilverScore float64 // 同步前银分
+	LastGoldScore   float64 // 同步前金分
+	LastLevel       string  // 同步前等级称号
+	LastRanking     int     // 同步前排名
+	WalletStatus    int     // 钱包状态 0锁定,1正常
 }
 
 type User struct {
@@ -183,22 +205,68 @@ func (user *User) AcountID() int {
 	return user.BaseData.UserData.AccountID
 }
 
-// CheckFirstLogin 检查是否每日的首次登录
-func (user *User) CheckFirstLogin() {
-	// var oneDay int64 = 24 * 60 * 60
+// RefreshData 刷新一些数据
+func (user *User) RefreshData() {
+	one := user.BaseData.UserData
+	// 检查是否每日首次登录,是则插入一条登录日志
 	t := time.Now().Format("2006-01-02")
 	t1, _ := time.Parse("2006-01-02", t)
 	today := t1.Unix() - 8*60*60
-	// log.Debug("today:%v,logintime:%v", today, user.BaseData.UserData.Logintime)
-	if user.BaseData.UserData.Logintime < today {
-		// 首次登录插入日志
-		db.InsertItemLog(db.ItemLog{
-			UID:        user.BaseData.UserData.AccountID,
-			Way:        db.FirstLogin,
-			Before:     user.BaseData.UserData.Coupon,
-			After:      user.BaseData.UserData.Coupon,
-			OptType:    db.NormalOpt,
-			CreateTime: time.Now().Unix(),
+	if one.Logintime < today {
+		game.GetSkeleton().Go(func() {
+			// 首次登录插入日志
+			db.InsertItemLog(db.ItemLog{
+				UID:        user.BaseData.UserData.AccountID,
+				Way:        db.FirstLogin,
+				Before:     user.BaseData.UserData.Coupon,
+				After:      user.BaseData.UserData.Coupon,
+				OptType:    db.NormalOpt,
+				CreateTime: time.Now().Unix(),
+			})
+		}, nil)
+	}
+
+	// 检查体总数据是否同步,每日同步一次
+	if utils.GetZeroTime(time.Unix(one.SportCenter.SyncTime, 0)) != utils.GetZeroTime(time.Now()) && len(one.IDCardNo) > 0 {
+		var err error
+		sportsCenterData := values.PlayerMasterScoreRet{}
+		game.GetSkeleton().Go(func() {
+			sportsCenterData, err = edy_api.PlayerMasterScoreQuery(one.IDCardNo)
+		}, func() {
+			change := false
+			if err != nil || len(sportsCenterData.Player_name) == 0 {
+				return
+			}
+			if ret, err := strconv.ParseFloat(sportsCenterData.B, 64); err == nil {
+				one.SportCenter.LastBlueScore = one.SportCenter.BlueScore
+				one.SportCenter.BlueScore = ret
+				change = true
+			}
+			if ret, err := strconv.ParseFloat(sportsCenterData.R, 64); err == nil {
+				one.SportCenter.LastRedScore = one.SportCenter.RedScore
+				one.SportCenter.RedScore = ret
+				change = true
+			}
+			if ret, err := strconv.ParseFloat(sportsCenterData.S, 64); err == nil {
+				one.SportCenter.LastSilverScore = one.SportCenter.SilverScore
+				one.SportCenter.SilverScore = ret
+				change = true
+			}
+			if ret, err := strconv.ParseFloat(sportsCenterData.G, 64); err == nil {
+				one.SportCenter.LastGoldScore = one.SportCenter.GoldScore
+				one.SportCenter.GoldScore = ret
+				change = true
+			}
+			if change {
+				one.SportCenter.LastLevel = one.SportCenter.Level
+				one.SportCenter.LastRanking = one.SportCenter.Ranking
+				one.SportCenter.Level = sportsCenterData.Level_name
+				one.SportCenter.Ranking = sportsCenterData.Ranking
+				one.SportCenter.SyncTime = time.Now().Unix()
+				game.GetSkeleton().Go(func() {
+					UpdateUserData(one.UserID, bson.M{"$set": bson.M{"sportcenter": one.SportCenter}})
+				}, nil)
+			}
 		})
 	}
 }
@@ -222,4 +290,13 @@ func CalcOnlineCnt(userIDUsers map[int]*User) int {
 		}
 	}
 	return cnt
+}
+
+func (user *User) SendUserInfo() {
+	send := map[string]interface{}{}
+	send["Sports"] = user.BaseData.UserData.SportCenter
+
+	user.WriteMsg(&msg.S2C_UserInfo{
+		Info: send,
+	})
 }

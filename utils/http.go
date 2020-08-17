@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"ddz/conf"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -25,7 +26,7 @@ func PostToAgentServer(send interface{}, path string) error {
 	sign := CalculateHash(string(params))
 	data := map[string]interface{}{"Data": string(params), "Sign": sign}
 	reqStr, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", agentServer+path, bytes.NewBuffer(reqStr))
+	req, err := http.NewRequest("POST", conf.GetCfgLeafSrv().AgentServer+path, bytes.NewBuffer(reqStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

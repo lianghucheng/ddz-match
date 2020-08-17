@@ -18,12 +18,13 @@ type C2S_Apply struct {
 }
 
 const (
-	S2C_Error_MatchId   = 1 //赛事不存在
-	S2C_Error_Coupon    = 2 //点券不足
-	S2C_Error_Action    = 3 //已报名(等待开赛)
-	S2C_Error_Match     = 4 //玩家已报名了其它赛事
-	S2C_Error_Realname  = 5 //玩家未实名
-	S2C_Error_MoreRobot = 6 //机器人过量
+	S2C_Error_MatchId        = 1 //赛事不存在
+	S2C_Error_Coupon         = 2 //点券不足
+	S2C_Error_Action         = 3 //已报名(等待开赛)
+	S2C_Error_Match          = 4 //玩家已报名了其它赛事
+	S2C_Error_Realname       = 5 //玩家未实名
+	S2C_Error_MoreRobot      = 6 //机器人过量
+	S2C_Error_NotEnoughScore = 7 //分数不足
 )
 
 type S2C_Apply struct {

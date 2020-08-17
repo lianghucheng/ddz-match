@@ -75,13 +75,14 @@ type LandlordPlayerRoundResult struct {
 
 // LandlordRankData 比赛排行榜信息
 type LandlordRankData struct {
-	Position int    // 玩家位置
-	Nickname string // 昵称(用户绑定的真实姓名)
-	Wins     int    // 获胜次数
-	Total    int64  // 总得分
-	Last     int64  // 尾副牌得分
-	Time     int64  // 累计用时(单位毫秒)
-	Sort     int    // 报名排序
+	AccountID int
+	Position  int    // 玩家位置
+	Nickname  string // 昵称(用户绑定的真实姓名)
+	Wins      int    // 获胜次数
+	Total     int64  // 总得分
+	Last      int64  // 尾副牌得分
+	Time      int64  // 累计用时(单位毫秒)
+	Sort      int    // 报名排序
 }
 
 // 斗地主所有的扑克牌
@@ -255,6 +256,13 @@ func CompareLandlordDiscard(discards []int, preDiscards []int) bool {
 
 func GetLandlordCardsType(cards []int) int {
 	cardsLen := len(cards)
+	// 判断牌组中是否有鬼牌
+	ghost := false
+	for _, c := range cards {
+		if CardValue(c) == 16 || CardValue(c) == 17 {
+			ghost = true
+		}
+	}
 	if cardsLen == 1 {
 		return Solo // 单张
 	}
@@ -277,7 +285,9 @@ func GetLandlordCardsType(cards []int) int {
 			return Bomb // 炸弹
 		}
 		if count1stCardValue == 3 || CountCardValue(cards[1:], cards[1]) == 3 {
-			return TrioSolo // 三带一
+			if !ghost {
+				return TrioSolo // 三带一
+			}
 		}
 	}
 	if cardsLen == 5 {
@@ -298,7 +308,9 @@ func GetLandlordCardsType(cards []int) int {
 	if cardsLen == 6 {
 		for i := 0; i < 3; i++ {
 			if CountCardValue(cards[i:i+4], cards[i]) == 4 {
-				return FourDualsolo // 四带两单
+				if !ghost {
+					return FourDualsolo // 四带两单
+				}
 			}
 		}
 	}
@@ -335,7 +347,7 @@ func GetLandlordCardsType(cards []int) int {
 				if allTrio && seq {
 					valueMap := GetCardValueMap(cards[i : i+cardsLen/4*3])
 					remain := RemoveCardByValue(cards, valueMap)
-					if len(remain) == cardsLen/4 {
+					if len(remain) == cardsLen/4 && !ghost {
 						return TrioSoloAirplane // 飞机带小翼
 					}
 				}

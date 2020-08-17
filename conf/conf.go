@@ -32,6 +32,7 @@ type CfgLeafSvr struct {
 	DBName        string
 	Model         bool //false :表示测试环境  true:表示正式环境
 	FirstRecharge int64
+	AgentServer   string // 推广服务器
 }
 type CfgDDZ struct {
 	DefaultAndroidDownloadUrl string

@@ -62,6 +62,7 @@ type LandlordMatchPlayerData struct {
 	state             int
 	Position          int // 用户在桌子上的位置，从 0 开始
 	dealer            bool
+	Double            uint    // 0未选择,1不加倍,2加倍
 	wins              int     // 赢的次数
 	hands             []int   // 手牌
 	discards          [][]int // 打出的牌
@@ -157,6 +158,7 @@ func (game *LandlordMatchRoom) initRoom() {
 		playerUserID := game.PositionUserIDs[playerPos]
 		playerPlayerData := game.UserIDPlayerDatas[playerUserID]
 		playerPlayerData.dealer = false
+		playerPlayerData.Double = 0
 	}
 	game.lastThree = []int{}
 	game.discards = []int{}
@@ -212,6 +214,10 @@ func (game *LandlordMatchRoom) allWaiting() bool {
 	if count == game.rule.MaxPlayers {
 		return true
 	}
+	// 无人加倍地主直接出牌
+	if len(game.getFarmerDouble()) == 0 && game.getDoublePlayers() == 2 {
+		return true
+	}
 	return false
 }
 
@@ -231,56 +237,61 @@ func (game *LandlordMatchRoom) showHand() {
 // 计算积分
 func (game *LandlordMatchRoom) calScore() {
 	game.Spring = true
-	landlordWin := true
+	landlordWin := 1
 	landlordPlayerData := game.UserIDPlayerDatas[game.landlordUserID]
 	var loserUserIDs []int // 用于连胜任务统计
-	if game.landlordUserID == game.winnerUserIDs[0] {
-		loserUserIDs = append(loserUserIDs, game.peasantUserIDs...)
-		for _, peasantUserID := range game.peasantUserIDs {
-			peasantPlayerData := game.UserIDPlayerDatas[peasantUserID]
-			if len(peasantPlayerData.discards) > 0 {
+	if len(game.winnerUserIDs) != 0 {
+		if game.landlordUserID == game.winnerUserIDs[0] {
+			loserUserIDs = append(loserUserIDs, game.peasantUserIDs...)
+			for _, peasantUserID := range game.peasantUserIDs {
+				peasantPlayerData := game.UserIDPlayerDatas[peasantUserID]
+				if len(peasantPlayerData.discards) > 0 {
+					game.Spring = false
+					break
+				}
+			}
+
+			log.Debug("游戏结束 地主胜利 春天: %v", game.Spring)
+		} else {
+			landlordWin = 0
+			game.winnerUserIDs = game.peasantUserIDs
+			loserUserIDs = append(loserUserIDs, game.landlordUserID)
+			if len(landlordPlayerData.discards) > 1 {
 				game.Spring = false
-				break
 			}
+			log.Debug("游戏结束 农民胜利 春天: %v", game.Spring)
 		}
+		if game.Spring {
+			for userID, player := range game.UserIDPlayerDatas {
+				//春天
+				if game.landlordUserID == game.winnerUserIDs[0] {
+					player.Spring = 1
+					player.Dealer *= 2
 
-		log.Debug("游戏结束 地主胜利 春天: %v", game.Spring)
-	} else {
-		landlordWin = false
-		game.winnerUserIDs = game.peasantUserIDs
-		loserUserIDs = append(loserUserIDs, game.landlordUserID)
-		if len(landlordPlayerData.discards) > 1 {
-			game.Spring = false
-		}
-		log.Debug("游戏结束 农民胜利 春天: %v", game.Spring)
-	}
-	if game.Spring {
-		for userID, player := range game.UserIDPlayerDatas {
-			//春天
-			if game.landlordUserID == game.winnerUserIDs[0] {
-				player.Spring = 1
-				player.Dealer *= 2
-
-				game.sendRoomPanel(userID)
-				continue
-			}
-			//反春天
-			player.LSpring = 1
-			if player.User.BaseData.UserData.UserID == game.landlordUserID {
+					game.sendRoomPanel(userID)
+					continue
+				}
+				//反春天
+				player.LSpring = 1
+				if player.User.BaseData.UserData.UserID == game.landlordUserID {
+					player.Xian *= 2
+					game.sendRoomPanel(userID)
+					continue
+				}
 				player.Xian *= 2
 				game.sendRoomPanel(userID)
-				continue
 			}
-			player.Xian *= 2
-			game.sendRoomPanel(userID)
-		}
 
+		}
+	} else {
+		landlordWin = 2
+		game.Spring = false
 	}
 
 	for _, player := range game.UserIDPlayerDatas {
 		//公共*庄家*防守
 		log.Debug("玩家%v的公共%v庄家%v防守%v", player.User.BaseData.UserData.UserID, player.Public, player.Dealer, player.Xian)
-		if landlordWin {
+		if landlordWin == 1 {
 			if player.User.BaseData.UserData.UserID != game.landlordUserID {
 				player.User.BaseData.MatchPlayer.LastScore = -int64(player.Public * player.Dealer * player.Xian)
 				player.User.BaseData.MatchPlayer.TotalScore += -int64(player.Public * player.Dealer * player.Xian)
@@ -300,7 +311,7 @@ func (game *LandlordMatchRoom) calScore() {
 				// game.gameRecords[userID].Result[game.count-1].Identity = 1
 				// game.gameRecords[userID].Result[game.count-1].Event = 1
 			}
-		} else {
+		} else if landlordWin == 0 {
 			if player.User.BaseData.UserData.UserID == game.landlordUserID {
 				player.User.BaseData.MatchPlayer.LastScore = -int64(player.Public * player.Dealer * player.Xian)
 				player.User.BaseData.MatchPlayer.TotalScore += -int64(player.Public * player.Dealer * player.Xian)
@@ -320,6 +331,17 @@ func (game *LandlordMatchRoom) calScore() {
 				// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
 				// game.gameRecords[userID].Result[game.count-1].Event = 1
 			}
+		} else if landlordWin == 2 {
+			player.User.BaseData.MatchPlayer.LastScore = 0
+			player.User.BaseData.MatchPlayer.TotalScore += 0
+			player.User.BaseData.MatchPlayer.Result[game.count-1].Score = player.User.BaseData.MatchPlayer.LastScore
+			player.User.BaseData.MatchPlayer.Result[game.count-1].Event = 2
+			player.User.BaseData.MatchPlayer.Result[game.count-1].Identity = 0
+			// if player.User.BaseData.UserData.UserID == game.landlordUserID {
+			// game.gameRecords[userID].Result[game.count-1].Score = player.roundResult.Chips
+			// game.gameRecords[userID].Result[game.count-1].Identity = 1
+			// game.gameRecords[userID].Result[game.count-1].Event = 1
+			// }
 		}
 		// 记录当前局的所有加倍信息
 		player.User.BaseData.MatchPlayer.Multiples = fmt.Sprintf("春天:%v,炸弹:%v,底分:%v,叫分:%v,明牌:%v,公共:%v,庄家:%v,防守方:%v,总倍数:%v",
@@ -385,13 +407,13 @@ func (ctx *LandlordMatchPlayerData) sendRoomPanel(baseScore int) {
 
 func (game *LandlordMatchRoom) GetProcess() []string {
 	if game.rule.Round == 2 {
-		return []string{"首局", "决赛", "冠军"}
+		return []string{"首轮", "决赛", "冠军"}
 	} else if game.rule.Round == 3 {
-		return []string{"首局", "次局", "决赛", "冠军"}
+		return []string{"首轮", "次轮", "决赛", "冠军"}
 	} else {
 		rt := []string{}
 		for i := 0; i < game.rule.Round; i++ {
-			rt = append(rt, fmt.Sprintf("第%v局", i+1))
+			rt = append(rt, fmt.Sprintf("第%v轮", i+1))
 		}
 		//todo: 根据具体需求修改
 		rt = append(rt, "冠军")

@@ -5,6 +5,8 @@ func init() {
 	Processor.Register(&S2C_Knapsack{})
 	Processor.Register(&C2S_UseProp{})
 	Processor.Register(&S2C_UseProp{})
+	Processor.Register(&C2S_UserInfo{})
+	Processor.Register(&S2C_UserInfo{})
 }
 
 type C2S_Knapsack struct {
@@ -35,4 +37,12 @@ type S2C_UseProp struct {
 	Name   string
 	PropID int
 	Amount int
+}
+
+type C2S_UserInfo struct {
+	AccountID int // 玩家id
+}
+
+type S2C_UserInfo struct {
+	Info interface{}
 }

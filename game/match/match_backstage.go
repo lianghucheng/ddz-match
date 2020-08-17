@@ -185,17 +185,36 @@ func editMatch(args []interface{}) {
 		return
 	}
 
+	if data.ShelfTime > time.Now().Unix() {
+		m.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.Shelf()
+		}))
+	}
+
+	if data.DownShelfTime > time.Now().Unix() {
+		m.SetDownShelfTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
+			// NewScoreManager(sConfig)
+			m.DownShelf()
+		}))
+	}
+
+	// 重新获取配置
+	c = m.GetNormalConfig()
+
 	if c.MatchSource == MatchSourceSportsCenter {
 		tmp := struct {
 			TotalMatch    int
 			ShelfTime     int64
 			DownShelfTime int64
 			StartTime     int64
+			Eliminate     []int // 每轮淘汰人数
 		}{
 			data.TotalMatch,
 			data.ShelfTime,
 			data.DownShelfTime,
 			data.StartTime,
+			data.Eliminate,
 		}
 		utils.StructCopy(c, &tmp)
 	} else {
@@ -221,22 +240,6 @@ func editMatch(args []interface{}) {
 			data.TotalMatch,
 		}
 		utils.StructCopy(c, &tmp)
-	}
-
-	if data.ShelfTime > time.Now().Unix() {
-		m.SetStartTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
-			// NewScoreManager(sConfig)
-			m.Shelf()
-		}))
-	} else if data.ShelfTime <= time.Now().Unix() && data.ShelfTime != 0 {
-		m.Shelf()
-	}
-
-	if data.DownShelfTime > time.Now().Unix() {
-		m.SetDownShelfTimer(game.GetSkeleton().AfterFunc(time.Duration(data.ShelfTime-time.Now().Unix())*time.Second, func() {
-			// NewScoreManager(sConfig)
-			m.DownShelf()
-		}))
 	}
 
 	// 当前赛事没人，且处于正常状态则直接修改

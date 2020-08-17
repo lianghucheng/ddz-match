@@ -2,7 +2,6 @@ package session
 
 import (
 	"ddz/conf"
-	"ddz/config"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
@@ -259,24 +258,32 @@ func rpcAddAward(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_AddAward)
-	if user, ok := UserIDUsers[m.Uid]; ok {
-		hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
-		user.GetUserData().Fee = hall.FeeAmount(m.Uid)
-		game.GetSkeleton().Go(func() {
-			SaveUserData(user.GetUserData())
-		}, func() {
-			hall.UpdateUserAfterTaxAward(user)
-		})
-	} else {
-		hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
-		ud := ReadUserDataByID(m.Uid)
-		ud.Fee = hall.FeeAmount(m.Uid)
-		game.GetSkeleton().Go(func() {
-			SaveUserData(ud)
-		}, func() {
-
-		})
+	ud := ReadUserDataByAid(m.Uid)
+	if ud.UserID == 0 {
+		log.Error("unknown user:%+v", m)
+		return
 	}
+	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
+	hall.AddFee(ud.UserID, ud.AccountID, m.Amount, db.NormalOpt, db.Backstage, "")
+
+	// if user, ok := UserIDUsers[m.Uid]; ok {
+	// 	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
+	// 	user.GetUserData().Fee = hall.FeeAmount(m.Uid)
+	// 	game.GetSkeleton().Go(func() {
+	// 		SaveUserData(user.GetUserData())
+	// 	}, func() {
+	// 		hall.UpdateUserAfterTaxAward(user)
+	// 	})
+	// } else {
+	// 	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
+	// 	ud := ReadUserDataByID(m.Uid)
+	// 	ud.Fee = hall.FeeAmount(m.Uid)
+	// 	game.GetSkeleton().Go(func() {
+	// 		SaveUserData(ud)
+	// 	}, func() {
+
+	// 	})
+	// }
 	log.Debug("【添加提现测试数据成功】")
 }
 
@@ -369,15 +376,20 @@ func rpcUpdateCoupon(args []interface{}) {
 	}
 	m := args[0].(*msg.RPC_UpdateCoupon)
 	ud := ReadUserDataByAid(m.Accountid)
-	if user, ok := UserIDUsers[ud.UserID]; ok {
-		ud := user.GetUserData()
-		ud.Coupon += int64(m.Amount)
-		SaveUserData(ud)
-		hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
-	} else {
-		ud.Coupon += int64(m.Amount)
-		SaveUserData(ud)
+	if ud.UserID == 0 {
+		log.Error("unknown user:%+v", m)
+		return
 	}
+	// if user, ok := UserIDUsers[ud.UserID]; ok {
+	// 	ud := user.GetUserData()
+	// 	ud.Coupon += int64(m.Amount)
+	// 	SaveUserData(ud)
+	// 	hall.UpdateUserCoupon(user, int64(m.Amount), ud.Coupon-int64(m.Amount), ud.Coupon, db.NormalOpt, db.Backstage)
+	// } else {
+	// 	ud.Coupon += int64(m.Amount)
+	// 	SaveUserData(ud)
+	// }
+	hall.AddCoupon(ud.UserID, ud.AccountID, int64(m.Amount), db.NormalOpt, db.Backstage, "")
 }
 
 func rpcUpdateHeadImg(args []interface{}) {
@@ -408,7 +420,13 @@ func rpcAddCouponFrag(args []interface{}) {
 		log.Debug("非法请求")
 		return
 	}
-	hall.AddPropAmount(config.PropTypeCouponFrag, m.Accountid, m.Amount)
+	ud := ReadUserDataByAid(m.Accountid)
+	if ud.UserID == 0 {
+		log.Error("unknown user:%+v", m)
+		return
+	}
+	// hall.AddPropAmount(config.PropTypeCouponFrag, m.Accountid, m.Amount)
+	hall.AddFragment(ud.UserID, ud.AccountID, int64(m.Amount), db.NormalOpt, db.Backstage, "")
 	log.Debug("成功！！！远程调用加点券碎片")
 }
 

@@ -89,6 +89,12 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 			userID = nextUserID
 
 		}
+		// 如果都不叫则直接游戏结束
+		if max == 0 {
+			game.EndGame()
+			return
+		}
+
 		skeleton.AfterFunc(1*time.Second, func() {
 			game.decideLandlord(userID)
 		})
@@ -131,7 +137,7 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 		Position: playerData.Position,
 	}, game.PositionUserIDs, -1)
 	// 最后三张
-	game.lastThree = game.rests[:3]
+	// game.lastThree = game.rests[:3]
 	game.rests = []int{}
 	sort.Sort(sort.Reverse(sort.IntSlice(game.lastThree)))
 	log.Debug("三张: %v", poker.ToCardsString(game.lastThree))
@@ -164,21 +170,67 @@ func (game *LandlordMatchRoom) decideLandlord(userID int) {
 // 加倍
 func (game *LandlordMatchRoom) double() {
 	actionTimestamp := time.Now().Unix()
+	doubleIDs := []int{}
 	for _, userID := range game.PositionUserIDs {
-		playerData := game.UserIDPlayerDatas[userID]
-		playerData.state = landlordActionDouble
-		playerData.actionTimestamp = actionTimestamp
-
+		if userID == game.landlordUserID {
+			continue
+		}
 		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
-			playerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
-				Countdown: conf.GetCfgTimeout().LandlordDouble,
-			})
+			// playerData := game.UserIDPlayerDatas[userID]
+			playerData.state = landlordActionDouble
+			playerData.actionTimestamp = actionTimestamp
+			doubleIDs = append(doubleIDs, playerData.User.BaseData.UserData.AccountID)
 		}
 	}
-	log.Debug("等待所有人加倍")
+	// playerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
+	// 	Countdown: conf.GetCfgTimeout().LandlordDouble,
+	// })
+	game.broadcast(&msg.S2C_ActionLandlordDouble{
+		Countdown: conf.GetCfgTimeout().LandlordDouble,
+		UIDs:      doubleIDs,
+		Notice:    "等待其他选手加倍",
+	}, game.PositionUserIDs, -1)
+	log.Debug("等待农民加倍")
 	game.doubleTimer = skeleton.AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordDouble+2)*time.Second, func() {
 		for _, userID := range game.PositionUserIDs {
 			playerData := game.UserIDPlayerDatas[userID]
+			if userID == game.landlordUserID {
+				continue
+			}
+			if playerData.state == landlordActionDouble {
+				log.Debug("userID %v 自动不加倍", userID)
+				game.doDouble(userID, false)
+			}
+		}
+	})
+}
+
+func (game *LandlordMatchRoom) dealerDouble() {
+	actionTimestamp := time.Now().Unix()
+	userID := game.landlordUserID
+
+	playerData := game.UserIDPlayerDatas[userID]
+	playerData.state = landlordActionDouble
+	playerData.actionTimestamp = actionTimestamp
+
+	// if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
+	// 	playerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
+	// 		Countdown: conf.GetCfgTimeout().LandlordDouble,
+	// 	})
+	// }
+	game.broadcast(&msg.S2C_ActionLandlordDouble{
+		Countdown: conf.GetCfgTimeout().LandlordDouble,
+		UIDs:      []int{playerData.User.BaseData.UserData.AccountID},
+		Notice:    "等待其他选手加倍",
+	}, game.PositionUserIDs, -1)
+
+	log.Debug("等待地主加倍")
+	game.doubleTimer = skeleton.AfterFunc(time.Duration(conf.GetCfgTimeout().LandlordDouble+2)*time.Second, func() {
+		for _, userID := range game.PositionUserIDs {
+			playerData := game.UserIDPlayerDatas[userID]
+			if playerData.User.BaseData.UserData.UserID != game.landlordUserID {
+				continue
+			}
 			if playerData.state == landlordActionDouble {
 				log.Debug("userID %v 自动不加倍", userID)
 				game.doDouble(userID, false)
@@ -196,60 +248,170 @@ func (game *LandlordMatchRoom) doDouble(userID int, double bool) {
 	lable := 1
 	if double {
 		lable = 2
+		playerData.Double = 2
+	} else {
+		playerData.Double = 1
 	}
 	// game.gameRecords[userID].Result[game.count-1].Multiple = lable
 	// game.gameRecords[userID].Result[game.count-1].ThreeCards = game.lastThree
 	playerData.User.BaseData.MatchPlayer.Result[game.count-1].Multiple = lable
-	playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
+	// playerData.User.BaseData.MatchPlayer.Result[game.count-1].ThreeCards = game.lastThree
 
-	game.broadcast(&msg.S2C_LandlordDouble{
-		Position: playerData.Position,
-		Double:   double,
-	}, game.PositionUserIDs, -1)
-	if userID == game.landlordUserID {
-		for i := 0; i < len(game.PositionUserIDs); i++ {
-			if game.PositionUserIDs[i] != game.landlordUserID {
-				if double {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
-				} else {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
-				}
-				game.sendRoomPanel(game.PositionUserIDs[i])
+	// 只有一人做了选择
+	if game.getDoublePlayers() == 1 {
+		// for _, player := range game.UserIDPlayerDatas {
+		// 	show := false
+		// 	if player.User.BaseData.UserData.UserID == game.landlordUserID {
+		// 		show = true
+		// 	} else if player.User.BaseData.UserData.UserID == userID {
+		// 		show = true
+		// 	}
+		// 	player.User.WriteMsg(&msg.S2C_LandlordDouble{
+		// 		Position:   playerData.Position,
+		// 		Double:     double,
+		// 		ShowNotice: show,
+		// 	})
+		// }
+		playerData.User.WriteMsg(&msg.S2C_LandlordDouble{
+			Position:   playerData.Position,
+			Double:     double,
+			ShowNotice: false,
+		})
+		return
+
+		// playerData.User.WriteMsg(&msg.S2C_LandlordDouble{
+		// 	Position: playerData.Position,
+		// 	Double:   double,
+		// 	ShowNotice:true,
+		// })
+		// game.broadcast(&msg.S2C_LandlordDouble{
+		// 	Position: playerData.Position,
+		// 	Double:   double,
+		// 	ShowNotice
+		// }, game.PositionUserIDs, playerData.Position)
+	} else if game.getDoublePlayers() == 2 {
+		farmers := game.getFarmers()
+		for _, player := range game.UserIDPlayerDatas {
+			show := false
+			if player.User.BaseData.UserData.UserID != game.landlordUserID && len(game.getFarmerDouble()) > 0 {
+				show = true
 			}
-		}
-		if double {
-			playerData.Dealer = 2
-		} else {
-			playerData.Dealer = 1
-		}
-		game.sendRoomPanel(userID)
-	}
-	if userID != game.landlordUserID {
-		for i := 0; i < len(game.PositionUserIDs); i++ {
-			if game.PositionUserIDs[i] == game.landlordUserID {
-				if double {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
-				} else {
-					game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
+			// if len(doubleDatas) > 0 {
+			for _, p := range farmers {
+				d := false
+				if p.Double == 2 {
+					d = true
 				}
-				game.sendRoomPanel(game.PositionUserIDs[i])
+				player.User.WriteMsg(&msg.S2C_LandlordDouble{
+					Position:   p.Position,
+					Double:     d,
+					ShowNotice: show,
+				})
 			}
+			// } else {
+			// 	player.User.WriteMsg(&msg.S2C_LandlordDouble{
+			// 		Position:   playerData.Position,
+			// 		Double:     double,
+			// 		ShowNotice: show,
+			// 	})
+			// }
 		}
-		if double {
-			playerData.Xian = 2
-		} else {
-			playerData.Xian = 1
+		// 有农民加倍,轮到地主选择加倍
+		if len(game.getFarmerDouble()) > 0 {
+			game.dealerDouble()
+			return
 		}
-		game.sendRoomPanel(userID)
+	} else {
+		for _, player := range game.UserIDPlayerDatas {
+			player.User.WriteMsg(&msg.S2C_LandlordDouble{
+				Position:   playerData.Position,
+				Double:     double,
+				ShowNotice: false,
+			})
+		}
 	}
+	// if userID == game.landlordUserID {
+	// 	for i := 0; i < len(game.PositionUserIDs); i++ {
+	// 		if game.PositionUserIDs[i] != game.landlordUserID {
+	// 			if double {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 2
+	// 			} else {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Dealer = 1
+	// 			}
+	// 			game.sendRoomPanel(game.PositionUserIDs[i])
+	// 		}
+	// 	}
+	// 	if double {
+	// 		playerData.Dealer = 2
+	// 	} else {
+	// 		playerData.Dealer = 1
+	// 	}
+	// 	game.sendRoomPanel(userID)
+	// }
+	// if userID != game.landlordUserID {
+	// 	for i := 0; i < len(game.PositionUserIDs); i++ {
+	// 		if game.PositionUserIDs[i] == game.landlordUserID {
+	// 			if double {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 2
+	// 			} else {
+	// 				game.UserIDPlayerDatas[game.PositionUserIDs[i]].Xian += 1
+	// 			}
+	// 			game.sendRoomPanel(game.PositionUserIDs[i])
+	// 		}
+	// 	}
+	// 	if double {
+	// 		playerData.Xian = 2
+	// 	} else {
+	// 		playerData.Xian = 1
+	// 	}
+	// 	game.sendRoomPanel(userID)
+	// }
 
 	if game.allWaiting() {
+		game.calDouble()
 		game.doubleTimer.Stop()
 		skeleton.AfterFunc(1500*time.Millisecond, func() {
 			game.broadcast(&msg.S2C_ClearAction{}, game.PositionUserIDs, -1)
 			game.discard(game.landlordUserID, poker.ActionLandlordDiscardMust)
 		})
 	}
+}
+
+func (game *LandlordMatchRoom) calDouble() {
+	farmerDoubleCount := 0
+	dealerDoubleCount := 0
+	for _, p := range game.UserIDPlayerDatas {
+		if p.Double < 2 {
+			continue
+		}
+		if p.User.BaseData.UserData.UserID != game.landlordUserID {
+			farmerDoubleCount++
+		} else {
+			dealerDoubleCount++
+		}
+	}
+	for _, p := range game.UserIDPlayerDatas {
+		p.Dealer = 1
+		if p.User.BaseData.UserData.UserID == game.landlordUserID {
+			if p.Double == 2 {
+				p.Xian = 4*farmerDoubleCount + (game.rule.MaxPlayers - farmerDoubleCount - 1)
+			} else {
+				p.Xian = 2*farmerDoubleCount + (game.rule.MaxPlayers - farmerDoubleCount - 1)
+			}
+			game.sendRoomPanel(p.User.BaseData.UserData.UserID)
+		} else {
+			if p.Double == 2 {
+				p.Xian = 2
+				if dealerDoubleCount > 0 {
+					p.Xian *= 2
+				}
+			} else {
+				p.Xian = 1
+			}
+			game.sendRoomPanel(p.User.BaseData.UserData.UserID)
+		}
+	}
+
 }
 
 // 出牌
@@ -526,6 +688,14 @@ func (game *LandlordMatchRoom) reconnect(userID int) {
 		})
 		game.sendRoomPanel(userID)
 	}
+	// 加倍阶段
+	if players := game.getDoublingPlayers(); len(players) > 0 {
+		thePlayerData.User.WriteMsg(&msg.S2C_ActionLandlordDouble{
+			Countdown: conf.GetCfgTimeout().LandlordDouble,
+			UIDs:      players,
+			Notice:    "等待其他选手加倍",
+		})
+	}
 	if game.discarderUserID > 0 {
 		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		if len(discarderPlayerData.discards) > 1 {
@@ -572,17 +742,17 @@ func (game *LandlordMatchRoom) getPlayerData(User *User, playerData *LandlordMat
 				Countdown: countdown - 1,
 			})
 		}
-	case landlordActionDouble:
-		if other {
-			return
-		}
-		after := int(time.Now().Unix() - playerData.actionTimestamp)
-		countdown := conf.GetCfgTimeout().LandlordDouble - after
-		if countdown > 1 {
-			User.WriteMsg(&msg.S2C_ActionLandlordDouble{
-				Countdown: countdown - 1,
-			})
-		}
+	// case landlordActionDouble:
+	// 	if other {
+	// 		return
+	// 	}
+	// 	after := int(time.Now().Unix() - playerData.actionTimestamp)
+	// 	countdown := conf.GetCfgTimeout().LandlordDouble - after
+	// 	if countdown > 1 {
+	// 		User.WriteMsg(&msg.S2C_ActionLandlordDouble{
+	// 			Countdown: countdown - 1,
+	// 		})
+	// 	}
 	case landlordActionDiscard:
 		after := int(time.Now().Unix() - playerData.actionTimestamp)
 		var prevDiscards []int
@@ -706,4 +876,55 @@ func (game *LandlordMatchRoom) sendUpdateScore() {
 			Result: result,
 		})
 	}
+}
+
+// 获取农民加倍人数
+func (game *LandlordMatchRoom) getFarmerDouble() []*LandlordMatchPlayerData {
+	playerDatas := []*LandlordMatchPlayerData{}
+	for _, userID := range game.PositionUserIDs {
+		playerData := game.UserIDPlayerDatas[userID]
+		if userID == game.landlordUserID {
+			continue
+		}
+		if playerData.Double == 2 {
+			playerDatas = append(playerDatas, playerData)
+		}
+	}
+	return playerDatas
+}
+
+// 获取已选择加倍人数
+func (game *LandlordMatchRoom) getDoublePlayers() int {
+	count := 0
+	for _, userID := range game.PositionUserIDs {
+		playerData := game.UserIDPlayerDatas[userID]
+		if playerData.Double > 0 {
+			count++
+		}
+	}
+	return count
+}
+
+// 获取正在选择加倍的玩家,用于断线重连
+func (game *LandlordMatchRoom) getDoublingPlayers() []int {
+	ids := []int{}
+	for _, userID := range game.PositionUserIDs {
+		playerData := game.UserIDPlayerDatas[userID]
+		if playerData.state == landlordActionDouble {
+			ids = append(ids, playerData.User.BaseData.UserData.AccountID)
+		}
+	}
+	return ids
+}
+
+// 获取农民
+func (game *LandlordMatchRoom) getFarmers() []*LandlordMatchPlayerData {
+	datas := []*LandlordMatchPlayerData{}
+	for _, v := range game.UserIDPlayerDatas {
+		if v.User.BaseData.UserData.UserID == game.landlordUserID {
+			continue
+		}
+		datas = append(datas, v)
+	}
+	return datas
 }

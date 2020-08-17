@@ -29,6 +29,8 @@ type S2C_LandlordBid struct {
 // 加倍动作（只发给自己）
 type S2C_ActionLandlordDouble struct {
 	Countdown int // 倒计时
+	UIDs      []int
+	Notice    string
 }
 
 type C2S_LandlordDouble struct {
@@ -36,8 +38,9 @@ type C2S_LandlordDouble struct {
 }
 
 type S2C_LandlordDouble struct {
-	Position int
-	Double   bool
+	Position   int
+	Double     bool
+	ShowNotice bool
 }
 
 type S2C_DecideLandlord struct {
@@ -83,6 +86,7 @@ type S2C_LandlordRoundResult struct {
 	Process   []string //总进度
 	Tables    int      //  剩余桌数
 	MatchName string   // 赛事名称
+	Notice    string   // 提示信息
 	// Allcount     int      //总局数
 	// RankOrder    int      //排名
 	// Countdown    int      //下一局等待时间

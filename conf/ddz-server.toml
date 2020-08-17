@@ -5,11 +5,12 @@
 	WSAddr= ":5658"
 	HTTPAddr= ":9084"
 	MaxConnNum= 20000
-	DBUrl= "mongodb://192.168.1.8"
+	DBUrl= "mongodb://127.0.0.1"
 	DBMaxConnNum= 100
 	DBName="ddz-match"
     SubsidyTotal = 2
     FirstRecharge=3
+    AgentServer="http://127.0.0.1:10616"
 
 
 [CfgDDZ]

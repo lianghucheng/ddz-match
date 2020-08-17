@@ -42,6 +42,7 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_GetCoupon{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_GetGameRecord{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_SetNickName{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_UserInfo{}, game.ChanRPC)
 	//rpc
 
 	msg.Processor.SetRouter(&msg.C2S_EndMatch{}, game.ChanRPC)

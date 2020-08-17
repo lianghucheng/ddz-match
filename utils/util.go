@@ -196,6 +196,31 @@ func CalculateHash(data string) string {
 	return fmt.Sprintf("%x", bs)
 }
 
+// FormatFloat 取小数点后n位非零小数
+func FormatFloat(num float64, decimal int) string {
+	if math.Trunc(num) == num || decimal == 0 {
+		return fmt.Sprintf("%.f", math.Trunc(num))
+	}
+	format := "%." + strconv.Itoa(decimal) + "f"
+	return fmt.Sprintf(format, num)
+}
+
+// GetFirstDateOfMonth 获取本月第一天零点
+func GetFirstDateOfMonth(d time.Time) time.Time {
+	d = d.AddDate(0, 0, -d.Day()+1)
+	return GetZeroTime(d)
+}
+
+// GetLastDateOfMonth 获取本月最后一天零点
+func GetLastDateOfMonth(d time.Time) time.Time {
+	return GetFirstDateOfMonth(d).AddDate(0, 1, -1)
+}
+
+// GetZeroTime 获取某一天的0点时间
+func GetZeroTime(d time.Time) time.Time {
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+}
+
 func Transfer(src interface{}, dir interface{}) error {
 	b, err := json.Marshal(src)
 	if err != nil {

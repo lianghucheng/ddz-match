@@ -68,20 +68,15 @@ func initMatchConfig() error {
 			if sConfig.ShelfTime > time.Now().Unix() {
 				sConfig.State = Cancel
 				sConfig.StartTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-					// NewScoreManager(sConfig)
 					sConfig.Shelf()
 				})
-				MatchManagerList[sConfig.MatchID] = sConfig
-			} else {
-				// NewScoreManager(sConfig)
-				sConfig.NewManager()
 			}
 			if sConfig.DownShelfTime > time.Now().Unix() {
-				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.ShelfTime-time.Now().Unix())*time.Second, func() {
-					// NewScoreManager(sConfig)
+				sConfig.DownShelfTimer = game.GetSkeleton().AfterFunc(time.Duration(sConfig.DownShelfTime-time.Now().Unix())*time.Second, func() {
 					sConfig.DownShelf()
 				})
 			}
+			sConfig.NewManager()
 		default:
 			log.Error("unknown match:%v", one)
 		}
@@ -195,9 +190,9 @@ func sortMatch(list []values.MatchManager) {
 // BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
 func BroadcastMatchInfo() {
 	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
-	if len(RaceInfo) == 0 {
-		return
-	}
+	// if len(RaceInfo) == 0 {
+	// 	return
+	// }
 	for uid, user := range player.UserIDUsers {
 		if ma, ok := UserIDMatch[uid]; ok {
 			myMatchID := ma.NormalCofig.MatchID

@@ -8,8 +8,9 @@ import (
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
-	"github.com/szxby/tools/log"
 	"time"
+
+	"github.com/szxby/tools/log"
 
 	"gopkg.in/mgo.v2/bson"
 )
@@ -40,12 +41,154 @@ func SetNickname(user *player.User, nickname string) {
 	})
 }
 
-func AddCoupon(user *player.User, count int64) {
-	user.BaseData.UserData.Coupon += count
-	user.WriteMsg(&msg.S2C_GetCoupon{
-		Error: msg.S2C_GetCouponSuccess,
+// AddCoupon 点券变动
+func AddCoupon(uid, accountID int, amount int64, opt int, way, matchID string) {
+	user, ok := player.UserIDUsers[uid]
+	var before, after int64
+
+	// 玩家在线
+	if ok {
+		user.BaseData.UserData.Coupon += amount
+		// user.WriteMsg(&msg.S2C_GetCoupon{
+		// 	Error: msg.S2C_GetCouponSuccess,
+		// })
+		user.WriteMsg(&msg.S2C_UpdateUserCoupon{
+			Coupon: user.Coupon(),
+		})
+		after = user.BaseData.UserData.Coupon
+		before = after - amount
+	} else {
+		s := db.MongoDB.Ref()
+		defer db.MongoDB.UnRef(s)
+		one := player.UserData{}
+		err := s.DB(db.DB).C("users").Find(bson.M{"accountid": accountID}).One(&one)
+		if err != nil {
+			before = one.Coupon
+			after = before + amount
+		}
+	}
+	if amount != 0 {
+		game.GetSkeleton().Go(
+			func() {
+				data := db.ItemLog{
+					UID:        accountID,
+					Item:       values.Coupon,
+					Way:        way,
+					Amount:     amount,
+					Before:     before,
+					After:      after,
+					OptType:    opt,
+					CreateTime: time.Now().Unix(),
+					MatchID:    matchID,
+				}
+				db.InsertItemLog(data)
+				player.UpdateUserData(uid, bson.M{"$inc": bson.M{"coupon": amount}})
+			}, nil)
+	}
+}
+
+// AddFee 奖金变动
+func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
+	user, ok := player.UserIDUsers[uid]
+	var before, after int64
+	changeAmount := FeeAmount(uid)
+	// 玩家在线
+	if ok {
+		user.GetUserData().Fee = changeAmount
+		// game.GetSkeleton().Go(func() {
+		// 	player.SaveUserData(user.GetUserData())
+		// }, nil)
+		user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
+			AfterTaxAward: utils.Decimal(changeAmount),
+		})
+	}
+	after = int64(changeAmount * 100)
+	before = after - int64(amount*100)
+	if amount != 0 {
+		game.GetSkeleton().Go(
+			func() {
+				data := db.ItemLog{
+					UID:        accountID,
+					Item:       "奖金",
+					Way:        way,
+					Amount:     int64(amount * 100),
+					Before:     before,
+					After:      after,
+					OptType:    opt,
+					CreateTime: time.Now().Unix(),
+					MatchID:    matchID,
+				}
+				db.InsertItemLog(data)
+				player.UpdateUserData(uid, bson.M{"$set": bson.M{"fee": changeAmount}})
+			}, nil)
+	}
+}
+
+// AddFragment 碎片奖励
+func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID string) {
+	data := KnapsackProp{}
+	data.Accountid = accountID
+	data.PropID = config.PropTypeCouponFrag
+	data.ReadByAidPid()
+	before := int64(data.Num)
+	data.Num += int(amount)
+	after := int64(data.Num)
+
+	data.Save()
+	// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
+	db.InsertItemLog(db.ItemLog{
+		UID:        accountID,
+		Item:       values.Fragment,
+		Amount:     amount,
+		Way:        way,
+		CreateTime: time.Now().Unix(),
+		Before:     before,
+		After:      after,
+		OptType:    db.MatchOpt,
+		MatchID:    matchID,
 	})
-	UpdateUserCoupon(user, count, user.BaseData.UserData.Coupon-count, user.BaseData.UserData.Coupon, db.NormalOpt, db.Charge)
+}
+
+// AddRedScore 红分变动
+func AddRedScore(uid, accountID int, amount float64, opt int, way string, matchID string) {
+	user, ok := player.UserIDUsers[uid]
+	var before, after int64
+	sportCenter := player.SportCenterData{}
+
+	// 玩家在线
+	if ok {
+		user.BaseData.UserData.SportCenter.RedScore += amount
+		after = int64(user.BaseData.UserData.SportCenter.RedScore * 100)
+		sportCenter = user.BaseData.UserData.SportCenter
+	} else {
+		s := db.MongoDB.Ref()
+		defer db.MongoDB.UnRef(s)
+		one := player.UserData{}
+		err := s.DB(db.DB).C("users").Find(bson.M{"accountid": accountID}).One(&one)
+		if err != nil {
+			sportCenter = one.SportCenter
+			sportCenter.RedScore += amount
+			after = int64(sportCenter.RedScore * 100)
+		}
+	}
+	before = after - int64(amount*100)
+	if sportCenter.RedScore != 0 {
+		game.GetSkeleton().Go(
+			func() {
+				db.InsertItemLog(db.ItemLog{
+					UID:        user.BaseData.UserData.AccountID,
+					Item:       values.RedScore,
+					Amount:     int64(amount * 100),
+					Way:        way,
+					CreateTime: time.Now().Unix(),
+					Before:     before,
+					After:      after,
+					OptType:    db.MatchOpt,
+					MatchID:    matchID,
+				})
+				player.UpdateUserData(uid, bson.M{"$set": bson.M{"sportcenter": sportCenter}})
+			}, nil)
+	}
 }
 
 func UpdateUserAfterTaxAward(user *player.User) {
