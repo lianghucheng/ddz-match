@@ -148,16 +148,16 @@ type SportsCenterReportRobot struct {
 	Card_group_id        string `json:"card_group_id"`
 	Card_desk_id         string `json:"card_desk_id"`
 	Card_score           string `json:"card_score"`
-	Mp_score             string `json:"mp_score"`
-	Mp_ratio             string `json:"mp_ratio"`
-	Mp_ratio_rank        string `json:"mp_ratio_rank"`
-	Card_type            string `json:"card_type"`
-	Call_score           string `json:"call_score"`
-	Spring               string `json:"spring"`
-	Raise                string `json:"raise"`
-	Card_hole            string `json:"card_hole"`
-	Status               string `json:"status"`
-	Passive              string `json:"passive"`
+	// Mp_score             string `json:"mp_score"`
+	// Mp_ratio             string `json:"mp_ratio"`
+	// Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type  string `json:"card_type"`
+	Call_score string `json:"call_score"`
+	Spring     string `json:"spring"`
+	Raise      string `json:"raise"`
+	Card_hole  string `json:"card_hole"`
+	Status     string `json:"status"`
+	Passive    string `json:"passive"`
 }
 
 // SportsCenterReportPersonal 人人对局结果上报
@@ -172,18 +172,18 @@ type SportsCenterReportPersonal struct {
 	Card_group_id        string `json:"card_group_id"`
 	Card_desk_id         string `json:"card_desk_id"`
 	Card_score           string `json:"card_score"`
-	Mp_score             string `json:"mp_score"`
-	Mp_ratio             string `json:"mp_ratio"`
-	Mp_ratio_rank        string `json:"mp_ratio_rank"`
-	Card_type            string `json:"card_type"`
-	Call_score           string `json:"call_score"`
-	Spring               string `json:"spring"`
-	Raise                string `json:"raise"`
-	Card_hole            string `json:"card_hole"`
-	Card_rival           string `json:"card_rival"`
-	Player_position      string `json:"player_position"`
-	Status               string `json:"status"`
-	Passive              string `json:"passive"`
+	// Mp_score             string `json:"mp_score"`
+	// Mp_ratio             string `json:"mp_ratio"`
+	// Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type       string `json:"card_type"`
+	Call_score      string `json:"call_score"`
+	Spring          string `json:"spring"`
+	Raise           string `json:"raise"`
+	Card_hole       string `json:"card_hole"`
+	Card_rival      string `json:"card_rival"`
+	Player_position string `json:"player_position"`
+	Status          string `json:"status"`
+	Passive         string `json:"passive"`
 }
 
 // SportsCenterRoundResult 人人对局单条结果
@@ -195,18 +195,18 @@ type SportsCenterRoundResult struct {
 	Card_group_id        string `json:"card_group_id"`
 	Card_desk_id         string `json:"card_desk_id"`
 	Card_score           string `json:"card_score"`
-	Mp_score             string `json:"mp_score"`
-	Mp_ratio             string `json:"mp_ratio"`
-	Mp_ratio_rank        string `json:"mp_ratio_rank"`
-	Card_type            string `json:"card_type"`
-	Call_score           string `json:"call_score"`
-	Spring               string `json:"spring"`
-	Raise                string `json:"raise"`
-	Card_hole            string `json:"card_hole"`
-	Card_rival           string `json:"card_rival"`
-	Player_position      string `json:"player_position"`
-	Status               string `json:"status"`
-	Passive              string `json:"passive"`
+	// Mp_score             string `json:"mp_score"`
+	// Mp_ratio             string `json:"mp_ratio"`
+	// Mp_ratio_rank        string `json:"mp_ratio_rank"`
+	Card_type       string `json:"card_type"`
+	Call_score      string `json:"call_score"`
+	Spring          string `json:"spring"`
+	Raise           string `json:"raise"`
+	Card_hole       string `json:"card_hole"`
+	Card_rival      string `json:"card_rival"`
+	Player_position string `json:"player_position"`
+	Status          string `json:"status"`
+	Passive         string `json:"passive"`
 }
 
 // SportsCenterRankResult 轮次排名上报
@@ -233,13 +233,13 @@ type SportsCenterFinalRankResult struct {
 
 // SportsCenterOneFinalRank 单条最终排名信息
 type SportsCenterOneFinalRank struct {
-	Player_id          string `json:"player_id"`
-	Ranking            string `json:"ranking"`
-	Average_mp_ratio   string `json:"average_mp_ratio"`
-	Rival_avg_mp_ratio string `json:"rival_avg_mp_ratio"`
-	Rank_count         string `json:"rank_count"`
-	Total_time         string `json:"total_time"`
-	Status             string `json:"status"`
+	Player_id string `json:"player_id"`
+	Ranking   string `json:"ranking"`
+	// Average_mp_ratio   string `json:"average_mp_ratio"`
+	// Rival_avg_mp_ratio string `json:"rival_avg_mp_ratio"`
+	Rank_count string `json:"rank_count"`
+	Total_time string `json:"total_time"`
+	Status     string `json:"status"`
 }
 
 // SportsCenterAwardResultRet 发奖结果查询接口返回

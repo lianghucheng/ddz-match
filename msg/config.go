@@ -19,6 +19,7 @@ type RaceInfo struct {
 	StartType    int     // 比赛开赛方式
 	IsSign       bool    // 是否报名
 	MatchType    string
+	Eliminate    []int // 晋级条件
 }
 
 type C2S_RaceInfo struct {
@@ -46,4 +47,5 @@ type S2C_RaceDetail struct {
 	SignNumDetail bool    //当前报名数是否可点击
 	EnterFee      float64 //报名费
 	IsSign        bool    //报名按钮的状态(报名,取消)
+	Eliminate     []int   // 晋级条件
 }

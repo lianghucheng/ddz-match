@@ -113,7 +113,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 	}
 	sortMatch(matchManager)
 	switch opt {
-	case 1:
+	case 1: // 大厅赛事信息推送
 		raceInfo := []msg.RaceInfo{}
 		for _, v := range matchManager {
 			var award float64
@@ -142,10 +142,11 @@ func GetMatchManagerInfo(opt int) interface{} {
 				StartTime:    sTime,
 				StartType:    info.StartType,
 				MatchType:    info.MatchType,
+				Eliminate:    info.Eliminate,
 			})
 		}
 		return raceInfo
-	case 2:
+	case 2: // 赛事列表信息推送
 		list := []msg.OneMatch{}
 		for _, m := range matchManager {
 			m := m.GetNormalConfig()
