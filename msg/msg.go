@@ -143,6 +143,7 @@ type UserMail struct {
 	Content   string  //内容
 	Annexes   []Annex //附件
 	Status    int64   //邮件状态
+	MailType int
 }
 
 type S2C_SendMail struct {

@@ -68,7 +68,7 @@
   "CfgDB": {
     "GameDBName": "ddz-match",
     "BackstageDBName": "backstage",
-    "BkDBUrl": "mongodb://192.168.1.8",
+    "BkDBUrl": "mongodb://localhost",
     "ConnNum": 100
   }
 }

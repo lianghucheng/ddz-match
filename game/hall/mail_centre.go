@@ -280,6 +280,7 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.CreatedAt = v.CreatedAt
 		temp.ID = v.ID
 		temp.Status = v.Status
+		temp.MailType = v.MailType
 
 		*rt = append(*rt, *temp)
 	}
