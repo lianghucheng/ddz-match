@@ -288,13 +288,13 @@ func (sc *scoreMatch) End() {
 			ranks := []SportsCenterOneFinalRank{}
 			for _, p := range sc.matchPlayers {
 				one := SportsCenterOneFinalRank{
-					Player_id:          strconv.Itoa(p.accountID),
-					Ranking:            strconv.Itoa(p.rank),
-					Average_mp_ratio:   "",
-					Rival_avg_mp_ratio: "",
-					Rank_count:         "",
-					Total_time:         strconv.FormatInt(p.opTime, 10),
-					Status:             "0",
+					Player_id: strconv.Itoa(p.accountID),
+					Ranking:   strconv.Itoa(p.rank),
+					// Average_mp_ratio:   " ",
+					// Rival_avg_mp_ratio: " ",
+					Rank_count: " ",
+					Total_time: strconv.FormatInt(p.opTime, 10),
+					Status:     "0",
 				}
 				ranks = append(ranks, one)
 			}
@@ -479,18 +479,18 @@ func (sc *scoreMatch) RoundOver(roomID string) {
 						Card_group_id:        "1",
 						Card_desk_id:         strconv.Itoa(n + 1),
 						Card_score:           strconv.FormatInt(player.LastScore, 10),
-						Mp_score:             "",
-						Mp_ratio:             "",
-						Mp_ratio_rank:        "",
-						Card_type:            changeCardsToSportsCenter(playerData.OriginHands),
-						Call_score:           strconv.Itoa(playerData.Score),
-						Spring:               getSpring(playerData.Spring, playerData.LSpring),
-						Raise:                getDouble(playerData.Double),
-						Card_hole:            changeCardsToSportsCenter(player.Result[base.CurrentRound-1].ThreeCards),
-						Card_rival:           getTablePlayerID(game.UserIDPlayerDatas, player.UID),
-						Player_position:      strconv.Itoa(playerData.Position),
-						Status:               "0",
-						Passive:              "0",
+						// Mp_score:             " ",
+						// Mp_ratio:             " ",
+						// Mp_ratio_rank:        " ",
+						Card_type:       changeCardsToSportsCenter(playerData.OriginHands),
+						Call_score:      strconv.Itoa(playerData.Score),
+						Spring:          getSpring(playerData.Spring, playerData.LSpring),
+						Raise:           getDouble(playerData.Double),
+						Card_hole:       changeCardsToSportsCenter(player.Result[base.CurrentRound-1].ThreeCards),
+						Card_rival:      getTablePlayerID(game.UserIDPlayerDatas, player.UID),
+						Player_position: strconv.Itoa(playerData.Position),
+						Status:          "0",
+						Passive:         "0",
 					})
 				}
 			}
@@ -535,13 +535,13 @@ func (sc *scoreMatch) NextRound() {
 		ranks := []SportsCenterOneFinalRank{}
 		for i := 0; i < len(base.AllPlayers); i++ {
 			one := SportsCenterOneFinalRank{
-				Player_id:          strconv.Itoa(sc.matchPlayers[i].accountID),
-				Ranking:            strconv.Itoa(sc.matchPlayers[i].rank),
-				Average_mp_ratio:   "",
-				Rival_avg_mp_ratio: "",
-				Rank_count:         "",
-				Total_time:         strconv.FormatInt(sc.matchPlayers[i].opTime, 10),
-				Status:             "0",
+				Player_id: strconv.Itoa(sc.matchPlayers[i].accountID),
+				Ranking:   strconv.Itoa(sc.matchPlayers[i].rank),
+				// Average_mp_ratio:   " ",
+				// Rival_avg_mp_ratio: " ",
+				Rank_count: " ",
+				Total_time: strconv.FormatInt(sc.matchPlayers[i].opTime, 10),
+				Status:     "0",
 			}
 			ranks = append(ranks, one)
 		}
@@ -586,18 +586,18 @@ func (sc *scoreMatch) NextRound() {
 				Card_group_id:        v.Card_group_id,
 				Card_desk_id:         v.Card_desk_id,
 				Card_score:           v.Card_score,
-				Mp_score:             v.Mp_score,
-				Mp_ratio:             v.Mp_ratio,
-				Mp_ratio_rank:        v.Mp_ratio_rank,
-				Card_type:            v.Card_type,
-				Call_score:           v.Call_score,
-				Spring:               v.Spring,
-				Raise:                v.Raise,
-				Card_hole:            v.Card_hole,
-				Card_rival:           v.Card_rival,
-				Player_position:      v.Player_position,
-				Status:               v.Status,
-				Passive:              v.Passive,
+				// Mp_score:             v.Mp_score,
+				// Mp_ratio:             v.Mp_ratio,
+				// Mp_ratio_rank:        v.Mp_ratio_rank,
+				Card_type:       v.Card_type,
+				Call_score:      v.Call_score,
+				Spring:          v.Spring,
+				Raise:           v.Raise,
+				Card_hole:       v.Card_hole,
+				Card_rival:      v.Card_rival,
+				Player_position: v.Player_position,
+				Status:          v.Status,
+				Passive:         v.Passive,
 			})
 		}
 
@@ -615,18 +615,18 @@ func (sc *scoreMatch) NextRound() {
 					Card_group_id:        v.Card_group_id,
 					Card_desk_id:         v.Card_desk_id,
 					Card_score:           v.Card_score,
-					Mp_score:             v.Mp_score,
-					Mp_ratio:             v.Mp_ratio,
-					Mp_ratio_rank:        v.Mp_ratio_rank,
-					Card_type:            v.Card_type,
-					Call_score:           v.Call_score,
-					Spring:               v.Spring,
-					Raise:                v.Raise,
-					Card_hole:            v.Card_hole,
-					Card_rival:           v.Card_rival,
-					Player_position:      v.Player_position,
-					Status:               v.Status,
-					Passive:              v.Passive,
+					// Mp_score:             v.Mp_score,
+					// Mp_ratio:             v.Mp_ratio,
+					// Mp_ratio_rank:        v.Mp_ratio_rank,
+					Card_type:       v.Card_type,
+					Call_score:      v.Call_score,
+					Spring:          v.Spring,
+					Raise:           v.Raise,
+					Card_hole:       v.Card_hole,
+					Card_rival:      v.Card_rival,
+					Player_position: v.Player_position,
+					Status:          v.Status,
+					Passive:         v.Passive,
 				}); err != nil {
 					log.Error("err:%v", err)
 				}
@@ -749,15 +749,16 @@ func (sc *scoreMatch) getSportsAwardResult(matchID string, num int) {
 func (sc *scoreMatch) onNextRound() {
 	base := sc.base.(*BaseMatch)
 	if base.CurrentRound < base.Round {
+
+		// 淘汰玩家
+		sc.eliminatePlayers()
+
 		// 广播单局总结算
 		sort.Sort(poker.LstPoker(sc.AllResults))
 		base.broadcast(&msg.S2C_LandlordRoundFinalResult{
 			RoundResults: sc.AllResults,
 			Countdown:    conf.GetCfgTimeout().LandlordNextStart,
 		})
-
-		// 淘汰玩家
-		sc.eliminatePlayers()
 
 		// 清理数据
 		sc.ClearRoundData()

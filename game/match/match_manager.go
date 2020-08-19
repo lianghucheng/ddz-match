@@ -313,6 +313,7 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 		EnterFee:      float64(sc.EnterFee),
 		SignNum:       len(sc.AllSignInPlayers),
 		IsSign:        isSign,
+		Eliminate:     sc.Eliminate,
 	}
 	user.WriteMsg(data)
 }

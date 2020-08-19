@@ -205,6 +205,20 @@ func FormatFloat(num float64, decimal int) string {
 	return fmt.Sprintf(format, num)
 }
 
+// RoundFloat 取小数点后n位非零小数,四舍五入
+func RoundFloat(num float64, decimal int) string {
+	if math.Trunc(num) == num || decimal == 0 {
+		return fmt.Sprintf("%.f", math.Trunc(num))
+	}
+	for i := 0; i < decimal; i++ {
+		num = num * 10
+	}
+	return fmt.Sprintf("%.1f", math.Round(num)/10)
+
+	// format := "%." + strconv.Itoa(decimal) + "f"
+	// return fmt.Sprintf(format, num)
+}
+
 // GetFirstDateOfMonth 获取本月第一天零点
 func GetFirstDateOfMonth(d time.Time) time.Time {
 	d = d.AddDate(0, 0, -d.Day()+1)

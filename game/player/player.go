@@ -226,8 +226,9 @@ func (user *User) RefreshData() {
 		}, nil)
 	}
 
-	// 检查体总数据是否同步,每日同步一次
-	if utils.GetZeroTime(time.Unix(one.SportCenter.SyncTime, 0)) != utils.GetZeroTime(time.Now()) && len(one.IDCardNo) > 0 {
+	// 检查体总数据是否同步,每三小时同步一次
+	// if utils.GetZeroTime(time.Unix(one.SportCenter.SyncTime, 0)) != utils.GetZeroTime(time.Now()) && len(one.IDCardNo) > 0 {
+	if time.Now().Unix()-one.SportCenter.SyncTime > 3*60*60 && len(one.IDCardNo) > 0 {
 		var err error
 		sportsCenterData := values.PlayerMasterScoreRet{}
 		game.GetSkeleton().Go(func() {
@@ -294,7 +295,23 @@ func CalcOnlineCnt(userIDUsers map[int]*User) int {
 
 func (user *User) SendUserInfo() {
 	send := map[string]interface{}{}
-	send["Sports"] = user.BaseData.UserData.SportCenter
+	type Sports struct {
+		BlueScore   string
+		RedScore    string
+		SilverScore string
+		GoldScore   string
+		Level       string
+		Ranking     int // 排名
+	}
+	sports := Sports{
+		BlueScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.BlueScore, 1),
+		RedScore:    utils.RoundFloat(user.BaseData.UserData.SportCenter.RedScore, 1),
+		SilverScore: utils.RoundFloat(user.BaseData.UserData.SportCenter.SilverScore, 1),
+		GoldScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
+		Level:       utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
+		Ranking:     user.BaseData.UserData.SportCenter.Ranking,
+	}
+	send["Sports"] = sports
 
 	user.WriteMsg(&msg.S2C_UserInfo{
 		Info: send,
