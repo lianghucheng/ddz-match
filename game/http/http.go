@@ -1,6 +1,7 @@
 package http
 
 import (
+	"ddz/cache"
 	"ddz/conf"
 	"ddz/config"
 	"ddz/edy_api"
@@ -60,6 +61,8 @@ func startHTTPServer() {
 	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
 	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
 	mux.HandleFunc("/notify/pricemenu", notidyPriceMenu)
+	mux.HandleFunc("/set/propbaseconfig", setPropBaseConfig)
+
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -422,16 +425,16 @@ func giveCouponFrag(w http.ResponseWriter, r *http.Request) {
 	log.Debug("后台发放点券:aid:%v   amount:%v", accountid, amount)
 	aid, _ := strconv.Atoi(accountid)
 	a, _ := strconv.Atoi(amount)
-	propid := config.PropTypeCouponFrag
-	prop, ok := config.PropList[propid]
+	propType := values.PropTypeCouponFrag
+	prop, ok := config.PropList[propType]
 	if !ok {
 		log.Error("没有这个道具配置")
 		return
 	}
 	knapsack := new(hall.KnapsackProp)
-	knapsack.PropID = propid
+	knapsack.PropType = propType
 	knapsack.Accountid = aid
-	knapsack.ReadByAidPid()
+	knapsack.ReadByAidPtype()
 	if knapsack.Createdat == 0 {
 		knapsack.ID, _ = MongoDBNextSeq("knapsackprop")
 		knapsack.Createdat = time.Now().Unix()
@@ -572,4 +575,34 @@ func handlePushMail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	param.PushMailBox()
+}
+
+func setPropBaseConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	if err := cache.UpdatePropBaseConfig(); err != nil {
+		log.Error(err.Error())
+		code = UPDATE_PROP_CONF_FAIL
+		errmsg = ErrMsg[code]
+		return
+	}
+	return
 }

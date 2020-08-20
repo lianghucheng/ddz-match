@@ -2,49 +2,49 @@
   "Model": 1,
   "CfgDailySignItems": [
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 5.0
     },
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 10.0
     },
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 5.0
     },
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 10.0
     },
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 5.0
     },
     {
-      "ID": 10003,
+      "PropType": 3,
       "Name": "点券碎片",
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 10.0
     },
     {
-      "ID": 10002,
+      "PropType": 1,
       "Name": "点券",
       "IsTowardKnapsack": false,
       "Desc": "平台内通用货币，人民币兑换1:1",

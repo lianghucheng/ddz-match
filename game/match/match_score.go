@@ -2,6 +2,7 @@ package match
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
@@ -1374,17 +1375,26 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 	if !ok {
 		return
 	}
+	cf := config.GetPropBaseConfig
 	for _, player := range sc.matchPlayers {
 		if player.uid == uid {
 			var award []string
+			var imgUrl []string
+			var awardDatas []map[string]string
 			if player.rank-1 < len(base.Award) {
 				for _, one := range strings.Split(base.Award[player.rank-1], ",") {
+					awardData := make(map[string]string)
 					award = append(award, one)
+					awardWord := GetAwardType(one)
+					propType := AwardWordToPropType[awardWord]
+					imgUrl = append(imgUrl, cf(propType).ImgUrl)
+					awardData[one] = cf(propType).ImgUrl
+					awardDatas = append(awardDatas, awardData)
 				}
 			}
 			user.WriteMsg(&msg.S2C_MineRoundRank{
 				RankOrder: player.rank,
-				Award:     award,
+				Award:     awardDatas,
 			})
 			break
 		}

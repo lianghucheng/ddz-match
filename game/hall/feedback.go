@@ -10,12 +10,12 @@ import (
 )
 
 type FeedBack struct {
-	ID int `bson:"_id"`
+	ID        int `bson:"_id"`
 	AccountID int
 	Title     string
 	Content   string
-	PhoneNum    string //联系方式
-	Nickname    string //昵称
+	PhoneNum  string //联系方式
+	Nickname  string //昵称
 	CreatedAt int64
 	UpdatedAt int64
 	DeletedAt int64
@@ -51,7 +51,7 @@ func saveFeedBack(feedBack *FeedBack) {
 		defer db.BackstageDB.UnRef(se)
 
 		if err := se.DB(db.BkDBName).C("feedback").Insert(feedBack); err != nil {
-			log.Error("用户反馈数据存储错误：error："+err.Error())
+			log.Error("用户反馈数据存储错误：error：" + err.Error())
 		}
 	}, nil)
 }

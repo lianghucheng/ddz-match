@@ -40,6 +40,22 @@ func read(coll string, data interface{}, query bson.M, model int) {
 	}
 }
 
+func read2(coll string, data interface{}, query bson.M, model int) {
+	se := BackstageDB.Ref()
+	defer BackstageDB.UnRef(se)
+	dbName := config.GetCfgDB().BackstageDBName
+	var err error
+	if model == readOne {
+		err = se.DB(dbName).C(coll).Find(query).One(data)
+	} else if model == readAll {
+		err = se.DB(dbName).C(coll).Find(query).Sort("order").All(data)
+	}
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+}
+
 func GetInterQuery(cond interface{}) bson.M {
 	if cond == nil {
 		return nil
@@ -101,5 +117,12 @@ func ReadPayAccounts(merID, paybranch int) *[]values.PayAccount {
 	datas := new([]values.PayAccount)
 	read("shoppayaccount", datas, bson.M{"merchantid": merID, "paybranch": paybranch}, readAll)
 	log.Debug("支付账号数据： %v", *datas)
+	return datas
+}
+
+func ReadPropBaseConfig() *[]values.PropBaseConfig {
+	datas := new([]values.PropBaseConfig)
+	read2("propbaseconfig", datas, bson.M{"deletedat": 0}, readAll)
+	log.Debug("道具配置基本信息： %v", *datas)
 	return datas
 }

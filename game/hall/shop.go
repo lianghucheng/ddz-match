@@ -1,6 +1,7 @@
 package hall
 
 import (
+	"ddz/config"
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/game/values"
@@ -80,10 +81,10 @@ func GetPriceMenu(goodsTypeID int) *[]msg.PriceItem {
 		*rt = append(*rt, msg.PriceItem{
 			PriceID:    v.ID,
 			Fee:        int64(v.Price),
-			Name:       values.PropTypeStr[v.PropType],
+			Name:       config.GetPropBaseConfig(v.PropType).Name,
 			Amount:     v.GetAmount,
 			GiftAmount: v.GiftAmount,
-			ImgUrl:     v.ImgUrl,
+			ImgUrl:     config.GetPropBaseConfig(v.PropType).ImgUrl,
 			TakenType:  v.TakenType,
 		})
 	}
@@ -119,49 +120,52 @@ func SendPriceMenu(user *player.User, model int) {
 	//m := &msg.S2C_PriceMenu{
 	//	PriceItems: *msgGoodsTypes,
 	//}
+	cf := config.GetPropBaseConfig
+	log.Debug("获取到的缓存道具基本信息：%v", cf(values.PropTypeCoupon))
+
 	prices := []msg.PriceItem{
 		{
 			PriceID:    1,
 			Fee:        500,
-			Name:       "点券",
+			Name:       cf(values.PropTypeCoupon).Name,
 			Amount:     5,
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
 			TakenType:  1,
 			GiftAmount: 0,
 		},
 		{
 			PriceID:    2,
 			Fee:        1000,
-			Name:       "点券",
+			Name:       cf(values.PropTypeCoupon).Name,
 			Amount:     10,
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
 			TakenType:  1,
 			GiftAmount: 0,
 		},
 		{
 			PriceID:    3,
 			Fee:        2000,
-			Name:       "点券",
+			Name:       cf(values.PropTypeCoupon).Name,
 			Amount:     20,
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
 			TakenType:  1,
 			GiftAmount: 0,
 		},
 		{
 			PriceID:    4,
 			Fee:        5000,
-			Name:       "点券",
+			Name:       cf(values.PropTypeCoupon).Name,
 			Amount:     50,
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
 			TakenType:  1,
 			GiftAmount: 0,
 		},
 		{
 			PriceID:    5,
 			Fee:        10000,
-			Name:       "点券",
+			Name:       cf(values.PropTypeCoupon).Name,
 			Amount:     100,
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_juan.png",
+			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
 			TakenType:  1,
 			GiftAmount: 0,
 		},

@@ -98,9 +98,7 @@ func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
 		// game.GetSkeleton().Go(func() {
 		// 	player.SaveUserData(user.GetUserData())
 		// }, nil)
-		user.WriteMsg(&msg.S2C_UpdateUserAfterTaxAward{
-			AfterTaxAward: utils.Decimal(changeAmount),
-		})
+		UpdateUserAfterTaxAward(user)
 	}
 	after = int64(changeAmount * 100)
 	before = after - int64(amount*100)
@@ -128,8 +126,8 @@ func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
 func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID string) {
 	data := KnapsackProp{}
 	data.Accountid = accountID
-	data.PropID = config.PropTypeCouponFrag
-	data.ReadByAidPid()
+	data.PropType = values.PropTypeCouponFrag
+	data.ReadByAidPtype()
 	before := int64(data.Num)
 	data.Num += int(amount)
 	after := int64(data.Num)
@@ -243,7 +241,7 @@ func TakenFirstCoupon(user *player.User) {
 type KnapsackProp struct {
 	ID        int `bson:"_id"`
 	Accountid int
-	PropID    int
+	PropType  int
 	Name      string
 	Num       int
 	IsAdd     bool
@@ -253,8 +251,8 @@ type KnapsackProp struct {
 	Createdat int64
 }
 
-func (ctx *KnapsackProp) ReadByAidPid() {
-	db.Read("knapsackprop", ctx, bson.M{"accountid": ctx.Accountid, "propid": ctx.PropID})
+func (ctx *KnapsackProp) ReadByAidPtype() {
+	db.Read("knapsackprop", ctx, bson.M{"accountid": ctx.Accountid, "proptype": ctx.PropType})
 }
 
 func (ctx *KnapsackProp) ReadAllByAid() *[]KnapsackProp {
@@ -281,7 +279,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 	kps := new([]msg.KnapsackProp)
 	for _, knapsack := range *knapsacks {
 		temp := new(msg.KnapsackProp)
-		temp.PropID = knapsack.PropID
+		temp.PropID = knapsack.PropType
 		temp.Name = knapsack.Name
 		temp.Num = knapsack.Num
 		temp.IsUse = knapsack.IsUse
@@ -295,7 +293,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 
 func UseProp(user *player.User, m *msg.C2S_UseProp) {
 	ud := user.GetUserData()
-	if m.PropID == config.PropTypeCouponFrag {
+	if m.PropID == values.PropTypeCouponFrag {
 		item, ok := config.PropList[m.PropID]
 		if !ok {
 			log.Error("no exist prop. ")
@@ -311,8 +309,8 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 			}
 			knapsackProp := new(KnapsackProp)
 			knapsackProp.Accountid = user.AcountID()
-			knapsackProp.PropID = m.PropID
-			knapsackProp.ReadByAidPid()
+			knapsackProp.PropType = m.PropID
+			knapsackProp.ReadByAidPtype()
 			if knapsackProp.Num < m.Amount*20 {
 				user.WriteMsg(&msg.S2C_UseProp{
 					Error:  values.ErrS2C_UsePropCouponFragLack,
@@ -328,31 +326,31 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 				knapsackProp.Save()
 			}, func() {
 				UpdateUserCoupon(user, int64(m.Amount), before, ud.Coupon, db.FragChangeOpt, db.CouponFrag)
-				cpItem := config.PropList[config.PropTypeCoupon]
+				cpItem := config.PropList[values.PropTypeCoupon]
 				user.WriteMsg(&msg.S2C_UseProp{
 					Error:  values.SuccessS2C_UseProp,
 					ErrMsg: values.ErrMsg[values.SuccessS2C_UseProp],
 					Amount: m.Amount,
-					Name:   cpItem.Name,
-					PropID: cpItem.ID,
+					Name:   config.GetPropBaseConfig(cpItem.ID).Name,
+					PropID: cpItem.PropID,
 				})
 			})
 		}
 	}
 }
 
-func AddPropAmount(propid int, accountid int, amount int) {
-	log.Debug("道具数量变动，propid：%v， accountid： %v, amount:%v. ", propid, accountid, amount)
+func AddPropAmount(propType int, accountid int, amount int) {
+	log.Debug("道具数量变动，propid：%v， accountid： %v, amount:%v. ", propType, accountid, amount)
 	knapsackProp := new(KnapsackProp)
-	prop, ok := config.PropList[propid]
+	prop, ok := config.PropList[propType]
 	if !ok {
 		log.Error("没有这个道具配置")
 		return
 	}
 	if prop.IsAdd {
 		knapsackProp.Accountid = accountid
-		knapsackProp.PropID = propid
-		knapsackProp.ReadByAidPid()
+		knapsackProp.PropType = propType
+		knapsackProp.ReadByAidPtype()
 		if knapsackProp.Createdat == 0 {
 			knapsackProp.ID, _ = db.MongoDBNextSeq("knapsackprop")
 			knapsackProp.Createdat = time.Now().Unix()
@@ -374,14 +372,14 @@ func AddPropAmount(propid int, accountid int, amount int) {
 		knapsackProp.Expiredat = prop.Expiredat
 		knapsackProp.Desc = prop.Desc
 		knapsackProp.Accountid = accountid
-		knapsackProp.PropID = propid
+		knapsackProp.PropType = propType
 		knapsackProp.Num += int(amount)
 		knapsackProp.Save()
 	}
 }
 
 //todo:目前只有点券
-func SendGoods(userID , amount int) {
+func SendGoods(userID, amount int) {
 	ud := player.ReadUserDataByID(userID)
 	if user, ok := player.UserIDUsers[userID]; ok {
 		user.GetUserData().Coupon += int64(amount)
@@ -397,5 +395,23 @@ func SendGoods(userID , amount int) {
 		go func() {
 			player.SaveUserData(ud)
 		}()
+	}
+}
+
+func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way, matchID string){
+	switch propType {
+	case values.PropTypeAward:
+		WriteFlowData(ud.UserID, amount, FlowTypeSign, "", "", []int{})
+		AddFee(ud.UserID, ud.AccountID, amount, opt,
+			way, matchID)
+	case values.PropTypeCoupon:
+		AddCoupon(ud.UserID, ud.AccountID, int64(amount), opt,
+			way, matchID)
+	case values.PropTypeCouponFrag:
+		AddFragment(ud.UserID, ud.AccountID, int64(amount), opt,
+			way, matchID)
+	case values.PropTypeRedScore:
+		AddRedScore(ud.UserID, ud.AccountID, amount, opt,
+			way, matchID)
 	}
 }

@@ -196,7 +196,7 @@ func rpcNotifyPayOK(args []interface{}) {
 	}, nil)
 
 	//发货
-	hall.SendGoods(ud.UserID, m.TotalFee / 100)
+	hall.SendGoods(ud.UserID, m.TotalFee/100)
 }
 
 func rpcAccountLogin(args []interface{}) {

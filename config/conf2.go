@@ -1,6 +1,7 @@
 package config
 
 import (
+	"ddz/game/values"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -46,6 +47,7 @@ type Config struct {
 	CfgDailySignItems    *[]CfgDailySignItem
 	CfgPay               map[string]*CfgPay
 	CfgDB                *CfgDB
+	CfgPropBases         map[int]*CfgPropBase
 }
 
 func (ctx *Config) print() {
@@ -72,7 +74,7 @@ type CfgMatchRobotMaxNum struct {
 }
 
 type CfgDailySignItem struct {
-	ID               int
+	PropType               int
 	Name             string
 	IsTowardKnapsack bool
 	Desc             string
@@ -94,6 +96,12 @@ type CfgDB struct {
 	BackstageDBName string
 	BkDBUrl         string
 	ConnNum         int
+}
+
+type CfgPropBase struct {
+	PropType int    //道具类型, 1是点券，2是奖金，3点券碎片
+	Name     string //名称
+	ImgUrl   string //图片url
 }
 
 var cfg *Config
@@ -184,6 +192,7 @@ func GetCfgDailySignItem() *[]CfgDailySignItem {
 
 type TempProp struct {
 	ID               int
+	PropID           int
 	Name             string
 	IsAdd            bool
 	IsTowardKnapsack bool
@@ -192,15 +201,10 @@ type TempProp struct {
 	Desc             string
 }
 
-const (
-	PropTypeAward      = 10001
-	PropTypeCoupon     = 10002
-	PropTypeCouponFrag = 10003
-)
-
 var PropList = map[int]TempProp{
-	PropTypeAward: {
-		ID:               10001,
+	values.PropTypeAward: {
+		ID:               values.PropTypeAward,
+		PropID:           10001,
 		Name:             "奖金",
 		IsAdd:            true,
 		IsTowardKnapsack: false,
@@ -208,8 +212,9 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropTypeCoupon: {
-		ID:               10002,
+	values.PropTypeCoupon: {
+		ID:               values.PropTypeCoupon,
+		PropID:           10002,
 		Name:             "点券",
 		IsAdd:            true,
 		IsTowardKnapsack: false,
@@ -217,8 +222,9 @@ var PropList = map[int]TempProp{
 		Expiredat:        -1,
 		Desc:             "用户税后奖金超过10元可进行提现申请处理",
 	},
-	PropTypeCouponFrag: {
-		ID:               10003,
+	values.PropTypeCouponFrag: {
+		ID:               values.PropTypeCouponFrag,
+		PropID:           10003,
 		Name:             "碎片",
 		IsAdd:            true,
 		IsTowardKnapsack: true,
@@ -238,4 +244,19 @@ func GetCfgPay() map[string]*CfgPay {
 
 func GetCfgDB() *CfgDB {
 	return cfg.CfgDB
+}
+
+func SetPropBaseConfig(data map[int]*CfgPropBase) {
+	cfg.CfgPropBases = data
+	log.Debug("设置缓存成功：%v", cfg.CfgPropBases)
+}
+
+func GetPropBaseConfig(propType int) *CfgPropBase {
+	data, ok := cfg.CfgPropBases[propType]
+	if !ok {
+		data := new(CfgPropBase)
+		data.ImgUrl = "http://111.230.39.198:10615/download/matchIcon/bg_dianquan.png"
+		return data
+	}
+	return data
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ddz/cache"
 	"ddz/conf"
 	"ddz/game"
 	_ "ddz/game/http"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	//config.DBCfgInit()
+	cache.Init()
 	lconf.LogLevel = conf.GetCfgLeafSrv().LogLevel
 	lconf.LogPath = conf.GetCfgLeafSrv().LogPath
 	lconf.LogFlag = log.Lshortfile | log.LstdFlags

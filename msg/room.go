@@ -42,7 +42,7 @@ type S2C_RoomPanel struct {
 
 type S2C_MineRoundRank struct {
 	RankOrder int
-	Award     []string
+	Award     []map[string]string
 }
 
 // 获取战绩记录
