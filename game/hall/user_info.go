@@ -332,7 +332,7 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 					ErrMsg: values.ErrMsg[values.SuccessS2C_UseProp],
 					Amount: m.Amount,
 					Name:   config.GetPropBaseConfig(cpItem.ID).Name,
-					PropID: cpItem.PropID,
+					PropID: cpItem.ID,
 				})
 			})
 		}

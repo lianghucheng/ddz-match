@@ -40,7 +40,8 @@ func (ctx *Realname) realNameAuth(user *player.User, api func(accountid int, idC
 
 	var err error
 	game.GetSkeleton().Go(func() {
-		err = api(ctx.UserID, ctx.IDCardNo, ctx.RealName, ctx.PhoneNum)
+		ud := player.ReadUserDataByID(ctx.UserID)
+		err = api(ud.AccountID, ctx.IDCardNo, ctx.RealName, ctx.PhoneNum)
 	}, func() {
 		if err != nil {
 			log.Error(err.Error())
