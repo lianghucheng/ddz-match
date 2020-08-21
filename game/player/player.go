@@ -308,7 +308,7 @@ func (user *User) SendUserInfo() {
 		RedScore:    utils.RoundFloat(user.BaseData.UserData.SportCenter.RedScore, 1),
 		SilverScore: utils.RoundFloat(user.BaseData.UserData.SportCenter.SilverScore, 1),
 		GoldScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
-		Level:       utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
+		Level:       user.BaseData.UserData.SportCenter.Level,
 		Ranking:     user.BaseData.UserData.SportCenter.Ranking,
 	}
 	send["Sports"] = sports
