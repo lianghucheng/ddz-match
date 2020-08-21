@@ -48,9 +48,11 @@ type Config struct {
 	CfgPay               map[string]*CfgPay
 	CfgDB                *CfgDB
 	CfgPropBases         map[int]*CfgPropBase
+	CfgLianHang 		 *CfgLianHang
 }
 
 func (ctx *Config) print() {
+	log.Debug("config *******************配置信息")
 	buf, err := json.Marshal(ctx)
 	if err != nil {
 		log.Error(err.Error())
@@ -102,6 +104,15 @@ type CfgPropBase struct {
 	PropType int    //道具类型, 1是点券，2是奖金，3点券碎片
 	Name     string //名称
 	ImgUrl   string //图片url
+}
+
+//天眼数聚
+type CfgLianHang struct {
+	AppKey string
+	AppSecret string
+	AppCode string
+	Host string
+	LianHangUrl string
 }
 
 var cfg *Config
@@ -259,4 +270,8 @@ func GetPropBaseConfig(propType int) *CfgPropBase {
 		return data
 	}
 	return data
+}
+
+func GetCfgLianHang() *CfgLianHang {
+	return cfg.CfgLianHang
 }

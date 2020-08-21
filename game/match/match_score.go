@@ -1358,20 +1358,20 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 
 // SendFinalResult 给玩家发送总结算
 func (sc *scoreMatch) SendFinalResult(uid int) {
-	// base := sc.base.(*BaseMatch)
-	// user := base.AllPlayers[uid]
-	// player := user.BaseData.MatchPlayer
-
-	// var award []string
-	// if player.Rank-1 < len(base.Award) {
-	// 	for _, one := range strings.Split(base.Award[player.Rank-1], ",") {
-	// 		award = append(award, one)
-	// 	}
-	// }
-	// user.WriteMsg(&msg.S2C_MineRoundRank{
-	// 	RankOrder: player.Rank,
-	// 	Award:     award,
-	// })
+	//base := sc.base.(*BaseMatch)
+	//user := base.AllPlayers[uid]
+	//player := user.BaseData.MatchPlayer
+	//
+	//var award []string
+	//if player.Rank-1 < len(base.Award) {
+	//	for _, one := range strings.Split(base.Award[player.Rank-1], ",") {
+	//		award = append(award, one)
+	//	}
+	//}
+	//user.WriteMsg(&msg.S2C_MineRoundRank{
+	//	RankOrder: player.Rank,
+	//	Award:     award,
+	//})
 	base := sc.base.(*BaseMatch)
 	user, ok := UserIDUsers[uid]
 	// 玩家不在线
@@ -1383,7 +1383,7 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 		if player.uid == uid {
 			var award []string
 			var imgUrl []string
-			var awardDatas []map[string]string
+			//var awardDatas []map[string]string
 			if player.rank-1 < len(base.Award) {
 				for _, one := range strings.Split(base.Award[player.rank-1], ",") {
 					awardData := make(map[string]string)
@@ -1392,12 +1392,12 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 					propType := AwardWordToPropType[awardWord]
 					imgUrl = append(imgUrl, cf(propType).ImgUrl)
 					awardData[one] = cf(propType).ImgUrl
-					awardDatas = append(awardDatas, awardData)
+					//awardDatas = append(awardDatas, awardData)
 				}
 			}
 			user.WriteMsg(&msg.S2C_MineRoundRank{
 				RankOrder: player.rank,
-				Award:     awardDatas,
+				Award:     award,
 			})
 			break
 		}

@@ -6,12 +6,12 @@ import (
 	"ddz/game/hall"
 	"ddz/game/player"
 	"errors"
-	"github.com/szxby/tools/log"
+	"github.com/name5566/leaf/log"
 )
 
 func Init() {
 	if err := UpdatePropBaseConfig(); err != nil {
-		log.Fatal("更新道具基本配置信息失败：" + err.Error())
+		log.Error("更新道具基本配置信息失败：" + err.Error())
 	}
 }
 

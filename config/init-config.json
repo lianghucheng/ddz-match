@@ -70,5 +70,12 @@
     "BackstageDBName": "backstage",
     "BkDBUrl": "mongodb://localhost",
     "ConnNum": 100
+  },
+  "CfgLianHang": {
+    "AppKey": "203850089",
+    "AppSecret" : "6yLje6GC62yfB2EkwpEuuR9TORDL58DG",
+    "AppCode" : "e03091fdd5fc450c91f502dd6df5f565",
+    "Host": "http://lianhang.shumaidata.com",
+    "LianHangUrl": "/lianhang"
   }
 }
