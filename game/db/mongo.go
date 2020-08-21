@@ -10,7 +10,7 @@ import (
 
 var MongoDB, BackstageDB *mongodb.DialContext
 
-var DB,BkDBName string
+var DB, BkDBName string
 
 func init() {
 	DB = conf.GetCfgLeafSrv().DBName

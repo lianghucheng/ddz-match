@@ -96,6 +96,7 @@ type S2C_DailySign struct {
 	Name   string
 	PropID int
 	Amount float64
+	ImgUrl string
 }
 
 type S2C_DailySignItems struct {
@@ -114,6 +115,7 @@ type DailySignItems struct {
 	PropID int
 	Amount float64
 	Status int
+	ImgUrl string
 }
 
 type C2S_FeedBack struct {
@@ -131,9 +133,10 @@ type S2C_FeedBack struct {
 }
 
 type Annex struct {
-	Type int
-	Num  int
+	PropType int
+	Num  float64
 	Desc string
+	Imgurl string
 }
 
 type UserMail struct {
@@ -143,11 +146,12 @@ type UserMail struct {
 	Content   string  //内容
 	Annexes   []Annex //附件
 	Status    int64   //邮件状态
+	MailType  int
 }
 
 type S2C_SendMail struct {
-	Datas []UserMail
-	Match []UserMail
+	Datas    []UserMail
+	Match    []UserMail
 	Activity []UserMail
 }
 

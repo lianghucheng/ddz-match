@@ -32,7 +32,7 @@ func init() {
 	skeleton.RegisterChanRPC("WriteAwardFlowData", rpcWriteAwardFlowData)
 	// skeleton.RegisterChanRPC("SendMatchEndMail", rpcSendMatchEndMail)
 	skeleton.RegisterChanRPC("SendInterruptMail", rpcSendInterruptMail)
-	skeleton.RegisterChanRPC("NotifyPayOK", rpcHttpNotifyPayOK)
+	skeleton.RegisterChanRPC("NotifyPayOK", rpcNotifyPayOK)
 	skeleton.RegisterChanRPC("AddFee", rpcAddFee)
 	skeleton.RegisterChanRPC("AddAward", rpcAddAward)
 	skeleton.RegisterChanRPC("UpdateAwardInfo", rpcUpdateAwardInfo)
@@ -169,7 +169,7 @@ func rpcSendInterruptMail(args []interface{}) {
 	hall.MatchInterruptPushMail(m.Userid, m.MatchName, m.Coupon)
 }
 
-func rpcHttpNotifyPayOK(args []interface{}) {
+func rpcNotifyPayOK(args []interface{}) {
 	if len(args) != 1 {
 		return
 	}
@@ -196,7 +196,7 @@ func rpcHttpNotifyPayOK(args []interface{}) {
 	}, nil)
 
 	//发货
-	hall.SendGoods(ud.UserID, m.TotalFee / 100)
+	hall.SendGoods(ud.UserID, m.TotalFee/100)
 }
 
 func rpcAccountLogin(args []interface{}) {

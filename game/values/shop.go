@@ -4,14 +4,6 @@ const (
 	TakenTypeRMB = 1
 )
 
-const (
-	PropTypeCoupon = 1
-)
-
-var PropTypeStr = map[int]string{
-	PropTypeCoupon: "点券",
-}
-
 type Goods struct {
 	ID          int    `bson:"_id"`
 	GoodsTypeID int    //商品类型唯一标识

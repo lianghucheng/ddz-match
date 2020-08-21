@@ -15,26 +15,27 @@ import (
 )
 
 const (
-	captchaTpl           = "#code#=%s" // 验证码模板
-	SUCCESS              = 0
-	SYSTEM_ERROR         = 1000
-	CAPTCHA_EXPIRE       = 1001
-	CAPTCHA_WRONG        = 1002
-	INONSISTENT_PASSWORD = 1003
-	INVALIDPARAMETER     = 1004
-	PHONENUMBER_INVALID  = 1005
-	OUTOFSMS             = 1006
-	CAPTCHA_SEND_FAIL    = 1007
-	ACCOUNTREGISTERD     = 1008
-	ACCOUNT_INVALID      = 1009
-	PASSWORD_INVALID     = 1010
-	FORMAT_FAIL          = 1011 //数据格式错误
-	PASSWORD_LACK        = 1012
+	captchaTpl            = "#code#=%s" // 验证码模板
+	SUCCESS               = 0
+	SYSTEM_ERROR          = 1000
+	CAPTCHA_EXPIRE        = 1001
+	CAPTCHA_WRONG         = 1002
+	INONSISTENT_PASSWORD  = 1003
+	INVALIDPARAMETER      = 1004
+	PHONENUMBER_INVALID   = 1005
+	OUTOFSMS              = 1006
+	CAPTCHA_SEND_FAIL     = 1007
+	ACCOUNTREGISTERD      = 1008
+	ACCOUNT_INVALID       = 1009
+	PASSWORD_INVALID      = 1010
+	FORMAT_FAIL           = 1011 //数据格式错误
+	PASSWORD_LACK         = 1012
+	UPDATE_PROP_CONF_FAIL = 1013
 )
 
 var ErrMsg = map[int]string{
-	FORMAT_FAIL: "数据格式错误. ",
-
+	FORMAT_FAIL:           "数据格式错误. ",
+	UPDATE_PROP_CONF_FAIL: "更新物件配置错误. ",
 }
 
 var success = NewError(SUCCESS, "成功")

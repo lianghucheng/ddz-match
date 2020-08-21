@@ -2,6 +2,7 @@ package hall
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
@@ -20,26 +21,26 @@ const (
 )
 
 type MailBox struct {
-	ID          int64   `bson:"_id"`          //唯一id
-	TargetID    int64   `json:"target_id"`    //目标用户， -1表示所有用户
-	MailType    int     `json:"mail_type"`    //邮箱邮件类型
-	CreatedAt   int64   `json:"created_at"`   //收件时间
-	Title       string  `json:"title"`        //主题
-	Content     string  `json:"content"`      //内容
-	Annexes     []Annex `json:"annexes"`      //附件
-	Status      int64   `json:"status"`       //邮箱邮件状态
-	ExpireValue int64   `json:"expire_value"` //有效时长
-	MailServiceType int //邮件服务类型
+	ID              int64   `bson:"_id"`          //唯一id
+	TargetID        int64   `json:"target_id"`    //目标用户， -1表示所有用户
+	MailType        int     `json:"mail_type"`    //邮箱邮件类型
+	CreatedAt       int64   `json:"created_at"`   //收件时间
+	Title           string  `json:"title"`        //主题
+	Content         string  `json:"content"`      //内容
+	Annexes         []Annex `json:"annexes"`      //附件
+	Status          int64   `json:"status"`       //邮箱邮件状态
+	ExpireValue     int64   `json:"expire_value"` //有效时长
+	MailServiceType int     //邮件服务类型
 }
 
 const (
-	AnnexTypeCoupon = 1
+	AnnexTypeCoupon     = 1
 	AnnexTypeCouponFrag = 2
 )
 
 type Annex struct {
-	Type int    `json:"type"`
-	Num  int    `json:"num"`
+	PropType int    `json:"prop_type"`
+	Num  float64    `json:"num"`
 	Desc string `json:"desc"`
 }
 
@@ -52,22 +53,22 @@ const (
 
 const (
 	MailServiceTypeOfficial = 0
-	MailServiceTypeMatch = 1
+	MailServiceTypeMatch    = 1
 	MailServiceTypeActivity = 2
 )
 
 type UserMail struct {
-	ID          int64 `bson:"_id"` //唯一主键
-	UserID      int64
-	CreatedAt   int64   //收件时间
-	Title       string  //主题
-	Content     string  //内容
-	Annexes     []Annex //附件
-	Status      int64   //用户邮件状态
-	ExpireValue int64   //有效时长
-	ExpiredAt   int64   //有效期
-	MailServiceType int //邮件服务类型
-	MailType int
+	ID              int64 `bson:"_id"` //唯一主键
+	UserID          int64
+	CreatedAt       int64   //收件时间
+	Title           string  //主题
+	Content         string  //内容
+	Annexes         []Annex //附件
+	Status          int64   //用户邮件状态
+	ExpireValue     int64   //有效时长
+	ExpiredAt       int64   //有效期
+	MailServiceType int     //邮件服务类型
+	MailType        int
 }
 
 func ReadMail(mid int64) {
@@ -112,8 +113,8 @@ func SendMail(user *player.User) {
 		matchUsermails := readUserMail(user.UID(), MailServiceTypeMatch)
 		activityUsermails := readUserMail(user.UID(), MailServiceTypeActivity)
 		user.WriteMsg(&msg.S2C_SendMail{
-			Datas: *transferMsgUserMail(officialUsermails),
-			Match: *transferMsgUserMail(matchUsermails),
+			Datas:    *transferMsgUserMail(officialUsermails),
+			Match:    *transferMsgUserMail(matchUsermails),
 			Activity: *transferMsgUserMail(activityUsermails),
 		})
 	})
@@ -280,6 +281,7 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.CreatedAt = v.CreatedAt
 		temp.ID = v.ID
 		temp.Status = v.Status
+		temp.MailType = v.MailType
 
 		*rt = append(*rt, *temp)
 	}
@@ -293,7 +295,8 @@ func transferMsgAnnexes(annex []Annex) *[]msg.Annex {
 		temp := new(msg.Annex)
 		temp.Desc = v.Desc
 		temp.Num = v.Num
-		temp.Type = v.Type
+		temp.PropType = v.PropType
+		temp.Imgurl = config.GetPropBaseConfig(v.PropType).ImgUrl
 		*rt = append(*rt, *temp)
 	}
 	return rt
@@ -306,13 +309,13 @@ func DeleteMail(mid int64) {
 }
 
 type MailBoxParam struct {
-	TargetID    int64   `json:"target_id"`    //目标用户， -1表示所有用户
-	MailType    int     `json:"mail_type"`    //邮箱邮件类型
-	MailServiceType int `json:"mail_service_type"`//邮件服务类型
-	Title       string  `json:"title"`        //主题
-	Content     string  `json:"content"`      //内容
-	Annexes     []Annex `json:"annexes"`      //附件
-	ExpireValue int64   `json:"expire_value"` //有效时长
+	TargetID        int64   `json:"target_id"`         //目标用户， -1表示所有用户
+	MailType        int     `json:"mail_type"`         //邮箱邮件类型
+	MailServiceType int     `json:"mail_service_type"` //邮件服务类型
+	Title           string  `json:"title"`             //主题
+	Content         string  `json:"content"`           //内容
+	Annexes         []Annex `json:"annexes"`           //附件
+	ExpireValue     int64   `json:"expire_value"`      //有效时长
 }
 
 func (ctx *MailBoxParam) PushMailBox() {
@@ -330,6 +333,20 @@ func (ctx *MailBoxParam) PushMailBox() {
 
 func TakenMailAnnex(mid int64) {
 	mail := readUserMailByID(mid)
+	if mail.Status == TakenUserMail {
+		return
+	}
 	mail.Status = TakenUserMail
 	mail.save()
+
+	var ud *player.UserData
+	user, ok := player.UserIDUsers[int(mail.UserID)]
+	if !ok {
+		ud = player.ReadUserDataByID(int(mail.UserID))
+	} else {
+		ud = user.GetUserData()
+	}
+	for _, v := range mail.Annexes {
+		AddSundries(v.PropType,ud,v.Num, db.MailOpt, db.Mail, "")
+	}
 }

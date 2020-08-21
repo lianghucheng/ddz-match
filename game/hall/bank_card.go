@@ -60,7 +60,8 @@ func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bank
 	//}
 	var err error
 	game.GetSkeleton().Go(func() {
-		err = api(ctx.Userid, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)
+		ud := player.ReadUserDataByID(ctx.Userid)
+		err = api(ud.AccountID, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)
 	}, func() {
 		if err != nil {
 			SendAddBankCard(user, msg.ErrAddBankCardBusiness, err.Error())
