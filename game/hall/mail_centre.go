@@ -350,3 +350,16 @@ func TakenMailAnnex(mid int64) {
 		AddSundries(v.PropType,ud,v.Num, db.MailOpt, db.Mail, "")
 	}
 }
+
+func TakenAndReadAllMail(user *player.User) {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	usermails := new([]UserMail)
+	err := se.DB(db.DB).C("usermail").Find(bson.M{"status": bson.M{"$ne": TakenUserMail}, "userid": user.UID()}).All(usermails)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	//for _, usermail := range *usermails {
+	//	usermail.MailType
+	//}
+}

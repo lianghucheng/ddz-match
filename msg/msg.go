@@ -83,6 +83,8 @@ func init() {
 	Processor.Register(&S2C_CreateEdyOrder{})
 	Processor.Register(&S2C_PriceMenu{})
 	Processor.Register(&S2C_OnlineUserNum{})
+	Processor.Register(&C2S_TakenAndReadAllMail{})
+	Processor.Register(&S2C_TakenAndReadAllMail{})
 }
 
 type C2S_Heartbeat struct{}
@@ -184,6 +186,12 @@ const (
 type S2C_TakenMailAnnex struct {
 	Error   int
 	Annexes []Annex //附件
+}
+
+type C2S_TakenAndReadAllMail struct {
+}
+
+type S2C_TakenAndReadAllMail struct {
 }
 
 type C2S_RankingList struct {

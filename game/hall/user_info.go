@@ -333,6 +333,7 @@ func UseProp(user *player.User, m *msg.C2S_UseProp) {
 					Amount: m.Amount,
 					Name:   config.GetPropBaseConfig(cpItem.ID).Name,
 					PropID: cpItem.ID,
+					Imgurl: config.GetPropBaseConfig(cpItem.ID).ImgUrl,
 				})
 			})
 		}
