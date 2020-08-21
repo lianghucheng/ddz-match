@@ -8,6 +8,7 @@ import (
 	"ddz/game/db"
 	"ddz/game/ddz"
 	"ddz/game/hall"
+	"ddz/game/http"
 	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
@@ -957,7 +958,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 		one := strings.Split(awardStr, ",")
 		for _, oneAward := range one {
 			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
-			awardAmount := values.ParseAward(oneAward)
+			awardAmount := values.ParseAward(oneAward) * 0.8
 			// 现金奖励
 			if values.GetAwardType(oneAward) == values.Money {
 				// 体总赛事需要对方给了发奖状态才会发奖
@@ -983,9 +984,9 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 					continue
 				}
 				// moneyAwardCount += utils.Decimal(awardAmount * 0.8)
-				hall.WriteFlowData(uid, utils.Decimal(awardAmount*0.8), hall.FlowTypeAward,
+				hall.WriteFlowData(uid, utils.Decimal(awardAmount), hall.FlowTypeAward,
 					base.NormalCofig.MatchType, base.NormalCofig.SonMatchID, []int{})
-				hall.AddFee(uid, player.accountID, utils.Decimal(awardAmount*0.8),
+				hall.AddFee(uid, player.accountID, utils.Decimal(awardAmount),
 					db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
 			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励
 				// awardAmount := values.ParseAward(oneAward)
@@ -1041,6 +1042,8 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
 		}
 		db.InsertMatchRecord(record)
+		http.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
+			http.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: player.opTime}, &http.RPCRet{})
 	}, nil)
 }
 

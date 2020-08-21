@@ -77,17 +77,25 @@ func (game *LandlordMatchRoom) doscore(userID int, score int) {
 	}
 	if playerData.Position == lastPos {
 		//比较叫分的大小决定谁是地主
-		max := game.UserIDPlayerDatas[game.dealerUserID].Score
-		userID := game.dealerUserID
-		for i := 1; i < len(game.UserIDPlayerDatas); i++ {
-			position := ((game.UserIDPlayerDatas[userID].Position) + i) % game.rule.MaxPlayers
-			nextUserID := game.PositionUserIDs[position]
-			if game.UserIDPlayerDatas[nextUserID].Score <= max {
-				continue
+		// max := game.UserIDPlayerDatas[game.dealerUserID].Score
+		// userID := game.dealerUserID
+		// for i := 1; i < len(game.UserIDPlayerDatas); i++ {
+		// 	position := ((game.UserIDPlayerDatas[userID].Position) + i) % game.rule.MaxPlayers
+		// 	nextUserID := game.PositionUserIDs[position]
+		// 	log.Debug("max:%v,score:%v", max, game.UserIDPlayerDatas[nextUserID].Score)
+		// 	if game.UserIDPlayerDatas[nextUserID].Score <= max {
+		// 		continue
+		// 	}
+		// 	max = game.UserIDPlayerDatas[nextUserID].Score
+		// 	userID = nextUserID
+		// }
+		max := 0
+		userID := 0
+		for _, p := range game.UserIDPlayerDatas {
+			if p.Score > max {
+				max = p.Score
+				userID = p.User.BaseData.UserData.UserID
 			}
-			max = game.UserIDPlayerDatas[nextUserID].Score
-			userID = nextUserID
-
 		}
 		// 如果都不叫则直接游戏结束
 		if max == 0 {

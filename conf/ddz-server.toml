@@ -11,6 +11,7 @@
     SubsidyTotal = 2
     FirstRecharge=3
     AgentServer="http://127.0.0.1:10616"
+    ActivityServer="127.0.0.1:10618"
 
 
 [CfgDDZ]

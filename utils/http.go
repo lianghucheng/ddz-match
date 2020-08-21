@@ -12,8 +12,7 @@ import (
 )
 
 const (
-	key         = "7inrmpd5DSQTfDxnAnOH"
-	agentServer = "http://123.207.12.67:10616"
+	key = "7inrmpd5DSQTfDxnAnOH"
 )
 
 // PostToAgentServer 向代理后台发送数据
