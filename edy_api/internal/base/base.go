@@ -23,11 +23,11 @@ const (
 
 var (
 	model      = modelSandbox
-	sandboxUrl = "https://sandbox-api-cc.cmsa.cn:60001"
+	sandboxUrl = "http://api.partner.imsa.cn"
 	productUrl = ""
 	url        string
-	CpID       = "17101" //厂商id
-	secret     = "USWH1TDG8K5G5C72N64JP4P6DDC1QDEF"
+	CpID       = "17001" //厂商id
+	secret     = "QIQJV1VI55PAJR0AVXDOCR51Q7825XRV"
 )
 
 type MyClient struct {
