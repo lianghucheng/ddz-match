@@ -85,6 +85,7 @@ func init() {
 	Processor.Register(&S2C_OnlineUserNum{})
 	Processor.Register(&C2S_TakenAndReadAllMail{})
 	Processor.Register(&S2C_TakenAndReadAllMail{})
+	Processor.Register(&C2S_GetAllMail{})
 }
 
 type C2S_Heartbeat struct{}
@@ -151,6 +152,9 @@ type UserMail struct {
 	MailType  int
 }
 
+type C2S_GetAllMail struct {
+}
+
 type S2C_SendMail struct {
 	Datas    []UserMail
 	Match    []UserMail
@@ -192,6 +196,7 @@ type C2S_TakenAndReadAllMail struct {
 }
 
 type S2C_TakenAndReadAllMail struct {
+	Error int
 }
 
 type C2S_RankingList struct {

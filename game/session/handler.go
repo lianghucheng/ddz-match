@@ -60,6 +60,7 @@ func init() {
 	handler(&msg.C2S_Knapsack{}, handleKnapsack)
 	handler(&msg.C2S_UserInfo{}, handleGetUserInfo)
 	handler(&msg.C2S_TakenAndReadAllMail{}, handleTakenAndReadAllMail)
+	handler(&msg.C2S_GetAllMail{}, handleGetSetMail)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -652,4 +653,23 @@ func handleTakenAndReadAllMail(args []interface{}) {
 	}
 
 	hall.TakenAndReadAllMail(user)
+	hall.SendMail(user)
+}
+
+func handleGetSetMail(args []interface{}) {
+	m := args[0].(*msg.C2S_GetAllMail)
+	_ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		log.Error("leaf UserData is nil. ")
+		return
+	}
+
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		log.Error("system UserData is nil. ")
+		return
+	}
+
+	hall.SendMail(user)
 }

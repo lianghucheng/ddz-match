@@ -359,7 +359,16 @@ func TakenAndReadAllMail(user *player.User) {
 	if err != nil {
 		log.Error(err.Error())
 	}
-	//for _, usermail := range *usermails {
-	//	usermail.MailType
-	//}
+	for _, usermail := range *usermails {
+		switch usermail.MailType {
+		case MailTypeText:
+			ReadMail(usermail.ID)
+		case MailTypeAward:
+			TakenMailAnnex(usermail.ID)
+		case MailTypeMix:
+			TakenMailAnnex(usermail.ID)
+		}
+	}
+
+	user.WriteMsg(&msg.S2C_TakenAndReadAllMail{})
 }

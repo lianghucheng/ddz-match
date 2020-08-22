@@ -11,7 +11,7 @@ import (
 
 func Init() {
 	if err := UpdatePropBaseConfig(); err != nil {
-		log.Error("更新道具基本配置信息失败：" + err.Error())
+		log.Fatal("更新道具基本配置信息失败：" + err.Error())
 	}
 }
 
@@ -34,6 +34,9 @@ func UpdatePropBaseConfig() error {
 	hall.SendPriceMenu(nil, hall.SendBroacast)
 	for _, user := range player.UserIDUsers {
 		hall.SendMail(user)
+		hall.SendDailySignItems(user)
+		hall.SendKnapsack(user)
 	}
+
 	return nil
 }

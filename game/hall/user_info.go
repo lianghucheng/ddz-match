@@ -286,6 +286,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 		temp.Expiredat = knapsack.Expiredat
 		temp.Desc = knapsack.Desc
 		temp.Createdat = temp.Createdat
+		temp.Imgurl = config.GetPropBaseConfig(knapsack.PropType).ImgUrl
 		*kps = append(*kps, *temp)
 	}
 	return kps
