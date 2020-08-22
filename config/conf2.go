@@ -49,6 +49,7 @@ type Config struct {
 	CfgDB                *CfgDB
 	CfgPropBases         map[int]*CfgPropBase
 	CfgLianHang          *CfgLianHang
+	CfgNewUserDailySignItems *[]CfgDailySignItem
 }
 
 func (ctx *Config) print() {
@@ -199,6 +200,10 @@ func ReadCfg(model int) (*Config, error) {
 
 func GetCfgDailySignItem() *[]CfgDailySignItem {
 	return cfg.CfgDailySignItems
+}
+
+func GetCfgNewUserDailySignItem() *[]CfgDailySignItem {
+	return cfg.CfgNewUserDailySignItems
 }
 
 type TempProp struct {

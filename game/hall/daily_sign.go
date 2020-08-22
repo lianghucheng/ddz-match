@@ -46,6 +46,7 @@ func checkDailySign(user *player.User) {
 			dist = 7 - int(week)
 		}
 		if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
+			user.GetUserData().NewDailySign = true
 			user.GetUserData().SignTimes = 0
 		}
 
@@ -59,11 +60,14 @@ func SendDailySignItems(user *player.User) {
 	checkDailySign(user)
 	ud := user.GetUserData()
 	cfgDs := config.GetCfgDailySignItem()
+	if !user.GetUserData().NewDailySign {
+		cfgDs = config.GetCfgNewUserDailySignItem()
+	}
 	dailySignItems := []msg.DailySignItems{}
 	cf := config.GetPropBaseConfig
 	for i := 0; i < ud.SignTimes; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   (*cfgDs)[i].Name,
+			Name:   cf((*cfgDs)[i].PropType).Name,
 			PropID: (*cfgDs)[i].PropType,
 			Amount: (*cfgDs)[i].Amount,
 			Status: msg.SignFinish,
@@ -72,7 +76,7 @@ func SendDailySignItems(user *player.User) {
 	}
 	if !user.GetUserData().DailySign {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   (*cfgDs)[ud.SignTimes].Name,
+			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
 			PropID: (*cfgDs)[ud.SignTimes].PropType,
 			Amount: (*cfgDs)[ud.SignTimes].Amount,
 			Status: msg.SignAccess,
@@ -80,7 +84,7 @@ func SendDailySignItems(user *player.User) {
 		})
 	} else {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   (*cfgDs)[ud.SignTimes].Name,
+			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
 			PropID: (*cfgDs)[ud.SignTimes].PropType,
 			Amount: (*cfgDs)[ud.SignTimes].Amount,
 			Status: msg.SignDeny,
@@ -90,7 +94,7 @@ func SendDailySignItems(user *player.User) {
 
 	for i := user.GetUserData().SignTimes + 1; i < 7; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   (*cfgDs)[i].Name,
+			Name:   cf((*cfgDs)[i].PropType).Name,
 			PropID: (*cfgDs)[i].PropType,
 			Amount: (*cfgDs)[i].Amount,
 			Status: msg.SignDeny,
