@@ -24,7 +24,7 @@ func DailySign(user *player.User) {
 	ud.SignTimes++
 	game.GetSkeleton().Go(func() {
 		log.Debug("签到，类型：%v，数量：%v. ", item.PropType, item.Amount)
-		AddSundries(item.PropType,ud,item.Amount, db.DailySignOpt, db.DailySign, "")
+		AddSundries(item.PropType, ud, item.Amount, db.DailySignOpt, db.DailySign, "")
 	}, func() {
 		user.WriteMsg(&msg.S2C_DailySign{
 			Name:   item.Name,

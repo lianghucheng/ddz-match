@@ -13,10 +13,10 @@ import (
 )
 
 type LianHangReq struct {
-	Bank string `json:"bank"`
+	Bank     string `json:"bank"`
 	Bankcard string `json:"bankcard"`
-	City string `json:"city"`
-	Key string `json:"key"`
+	City     string `json:"city"`
+	Key      string `json:"key"`
 	Province string `json:"province"`
 }
 
@@ -56,52 +56,51 @@ type LianHangReq struct {
 //}
 //
 
-
-func (ctx *LianHangReq)LianHangApi() (string, error) {
+func (ctx *LianHangReq) LianHangApi() (string, error) {
 	cfg := config.GetCfgLianHang()
-	req ,err := http.NewRequest("GET", cfg.Host+cfg.LianHangUrl+"?"+ToUrlStr(ctx), nil)
+	req, err := http.NewRequest("GET", cfg.Host+cfg.LianHangUrl+"?"+ToUrlStr(ctx), nil)
 	if err != nil {
 		log.Error(err.Error())
-		return "",err
+		return "", err
 	}
 	req.Header.Set("Authorization", "APPCODE "+cfg.AppCode)
 	c := &http.Client{}
 	resp, err := c.Do(req)
 	if err != nil {
 		log.Error(err.Error())
-		return "",err
+		return "", err
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Error(err.Error())
-		return "",err
+		return "", err
 	}
 	defer resp.Body.Close()
 	log.Debug("########   %v", string(b))
 	m := map[string]interface{}{}
 	if err := json.Unmarshal(b, &m); err != nil {
 		log.Error(err.Error())
-		return "",err
+		return "", err
 	}
 	code, ok := m["code"]
 	if !ok || code.(float64) != 200 {
-		return "",errors.New("request lian hang error. ")
+		return "", errors.New("request lian hang error. ")
 	}
 	log.Debug("the result map %v   %v", m["data"].(map[string]interface{})["result"].(map[string]interface{})["totalcount"], reflect.TypeOf(m["data"].(map[string]interface{})["result"].(map[string]interface{})["totalcount"]))
 	totalCount, ok := m["data"].(map[string]interface{})["result"].(map[string]interface{})["totalcount"]
 	if !ok {
-		return "",errors.New("lian hang api no totalcount. ")
+		return "", errors.New("lian hang api no totalcount. ")
 	}
 	i_totalCount, _ := strconv.Atoi(fmt.Sprintf("%v", totalCount))
 	if i_totalCount != 1 {
-		return "",nil
+		return "", nil
 	}
 
 	bankcode, ok := m["data"].(map[string]interface{})["result"].(map[string]interface{})["record"].([]interface{})[0].(map[string]interface{})["bankcode"].(string)
 	if !ok {
-		return "",errors.New("lian hang aou no bankcode")
+		return "", errors.New("lian hang aou no bankcode")
 	}
-	return bankcode,nil
+	return bankcode, nil
 }
 
 func ToUrlStr(m interface{}) string {
@@ -113,7 +112,7 @@ func ToUrlStr(m interface{}) string {
 	data := map[string]interface{}{}
 	json.Unmarshal(jsonD, &data)
 	for k, v := range data {
-		str += fmt.Sprintf("&%v=%v", k,v)
+		str += fmt.Sprintf("&%v=%v", k, v)
 	}
 
 	return str[1:]

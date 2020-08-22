@@ -48,7 +48,7 @@ type Config struct {
 	CfgPay               map[string]*CfgPay
 	CfgDB                *CfgDB
 	CfgPropBases         map[int]*CfgPropBase
-	CfgLianHang 		 *CfgLianHang
+	CfgLianHang          *CfgLianHang
 }
 
 func (ctx *Config) print() {
@@ -76,7 +76,7 @@ type CfgMatchRobotMaxNum struct {
 }
 
 type CfgDailySignItem struct {
-	PropType               int
+	PropType         int
 	Name             string
 	IsTowardKnapsack bool
 	Desc             string
@@ -108,10 +108,10 @@ type CfgPropBase struct {
 
 //天眼数聚
 type CfgLianHang struct {
-	AppKey string
-	AppSecret string
-	AppCode string
-	Host string
+	AppKey      string
+	AppSecret   string
+	AppCode     string
+	Host        string
 	LianHangUrl string
 }
 

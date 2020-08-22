@@ -181,7 +181,6 @@ type S2C_DeleteMail struct {
 }
 
 type C2S_DeleteAllMail struct {
-
 }
 
 type S2C_DeleteAllMail struct {

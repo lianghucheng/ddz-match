@@ -29,7 +29,7 @@ type MailBox struct {
 	Content         string  `json:"content"`      //内容
 	Annexes         []Annex `json:"annexes"`      //附件
 	Status          int64   `json:"status"`       //邮箱邮件状态
-	ExpireValue     int64   `json:"expire_value"` //有效时长
+	ExpireValue     float64 `json:"expire_value"` //有效时长
 	MailServiceType int     //邮件服务类型
 }
 
@@ -39,9 +39,9 @@ const (
 )
 
 type Annex struct {
-	PropType int    `json:"prop_type"`
-	Num  float64    `json:"num"`
-	Desc string `json:"desc"`
+	PropType int     `json:"prop_type"`
+	Num      float64 `json:"num"`
+	Desc     string  `json:"desc"`
 }
 
 const (
@@ -65,7 +65,7 @@ type UserMail struct {
 	Content         string  //内容
 	Annexes         []Annex //附件
 	Status          int64   //用户邮件状态
-	ExpireValue     int64   //有效时长
+	ExpireValue     float64 //有效时长
 	ExpiredAt       int64   //有效期
 	MailServiceType int     //邮件服务类型
 	MailType        int
@@ -74,7 +74,7 @@ type UserMail struct {
 func ReadMail(mid int64) {
 	mail := readUserMailByID(mid)
 	mail.Status = ReadUserMail
-	mail.ExpiredAt = time.Now().Unix() + mail.ExpireValue*86400
+	mail.ExpiredAt = time.Now().Unix() + int64(mail.ExpireValue*86400)
 	mail.save()
 }
 
@@ -165,7 +165,7 @@ func pullMailBox(user *player.User, mails *[]MailBox) {
 func GamePushMail(userid int, title, content string) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
-	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.MailServiceType = MailServiceTypeMatch
 	mailBox.Title = title
@@ -192,7 +192,7 @@ func MatchEndPushMail(userid int, matchName string, order int, award string) {
 func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
-	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.MailServiceType = MailServiceTypeMatch
 	mailBox.Title = "退赛通知"
@@ -206,7 +206,7 @@ func MatchInterruptPushMail(userid int, matchName string, coupon int64) {
 func PrizePresentationPushMail(userid int, bankName string, fee float64) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
-	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.MailServiceType = MailServiceTypeOfficial
 	mailBox.Title = "提奖通知"
@@ -218,7 +218,7 @@ func PrizePresentationPushMail(userid int, bankName string, fee float64) {
 func RefundPushMail(userid int, fee float64) {
 	mailBox := new(MailBox)
 	mailBox.TargetID = int64(userid)
-	mailBox.ExpireValue = int64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeText
 	mailBox.MailServiceType = MailServiceTypeOfficial
 	mailBox.Title = "退款通知"
@@ -260,7 +260,7 @@ func readUserMail(uid, mailServiceType int) *[]UserMail {
 		limit -= len(*notRead)
 		readed := new([]UserMail)
 		err = se.DB(db.DB).C("usermail").
-			Find(bson.M{"$or":[]bson.M{{"status": ReadUserMail}, {"status": TakenUserMail}}, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid, "mailservicetype": mailServiceType}).
+			Find(bson.M{"$or": []bson.M{{"status": ReadUserMail}, {"status": TakenUserMail}}, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid, "mailservicetype": mailServiceType}).
 			Sort("-createdat").Limit(limit).All(readed)
 		if err != nil {
 			log.Error(err.Error())
@@ -315,7 +315,7 @@ type MailBoxParam struct {
 	Title           string  `json:"title"`             //主题
 	Content         string  `json:"content"`           //内容
 	Annexes         []Annex `json:"annexes"`           //附件
-	ExpireValue     int64   `json:"expire_value"`      //有效时长
+	ExpireValue     float64 `json:"expire_value"`      //有效时长
 }
 
 func (ctx *MailBoxParam) PushMailBox() {
@@ -347,7 +347,7 @@ func TakenMailAnnex(mid int64) {
 		ud = user.GetUserData()
 	}
 	for _, v := range mail.Annexes {
-		AddSundries(v.PropType,ud,v.Num, db.MailOpt, db.Mail, "")
+		AddSundries(v.PropType, ud, v.Num, db.MailOpt, db.Mail, "")
 	}
 }
 
@@ -377,10 +377,10 @@ func DeleteAllMail(user *player.User) {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	usermails := new([]UserMail)
-	err := se.DB(db.DB).C("usermail").Find(bson.M{"userid": user.UID(), "$or":[]bson.M{
-		{"mailtype":MailTypeText, "status": ReadUserMail},
-		{"mailtype":MailTypeAward, "status": TakenUserMail},
-		{"mailtype":MailTypeMix, "status": TakenUserMail},
+	err := se.DB(db.DB).C("usermail").Find(bson.M{"userid": user.UID(), "$or": []bson.M{
+		{"mailtype": MailTypeText, "status": ReadUserMail},
+		{"mailtype": MailTypeAward, "status": TakenUserMail},
+		{"mailtype": MailTypeMix, "status": TakenUserMail},
 	}}).All(usermails)
 	if err != nil {
 		log.Error(err.Error())

@@ -274,7 +274,7 @@ func (sc *scoreMatch) End() {
 	// 刷新排行榜
 	for _, p := range sc.matchPlayers {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
-		if p.rank <= len(base.Award) {
+		if p.rank <= len(sc.matchPlayers)/3 {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)

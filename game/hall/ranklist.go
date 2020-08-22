@@ -2,7 +2,6 @@ package hall
 
 import (
 	"ddz/conf"
-	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
 	"ddz/msg"
@@ -48,14 +47,12 @@ func FlushRank(gameType int, rankType string, userid int, value float64) {
 }
 
 func (ctx *Rank) save() {
-	game.GetSkeleton().Go(func() {
-		se := db.MongoDB.Ref()
-		defer db.MongoDB.UnRef(se)
-		_, err := se.DB(db.DB).C("rank").Upsert(bson.M{"userid": ctx.UserID}, ctx)
-		if err != nil {
-			log.Error(err.Error())
-		}
-	}, nil)
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	_, err := se.DB(db.DB).C("rank").Upsert(bson.M{"userid": ctx.UserID}, ctx)
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func (ctx *Rank) readByUserID() {

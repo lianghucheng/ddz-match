@@ -703,7 +703,7 @@ func handleGetSetMail(args []interface{}) {
 	hall.SendMail(user)
 }
 
-func checkAgent(a gate.Agent) (*User,bool) {
+func checkAgent(a gate.Agent) (*User, bool) {
 	if a.UserData() == nil {
 		log.Error("leaf UserData is nil. ")
 		return nil, false
@@ -721,7 +721,7 @@ func handleDeleteAllMail(args []interface{}) {
 	m := args[0].(*msg.C2S_DeleteAllMail)
 	_ = m
 	a := args[1].(gate.Agent)
-	if user, ok := checkAgent(a);!ok {
+	if user, ok := checkAgent(a); !ok {
 		return
 	} else {
 		hall.DeleteAllMail(user)
