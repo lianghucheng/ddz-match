@@ -137,9 +137,9 @@ type S2C_FeedBack struct {
 
 type Annex struct {
 	PropType int
-	Num  float64
-	Desc string
-	Imgurl string
+	Num      float64
+	Desc     string
+	Imgurl   string
 }
 
 type UserMail struct {

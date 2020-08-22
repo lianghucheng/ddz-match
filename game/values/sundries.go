@@ -7,6 +7,13 @@ const (
 	PropTypeRedScore   = 4
 )
 
+var PropID2Type = map[int]int{
+	10001: PropTypeAward,
+	20001: PropTypeCoupon,
+	20002: PropTypeCouponFrag,
+	30001: PropTypeRedScore,
+}
+
 var PropTypes = []int{PropTypeCoupon, PropTypeAward, PropTypeCouponFrag, PropTypeRedScore}
 
 type PropBaseConfig struct {
@@ -22,9 +29,9 @@ type PropBaseConfig struct {
 	DeletedAt int //删除时间戳，0表示没有删除
 }
 
-var AwardWordToPropType = map[string]int {
-	Money: PropTypeAward,
+var AwardWordToPropType = map[string]int{
+	Money:    PropTypeAward,
 	RedScore: PropTypeRedScore,
-	Coupon: PropTypeCoupon,
+	Coupon:   PropTypeCoupon,
 	Fragment: PropTypeCouponFrag,
 }

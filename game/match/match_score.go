@@ -8,7 +8,6 @@ import (
 	"ddz/game/db"
 	"ddz/game/ddz"
 	"ddz/game/hall"
-	"ddz/game/http"
 	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
@@ -1042,8 +1041,8 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
 		}
 		db.InsertMatchRecord(record)
-		http.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
-			http.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: player.opTime}, &http.RPCRet{})
+		// rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
+		// 	rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: player.opTime}, &rpc.RPCRet{})
 	}, nil)
 }
 
