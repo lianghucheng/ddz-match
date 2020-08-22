@@ -260,7 +260,7 @@ func readUserMail(uid, mailServiceType int) *[]UserMail {
 		limit -= len(*notRead)
 		readed := new([]UserMail)
 		err = se.DB(db.DB).C("usermail").
-			Find(bson.M{"status": ReadUserMail, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid, "mailservicetype": mailServiceType}).
+			Find(bson.M{"$or":[]bson.M{{"status": ReadUserMail}, {"status": TakenUserMail}}, "expiredat": bson.M{"$gt": time.Now().Unix()}, "userid": uid, "mailservicetype": mailServiceType}).
 			Sort("-createdat").Limit(limit).All(readed)
 		if err != nil {
 			log.Error(err.Error())
@@ -369,6 +369,26 @@ func TakenAndReadAllMail(user *player.User) {
 			TakenMailAnnex(usermail.ID)
 		}
 	}
-
+	SendMail(user)
 	user.WriteMsg(&msg.S2C_TakenAndReadAllMail{})
+}
+
+func DeleteAllMail(user *player.User) {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	usermails := new([]UserMail)
+	err := se.DB(db.DB).C("usermail").Find(bson.M{"userid": user.UID(), "$or":[]bson.M{
+		{"mailtype":MailTypeText, "status": ReadUserMail},
+		{"mailtype":MailTypeAward, "status": TakenUserMail},
+		{"mailtype":MailTypeMix, "status": TakenUserMail},
+	}}).All(usermails)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	for _, usermail := range *usermails {
+		DeleteMail(usermail.ID)
+	}
+
+	SendMail(user)
+	user.WriteMsg(&msg.S2C_DeleteAllMail{})
 }

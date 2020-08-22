@@ -86,6 +86,8 @@ func init() {
 	Processor.Register(&C2S_TakenAndReadAllMail{})
 	Processor.Register(&S2C_TakenAndReadAllMail{})
 	Processor.Register(&C2S_GetAllMail{})
+	Processor.Register(&C2S_DeleteAllMail{})
+	Processor.Register(&S2C_DeleteAllMail{})
 }
 
 type C2S_Heartbeat struct{}
@@ -175,6 +177,14 @@ const (
 )
 
 type S2C_DeleteMail struct {
+	Error int
+}
+
+type C2S_DeleteAllMail struct {
+
+}
+
+type S2C_DeleteAllMail struct {
 	Error int
 }
 

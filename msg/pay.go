@@ -20,8 +20,14 @@ type C2S_CreateEdyOrder struct {
 	//DefPayType string
 }
 
+const (
+	ErrCreateEdyOrderSuccess = 0//成功
+	ErrCreateEdyOrderNotRealAuth = 1//未实名
+)
+
 type S2C_CreateEdyOrder struct {
 	Error    int
+	ErrMsg   string
 	AppID    int
 	AppToken string
 	Amount   int
