@@ -61,6 +61,7 @@ func init() {
 	handler(&msg.C2S_UserInfo{}, handleGetUserInfo)
 	handler(&msg.C2S_GetDailyWelfareInfo{}, handleGetDailyWelfareInfo)
 	handler(&msg.C2S_DrawDailyWelfareInfo{}, handleDrawDailyWelfareInfo)
+	handler(&msg.C2S_TakenAndReadAllMail{}, handleTakenAndReadAllMail)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -663,4 +664,21 @@ func handleDrawDailyWelfareInfo(args []interface{}) {
 		return
 	}
 	user.DrawDailyWelfare(m.DailyType, m.AwardIndex)
+}
+func handleTakenAndReadAllMail(args []interface{}) {
+	m := args[0].(*msg.C2S_TakenAndReadAllMail)
+	_ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		log.Error("leaf UserData is nil. ")
+		return
+	}
+
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		log.Error("system UserData is nil. ")
+		return
+	}
+
+	hall.TakenAndReadAllMail(user)
 }

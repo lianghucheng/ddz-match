@@ -5,7 +5,9 @@ import (
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/lianhang_api"
 	"ddz/msg"
+	"errors"
 
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
@@ -61,7 +63,24 @@ func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bank
 	var err error
 	game.GetSkeleton().Go(func() {
 		ud := player.ReadUserDataByID(ctx.Userid)
-		err = api(ud.AccountID, ctx.OpeningBank, ctx.BankName, ctx.BankCardNo)
+		lianHangReq := new(lianhang_api.LianHangReq)
+		lianHangReq.Bank = ctx.BankName
+		lianHangReq.Bankcard = ctx.BankCardNo
+		lianHangReq.City = ctx.City
+		lianHangReq.Key = ctx.OpeningBank
+		lianHangReq.Province = ctx.Province
+		bankCode := ""
+		bankCode, err = lianHangReq.LianHangApi()
+		if err != nil {
+			log.Error(err.Error())
+			err = errors.New("查询不到联行号，请联系客服解决～")
+			return
+		}
+		if bankCode == "" {
+			err = errors.New("查询不到联行号，请联系客服解决～")
+			return
+		}
+		err = api(ud.AccountID, bankCode, ctx.BankName, ctx.BankCardNo)
 	}, func() {
 		if err != nil {
 			SendAddBankCard(user, msg.ErrAddBankCardBusiness, err.Error())

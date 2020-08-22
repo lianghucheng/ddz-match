@@ -41,6 +41,7 @@ type S2C_UseProp struct {
 	Name   string
 	PropID int
 	Amount int
+	Imgurl string
 }
 
 type C2S_UserInfo struct {
