@@ -59,6 +59,8 @@ func init() {
 	handler(&msg.C2S_UseProp{}, handleUseProp)
 	handler(&msg.C2S_Knapsack{}, handleKnapsack)
 	handler(&msg.C2S_UserInfo{}, handleGetUserInfo)
+	handler(&msg.C2S_GetDailyWelfareInfo{}, handleGetDailyWelfareInfo)
+	handler(&msg.C2S_DrawDailyWelfareInfo{}, handleDrawDailyWelfareInfo)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -622,8 +624,8 @@ func handleKnapsack(args []interface{}) {
 }
 
 func handleGetUserInfo(args []interface{}) {
-	m := args[0].(*msg.C2S_UserInfo)
-	_ = m
+	// m := args[0].(*msg.C2S_UserInfo)
+	// _ = m
 	a := args[1].(gate.Agent)
 	if a.UserData() == nil {
 		return
@@ -633,4 +635,32 @@ func handleGetUserInfo(args []interface{}) {
 		return
 	}
 	user.SendUserInfo()
+}
+
+func handleGetDailyWelfareInfo(args []interface{}) {
+	// m := args[0].(*msg.C2S_GetDailyWelfareInfo)
+	// _ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	user.GetDailyWelfareInfo()
+}
+
+func handleDrawDailyWelfareInfo(args []interface{}) {
+	m := args[0].(*msg.C2S_DrawDailyWelfareInfo)
+	// _ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+	user.DrawDailyWelfare(m.DailyType, m.AwardIndex)
 }

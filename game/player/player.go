@@ -1,13 +1,16 @@
 package player
 
 import (
+	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
 	. "ddz/game/db"
+	"ddz/game/rpc"
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -315,5 +318,64 @@ func (user *User) SendUserInfo() {
 
 	user.WriteMsg(&msg.S2C_UserInfo{
 		Info: send,
+	})
+}
+
+// GetDailyWelfareInfo 获取每日福利详情
+func (u *User) GetDailyWelfareInfo() {
+	var err error
+	reply := &rpc.RPCRet{}
+	game.GetSkeleton().Go(func() {
+		err = rpc.CallActivityServer("DailyWelfareObj.GetDailyWelfareInfo",
+			rpc.RPCGetDailyWelfareInfo{AccountID: u.BaseData.UserData.AccountID}, reply)
+	}, func() {
+		info := msg.DailyData{}
+		defer func() {
+			u.WriteMsg(&msg.S2C_GetDailyWelfareInfo{
+				Code: reply.Code,
+				Desc: reply.Desc,
+				Info: info,
+			})
+		}()
+		if err != nil {
+			return
+		}
+		if err := json.Unmarshal([]byte(reply.Data.(string)), &info); err != nil {
+			return
+		}
+		for i := range info.MatchTimeAward {
+			propType := values.PropID2Type[info.MatchTimeAward[i].Item]
+			info.MatchTimeAward[i].URL = config.GetPropBaseConfig(propType).ImgUrl
+		}
+		for i := range info.AdditionalAward {
+			propType := values.PropID2Type[info.AdditionalAward[i].Item]
+			info.AdditionalAward[i].URL = config.GetPropBaseConfig(propType).ImgUrl
+		}
+	})
+}
+
+// DrawDailyWelfare 领取每日福利
+func (u *User) DrawDailyWelfare(dailyType, awardIndex int) {
+	var err error
+	reply := &rpc.RPCRet{}
+	game.GetSkeleton().Go(func() {
+		err = rpc.CallActivityServer("DailyWelfareObj.DrawDailyWelfare",
+			rpc.RPCDrawDailyWelfare{AccountID: u.BaseData.UserData.AccountID, DailyType: dailyType, AwardIndex: awardIndex}, reply)
+	}, func() {
+		code := reply.Code
+		desc := reply.Desc
+		defer func() {
+			u.WriteMsg(&msg.S2C_GetDailyWelfareInfo{
+				Code: code,
+				Desc: desc,
+			})
+		}()
+		if err != nil {
+			code = 1
+			desc = "领取失败!"
+			if len(reply.Desc) > 0 {
+				desc = reply.Desc
+			}
+		}
 	})
 }

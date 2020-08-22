@@ -7,6 +7,10 @@ func init() {
 	Processor.Register(&S2C_UseProp{})
 	Processor.Register(&C2S_UserInfo{})
 	Processor.Register(&S2C_UserInfo{})
+	Processor.Register(&C2S_GetDailyWelfareInfo{})
+	Processor.Register(&S2C_GetDailyWelfareInfo{})
+	Processor.Register(&C2S_DrawDailyWelfareInfo{})
+	Processor.Register(&S2C_DrawDailyWelfareInfo{})
 }
 
 type C2S_Knapsack struct {
@@ -45,4 +49,44 @@ type C2S_UserInfo struct {
 
 type S2C_UserInfo struct {
 	Info interface{}
+}
+
+// C2S_GetDailyWelfareInfo 获取每日福利详情
+type C2S_GetDailyWelfareInfo struct {
+}
+
+// S2C_GetDailyWelfareInfo 获取每日福利详情
+type S2C_GetDailyWelfareInfo struct {
+	Code int
+	Desc string
+	Info DailyData
+}
+
+// C2S_DrawDailyWelfareInfo 领取每日福利
+type C2S_DrawDailyWelfareInfo struct {
+	DailyType  int // 奖励类型
+	AwardIndex int // 领取奖励序列号
+}
+
+// S2C_DrawDailyWelfareInfo 领取每日福利
+type S2C_DrawDailyWelfareInfo struct {
+	Code int
+	Desc string
+}
+
+// DailyData 玩家每日数据
+type DailyData struct {
+	MatchTime       int64          // 参赛时间
+	MatchCount      int64          // 参赛次数
+	MatchTimeAward  []OneItemAward `bson:"MatchTimeAward"`  // 参赛时长奖励
+	AdditionalAward []OneItemAward `bson:"AdditionalAward"` // 额外奖励
+}
+
+// OneItemAward 单个目标奖励对象
+type OneItemAward struct {
+	Item         int    `bson:"Item"` // 物品ID
+	URL          string // 物品图片地址
+	AwardAmount  int    `bson:"AwardAmount"`  // 奖励数量
+	TargetAmount int64  `bson:"TargetAmount"` // 达成条件
+	Status       int    `bson:"Status"`       // 领取状态1未完成,2已完成未领取,3已领取
 }

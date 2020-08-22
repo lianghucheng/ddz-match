@@ -1,4 +1,4 @@
-package http
+package rpc
 
 import (
 	"container/list"
@@ -69,7 +69,7 @@ func PushData(data interface{}) {
 }
 
 // CallActivityServer 向活动服发送数据
-func CallActivityServer(method string, send interface{}, reply interface{}) error {
+func CallActivityServer(method string, send interface{}, reply *RPCRet) error {
 	req := RPCReq{
 		Method: method,
 		Send:   send,
@@ -85,14 +85,17 @@ func CallActivityServer(method string, send interface{}, reply interface{}) erro
 	}
 	err := activityClient.Call(method, send, reply)
 	if err != nil {
-		if err == rpc.ErrShutdown {
-			connectToActivityServer()
-		}
 		if reply == nil {
 			PushData(req)
 		}
+		if err == rpc.ErrShutdown {
+			connectToActivityServer()
+		}
 		log.Error("err:%v", err)
 		return err
+	}
+	if reply.Code != 0 {
+		return errors.New(reply.Desc)
 	}
 	return nil
 }
@@ -114,4 +117,16 @@ type RPCReq struct {
 type RPCUploadMatchInfo struct {
 	AccountID int
 	OptTime   int64
+}
+
+// RPCGetDailyWelfareInfo 获取每日福利详情
+type RPCGetDailyWelfareInfo struct {
+	AccountID int
+}
+
+// RPCDrawDailyWelfare 玩家领取每日福利
+type RPCDrawDailyWelfare struct {
+	AccountID  int
+	DailyType  int // 奖励类型
+	AwardIndex int // 领取奖励序列号
 }
