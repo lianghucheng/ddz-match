@@ -75,6 +75,7 @@ func ReadMail(mid int64) {
 	mail := readUserMailByID(mid)
 	mail.Status = ReadUserMail
 	mail.ExpiredAt = time.Now().Unix() + int64(mail.ExpireValue*86400)
+	log.Debug("邮件过期时间：%v", mail.ExpiredAt)
 	mail.save()
 }
 
@@ -234,7 +235,6 @@ func (ctx *MailBox) pushMailBox() {
 	}
 	ctx.ID = int64(id)
 	ctx.CreatedAt = time.Now().Unix()
-	ctx.ExpireValue = 30
 	game.GetSkeleton().Go(func() {
 		ctx.save()
 	}, func() {
@@ -265,6 +265,7 @@ func readUserMail(uid, mailServiceType int) *[]UserMail {
 		if err != nil {
 			log.Error(err.Error())
 		}
+		log.Debug("调试发送邮件，现在时间戳：%v，读取到的邮件：%+v", time.Now().Unix(), (*readed))
 		*rt = append(*rt, *readed...)
 	}
 
