@@ -35,7 +35,6 @@ func UpdatePropBaseConfig() error {
 	for _, user := range player.UserIDUsers {
 		hall.SendMail(user)
 		hall.SendDailySignItems(user)
-		hall.SendKnapsack(user)
 	}
 
 	return nil

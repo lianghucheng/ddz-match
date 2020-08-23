@@ -46,7 +46,9 @@ func checkDailySign(user *player.User) {
 			dist = 7 - int(week)
 		}
 		if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
-			user.GetUserData().NewDailySign = true
+			if dead != 0 {
+				user.GetUserData().NewDailySign = true
+			}
 			user.GetUserData().SignTimes = 0
 		}
 
