@@ -61,7 +61,7 @@ func init() {
 	handler(&msg.C2S_UserInfo{}, handleGetUserInfo)
 	handler(&msg.C2S_GetDailyWelfareInfo{}, handleGetDailyWelfareInfo)
 	handler(&msg.C2S_DrawDailyWelfareInfo{}, handleDrawDailyWelfareInfo)
-	handler(&msg.C2S_TakenAndReadAllMail{}, handleTakenAndReadAllMail)
+	handler(&msg.C2S_TakenAllMail{}, handleTakenAllMail)
 	handler(&msg.C2S_GetAllMail{}, handleGetSetMail)
 	handler(&msg.C2S_DeleteAllMail{}, handleDeleteAllMail)
 }
@@ -388,7 +388,7 @@ func handleTakenMailAnnex(args []interface{}) {
 		return
 	}
 	hall.TakenMailAnnex(m.ID)
-	user.WriteMsg(&msg.S2C_DeleteMail{
+	user.WriteMsg(&msg.S2C_TakenMailAnnex{
 		Error: msg.S2C_TakenMailAnnex_OK,
 	})
 	hall.SendMail(user)
@@ -667,8 +667,8 @@ func handleDrawDailyWelfareInfo(args []interface{}) {
 	}
 	user.DrawDailyWelfare(m.DailyType, m.AwardIndex)
 }
-func handleTakenAndReadAllMail(args []interface{}) {
-	m := args[0].(*msg.C2S_TakenAndReadAllMail)
+func handleTakenAllMail(args []interface{}) {
+	m := args[0].(*msg.C2S_TakenAllMail)
 	_ = m
 	a := args[1].(gate.Agent)
 	if a.UserData() == nil {
@@ -682,7 +682,7 @@ func handleTakenAndReadAllMail(args []interface{}) {
 		return
 	}
 
-	hall.TakenAndReadAllMail(user)
+	hall.TakenAllMail(user)
 }
 
 func handleGetSetMail(args []interface{}) {

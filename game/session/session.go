@@ -196,7 +196,12 @@ func rpcNotifyPayOK(args []interface{}) {
 	}, nil)
 
 	//发货
-	hall.SendGoods(ud.UserID, m.TotalFee/100)
+	addCoupon := m.TotalFee / 100
+	if m.Amount > 0 {
+		addCoupon = m.Amount
+	}
+
+	hall.SendGoods(ud.UserID, addCoupon)
 }
 
 func rpcAccountLogin(args []interface{}) {

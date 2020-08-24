@@ -42,13 +42,13 @@ const (
 )
 
 type Config struct {
-	Model                int //配置模式
-	CfgMatchRobotMaxNums map[string]int
-	CfgDailySignItems    *[]CfgDailySignItem
-	CfgPay               map[string]*CfgPay
-	CfgDB                *CfgDB
-	CfgPropBases         map[int]*CfgPropBase
-	CfgLianHang          *CfgLianHang
+	Model                    int //配置模式
+	CfgMatchRobotMaxNums     map[string]int
+	CfgDailySignItems        *[]CfgDailySignItem
+	CfgPay                   map[string]*CfgPay
+	CfgDB                    *CfgDB
+	CfgPropBases             map[int]*CfgPropBase
+	CfgLianHang              *CfgLianHang
 	CfgNewUserDailySignItems *[]CfgDailySignItem
 }
 
@@ -92,6 +92,7 @@ type CfgPay struct {
 	AppID            int
 	AppToken         string
 	AppSecret        string
+	PayType          int
 }
 
 type CfgDB struct {
@@ -180,6 +181,23 @@ func UpdateCfg(model int) error {
 		return err
 	}
 	cfg = ret
+	return nil
+}
+
+func UpdateCfg2() error {
+	b, err := ioutil.ReadFile("config/init-config.json")
+	if err != nil {
+		log.Fatal("Read config from config.json, the error is: error: ", err.Error())
+		return err
+	}
+	ret := new(Config)
+	if err := json.Unmarshal(b, ret); err != nil {
+		log.Fatal(err.Error())
+		return err
+	}
+	ret.CfgMatchRobotMaxNums = make(map[string]int)
+	cfg = ret
+	cfg.print()
 	return nil
 }
 

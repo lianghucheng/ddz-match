@@ -403,7 +403,7 @@ func SendGoods(userID, amount int) {
 func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way, matchID string) {
 	switch propType {
 	case values.PropTypeAward:
-		WriteFlowData(ud.UserID, amount, FlowTypeSign, "", "", []int{})
+		WriteFlowData(ud.UserID, amount, FlowTypeGift, "", "", []int{})
 		AddFee(ud.UserID, ud.AccountID, amount, opt,
 			way, matchID)
 	case values.PropTypeCoupon:

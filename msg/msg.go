@@ -83,8 +83,8 @@ func init() {
 	Processor.Register(&S2C_CreateEdyOrder{})
 	Processor.Register(&S2C_PriceMenu{})
 	Processor.Register(&S2C_OnlineUserNum{})
-	Processor.Register(&C2S_TakenAndReadAllMail{})
-	Processor.Register(&S2C_TakenAndReadAllMail{})
+	Processor.Register(&C2S_TakenAllMail{})
+	Processor.Register(&S2C_TakenAllMail{})
 	Processor.Register(&C2S_GetAllMail{})
 	Processor.Register(&C2S_DeleteAllMail{})
 	Processor.Register(&S2C_DeleteAllMail{})
@@ -145,13 +145,14 @@ type Annex struct {
 }
 
 type UserMail struct {
-	ID        int64   `bson:"_id"` //唯一主键
-	CreatedAt int64   //收件时间
-	Title     string  //主题
-	Content   string  //内容
-	Annexes   []Annex //附件
-	Status    int64   //邮件状态
-	MailType  int
+	ID              int64   `bson:"_id"` //唯一主键
+	CreatedAt       int64   //收件时间
+	Title           string  //主题
+	Content         string  //内容
+	Annexes         []Annex //附件
+	Status          int64   //邮件状态
+	MailType        int
+	MailServiceType int
 }
 
 type C2S_GetAllMail struct {
@@ -201,10 +202,10 @@ type S2C_TakenMailAnnex struct {
 	Annexes []Annex //附件
 }
 
-type C2S_TakenAndReadAllMail struct {
+type C2S_TakenAllMail struct {
 }
 
-type S2C_TakenAndReadAllMail struct {
+type S2C_TakenAllMail struct {
 	Error int
 }
 

@@ -78,15 +78,6 @@ func SendDailySignItems(user *player.User) {
 			ImgUrl: cf((*cfgDs)[i].PropType).ImgUrl,
 		})
 	}
-	if !user.GetUserData().DailySign {
-		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
-			PropID: (*cfgDs)[ud.SignTimes].PropType,
-			Amount: (*cfgDs)[ud.SignTimes].Amount,
-			Status: msg.SignAccess,
-			ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
-		})
-	}
 	//else {
 	//	log.Debug("*********滴滴滴，调试签到。签到次数：%v，是否已签到：%v", ud.SignTimes, ud.DailySign)
 	//	log.Debug("签到奖励表：%+v  (*cfgDs)[%v]: %+v", (*cfgDs), ud.SignTimes, (*cfgDs)[ud.SignTimes])
@@ -99,13 +90,22 @@ func SendDailySignItems(user *player.User) {
 	//	})
 	//}
 
-	for i := user.GetUserData().SignTimes + 1; i < 7; i++ {
+	for i := user.GetUserData().SignTimes; i < 7; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{
 			Name:   cf((*cfgDs)[i].PropType).Name,
 			PropID: (*cfgDs)[i].PropType,
 			Amount: (*cfgDs)[i].Amount,
 			Status: msg.SignDeny,
 			ImgUrl: cf((*cfgDs)[i].PropType).ImgUrl,
+		})
+	}
+	if !user.GetUserData().DailySign {
+		dailySignItems = append(dailySignItems, msg.DailySignItems{
+			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
+			PropID: (*cfgDs)[ud.SignTimes].PropType,
+			Amount: (*cfgDs)[ud.SignTimes].Amount,
+			Status: msg.SignAccess,
+			ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
 		})
 	}
 	user.WriteMsg(&msg.S2C_DailySignItems{

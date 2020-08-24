@@ -62,7 +62,7 @@ type UserData struct {
 	SignTimes         int
 	DailySign         bool
 	DailySignDeadLine int64
-	NotNewDailySign bool
+	NotNewDailySign   bool
 	LastTakenMail     int64
 	RealName          string
 	IDCardNo          string

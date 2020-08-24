@@ -4,7 +4,6 @@ import (
 	"ddz/config"
 	"ddz/game/db"
 	"ddz/game/player"
-	"ddz/game/values"
 	"ddz/msg"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
@@ -93,104 +92,102 @@ func GetPriceMenu(goodsTypeID int) *[]msg.PriceItem {
 
 func SendPriceMenu(user *player.User, model int) {
 	log.Debug("send price menu")
-	//merchant := db.ReadShopMerchant()
-	//if merchant.ID <= 0 {
-	//	log.Error("Has no up merchant int shop. ")
-	//	return
-	//}
-	//goodsTypes := db.ReadGoodsTypes(merchant.ID)
-	//if len(*goodsTypes) == 0 {
-	//	log.Error("The goodsType is nil. ")
-	//	return
-	//}
-	//
-	//if len(*goodsTypes) == 0 {
-	//	log.Error("The goodsType is nil. ")
-	//	return
-	//}
-	//msgGoodsTypes := new([]msg.GoodsType)
-	//for _, v := range *goodsTypes {
-	//	*msgGoodsTypes = append(*msgGoodsTypes, msg.GoodsType{
-	//		ID:         v.ID,
-	//		TypeName:   v.TypeName,
-	//		ImgUrl:     v.ImgUrl,
-	//		PriceItems: *GetPriceMenu(v.ID),
-	//	})
-	//}
-	//m := &msg.S2C_PriceMenu{
-	//	PriceItems: *msgGoodsTypes,
-	//}
-	cf := config.GetPropBaseConfig
-	log.Debug("获取到的缓存道具基本信息：%v", cf(values.PropTypeCoupon))
-
-	prices := []msg.PriceItem{
-		{
-			PriceID:    1,
-			Fee:        500,
-			Name:       cf(values.PropTypeCoupon).Name,
-			Amount:     5,
-			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
-			TakenType:  1,
-			GiftAmount: 0,
-			//Name:   "点券",
-			//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
-		},
-		{
-			PriceID:    2,
-			Fee:        1000,
-			Name:       cf(values.PropTypeCoupon).Name,
-			Amount:     10,
-			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
-			TakenType:  1,
-			GiftAmount: 0,
-			//Name:   "点券",
-			//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
-		},
-		{
-			PriceID:    3,
-			Fee:        2000,
-			Name:       cf(values.PropTypeCoupon).Name,
-			Amount:     20,
-			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
-			TakenType:  1,
-			GiftAmount: 0,
-			//Name:   "点券",
-			//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
-		},
-		{
-			PriceID:    4,
-			Fee:        5000,
-			Name:       cf(values.PropTypeCoupon).Name,
-			Amount:     50,
-			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
-			TakenType:  1,
-			GiftAmount: 0,
-			//Name:   "点券",
-			//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
-		},
-		{
-			PriceID:    5,
-			Fee:        10000,
-			Name:       cf(values.PropTypeCoupon).Name,
-			Amount:     100,
-			ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
-			TakenType:  1,
-			GiftAmount: 0,
-			//Name:   "点券",
-			//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
-		},
+	merchant := db.ReadShopMerchant()
+	if merchant.ID <= 0 {
+		log.Error("Has no up merchant int shop. ")
+		return
 	}
-	data := []msg.GoodsType{
-		{
-			ID:         0,
-			TypeName:   "点券",
-			ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_dianquan.png",
-			PriceItems: prices,
-		},
+	goodsTypes := db.ReadGoodsTypes(merchant.ID)
+	if len(*goodsTypes) == 0 {
+		log.Error("The goodsType is nil. ")
+		return
+	}
+
+	if len(*goodsTypes) == 0 {
+		log.Error("The goodsType is nil. ")
+		return
+	}
+	msgGoodsTypes := new([]msg.GoodsType)
+	for _, v := range *goodsTypes {
+		*msgGoodsTypes = append(*msgGoodsTypes, msg.GoodsType{
+			ID:         v.ID,
+			TypeName:   v.TypeName,
+			ImgUrl:     v.ImgUrl,
+			PriceItems: *GetPriceMenu(v.ID),
+		})
 	}
 	m := &msg.S2C_PriceMenu{
-		PriceItems: data,
+		PriceItems: *msgGoodsTypes,
 	}
+
+	//prices := []msg.PriceItem{
+	//	{
+	//		PriceID:    1,
+	//		Fee:        500,
+	//		Name:       cf(values.PropTypeCoupon).Name,
+	//		Amount:     5,
+	//		ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
+	//		TakenType:  1,
+	//		GiftAmount: 0,
+	//		//Name:   "点券",
+	//		//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
+	//	},
+	//	{
+	//		PriceID:    2,
+	//		Fee:        1000,
+	//		Name:       cf(values.PropTypeCoupon).Name,
+	//		Amount:     10,
+	//		ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
+	//		TakenType:  1,
+	//		GiftAmount: 0,
+	//		//Name:   "点券",
+	//		//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
+	//	},
+	//	{
+	//		PriceID:    3,
+	//		Fee:        2000,
+	//		Name:       cf(values.PropTypeCoupon).Name,
+	//		Amount:     20,
+	//		ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
+	//		TakenType:  1,
+	//		GiftAmount: 0,
+	//		//Name:   "点券",
+	//		//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
+	//	},
+	//	{
+	//		PriceID:    4,
+	//		Fee:        5000,
+	//		Name:       cf(values.PropTypeCoupon).Name,
+	//		Amount:     50,
+	//		ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
+	//		TakenType:  1,
+	//		GiftAmount: 0,
+	//		//Name:   "点券",
+	//		//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
+	//	},
+	//	{
+	//		PriceID:    5,
+	//		Fee:        10000,
+	//		Name:       cf(values.PropTypeCoupon).Name,
+	//		Amount:     100,
+	//		ImgUrl:     cf(values.PropTypeCoupon).ImgUrl,
+	//		TakenType:  1,
+	//		GiftAmount: 0,
+	//		//Name:   "点券",
+	//		//ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/juan.png",
+	//	},
+	//}
+	//data := []msg.GoodsType{
+	//	{
+	//		ID:         0,
+	//		TypeName:   "点券",
+	//		ImgUrl:     "http://111.230.39.198:10615/download/matchIcon/bg_dianquan.png",
+	//		PriceItems: prices,
+	//	},
+	//}
+	//m := &msg.S2C_PriceMenu{
+	//	PriceItems: data,
+	//}
 	if model == 1 {
 		log.Debug("price menu single %v   %v", *m, (m.PriceItems))
 		user.WriteMsg(m)

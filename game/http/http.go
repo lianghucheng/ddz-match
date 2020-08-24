@@ -8,6 +8,7 @@ import (
 	"ddz/game"
 	. "ddz/game/db"
 	"ddz/game/hall"
+	"ddz/game/pay"
 	"ddz/game/player"
 	"ddz/game/values"
 	"ddz/msg"
@@ -62,6 +63,10 @@ func startHTTPServer() {
 	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
 	mux.HandleFunc("/notify/pricemenu", notidyPriceMenu)
 	mux.HandleFunc("/set/propbaseconfig", setPropBaseConfig)
+	mux.HandleFunc("/reload/config", reloadConfig)
+
+	mux.HandleFunc("/faker/create-order", fakerCreateOrder)
+	mux.HandleFunc("/faker/valid-order", fakerValidOrder)
 
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
@@ -353,6 +358,7 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
 		TotalFee:  int(order.Fee),
 		AccountID: order.Accountid,
+		Amount:    order.Amount,
 	})
 	//通知第三方支付流程已完成，封装响应数据
 	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
@@ -605,4 +611,113 @@ func setPropBaseConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	return
+}
+
+func reloadConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	if err := config.UpdateCfg2(); err != nil {
+		code = RELOAD_CONFIG_FAIL
+		errmsg = ErrMsg[code] + err.Error()
+		return
+	}
+
+	if err := cache.UpdatePropBaseConfig(); err != nil {
+		code = UPDATE_PROP_CONF_FAIL
+		errmsg = ErrMsg[code] + err.Error()
+		return
+	}
+
+	return
+}
+
+func fakerCreateOrder(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	aid := r.FormValue("aid")
+	pid := r.FormValue("pid")
+	accountid, _ := strconv.Atoi(aid)
+	priceid, _ := strconv.Atoi(pid)
+	code, errmsg = pay.FakerCreateOrder(accountid, priceid)
+
+	return
+}
+
+func fakerValidOrder(w http.ResponseWriter, r *http.Request) {
+	OpenOrderID := r.FormValue("openOrderID")
+	log.Debug("【请求参数】%+v", OpenOrderID)
+
+	//存订单
+	order := new(values.EdyOrder)
+	Read("edyorder", order, bson.M{"tradeno": OpenOrderID, "status": false})
+	if order.PayStatus != values.PayStatusAction {
+		log.Debug("支付失败，不发货")
+		return
+	}
+	order.TradeNoReceive = "faker"
+	order.Status = true
+	order.PayStatus = values.PayStatusSuccess
+	Save("edyorder", order, bson.M{"_id": order.ID})
+	//通知完成支付，进行发货
+	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
+		TotalFee:  int(order.Fee),
+		AccountID: order.Accountid,
+		Amount:    order.Amount,
+	})
+	//通知第三方支付流程已完成，封装响应数据
+	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
+	edyPayNotifyResp.OrderResult = "success"
+	edyPayNotifyResp.OrderAmount = fmt.Sprintf("%v", order.Fee)
+	ts := time.Now().Unix()
+	edyPayNotifyResp.OrderTime = time.Unix(ts, 0).Format("2006-01-02 03:04:05")
+	edyPayNotifyResp.Ts = ts
+	param2, err := edy_api.GetUrlKeyValStr(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	edyPayNotifyResp.Sign = edy_api.GenerateSign(param2)
+	b, err := json.Marshal(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
