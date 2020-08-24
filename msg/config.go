@@ -26,7 +26,7 @@ type C2S_RaceInfo struct {
 }
 
 type S2C_RaceInfo struct {
-	Races []RaceInfo
+	Races []OneMatch
 }
 
 type C2S_RaceDetail struct {

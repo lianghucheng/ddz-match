@@ -11,6 +11,7 @@ import (
 	. "ddz/game/player"
 	"ddz/game/poker"
 	. "ddz/game/room"
+	"ddz/game/rpc"
 	"ddz/game/values"
 	. "ddz/game/values"
 	"ddz/msg"
@@ -327,7 +328,7 @@ func (sc *scoreMatch) End() {
 	utils.StructCopy(record, base.NormalCofig)
 	utils.StructCopy(record, base)
 	utils.StructCopy(record, sc.myConfig)
-	record.EndTime = time.Now().Unix()
+	// record.EndTime = time.Now().Unix()
 	game.GetSkeleton().Go(func() {
 		s := db.MongoDB.Ref()
 		defer db.MongoDB.UnRef(s)
@@ -1041,8 +1042,8 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
 		}
 		db.InsertMatchRecord(record)
-		// rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
-		// 	rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: player.opTime}, &rpc.RPCRet{})
+		rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
+			rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, &rpc.RPCRet{})
 	}, nil)
 }
 
