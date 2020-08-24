@@ -1082,7 +1082,7 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 	fails := 0
 
 	var moneyAwardCount float64
-	if player.Rank >= len(sc.matchPlayers)/3 {
+	if player.Rank <= len(sc.matchPlayers)/3 {
 		wins = 1
 	} else {
 		fails = 1
