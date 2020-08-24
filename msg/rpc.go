@@ -53,6 +53,7 @@ type RPC_WriteAwardFlowData struct {
 type RPC_NotifyPayOK struct {
 	TotalFee  int
 	AccountID int
+	Amount    int
 }
 
 type RPC_AddFee struct {

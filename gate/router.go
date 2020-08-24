@@ -90,7 +90,7 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_Knapsack{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_AddCouponFrag{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_SendPayAccount{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.C2S_TakenAndReadAllMail{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_TakenAllMail{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_GetAllMail{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_DeleteAllMail{}, game.ChanRPC)
 }

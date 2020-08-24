@@ -282,7 +282,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 	for _, knapsack := range *knapsacks {
 		temp := new(msg.KnapsackProp)
 		temp.PropID = knapsack.PropType
-		temp.Name = knapsack.Name
+		temp.Name = config.GetPropBaseConfig(knapsack.PropType).Name
 		temp.Num = knapsack.Num
 		temp.IsUse = knapsack.IsUse
 		temp.Expiredat = knapsack.Expiredat
@@ -405,7 +405,7 @@ func SendGoods(userID, amount int) {
 func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way, matchID string) {
 	switch propType {
 	case values.PropTypeAward:
-		WriteFlowData(ud.UserID, amount, FlowTypeSign, "", "", []int{})
+		WriteFlowData(ud.UserID, amount, FlowTypeGift, "", "", []int{})
 		AddFee(ud.UserID, ud.AccountID, amount, opt,
 			way, matchID)
 	case values.PropTypeCoupon:

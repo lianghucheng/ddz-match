@@ -265,7 +265,6 @@ func readUserMail(uid, mailServiceType int) *[]UserMail {
 		if err != nil {
 			log.Error(err.Error())
 		}
-		log.Debug("调试发送邮件，现在时间戳：%v，读取到的邮件：%+v", time.Now().Unix(), (*readed))
 		*rt = append(*rt, *readed...)
 	}
 
@@ -283,7 +282,7 @@ func transferMsgUserMail(usermails *[]UserMail) *[]msg.UserMail {
 		temp.ID = v.ID
 		temp.Status = v.Status
 		temp.MailType = v.MailType
-
+		temp.MailServiceType = v.MailServiceType
 		*rt = append(*rt, *temp)
 	}
 
@@ -352,7 +351,7 @@ func TakenMailAnnex(mid int64) {
 	}
 }
 
-func TakenAndReadAllMail(user *player.User) {
+func TakenAllMail(user *player.User) {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 	usermails := new([]UserMail)
@@ -363,7 +362,7 @@ func TakenAndReadAllMail(user *player.User) {
 	for _, usermail := range *usermails {
 		switch usermail.MailType {
 		case MailTypeText:
-			ReadMail(usermail.ID)
+			//ReadMail(usermail.ID)
 		case MailTypeAward:
 			TakenMailAnnex(usermail.ID)
 		case MailTypeMix:
@@ -371,7 +370,7 @@ func TakenAndReadAllMail(user *player.User) {
 		}
 	}
 	SendMail(user)
-	user.WriteMsg(&msg.S2C_TakenAndReadAllMail{})
+	user.WriteMsg(&msg.S2C_TakenAllMail{})
 }
 
 func DeleteAllMail(user *player.User) {

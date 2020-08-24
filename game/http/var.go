@@ -31,11 +31,13 @@ const (
 	FORMAT_FAIL           = 1011 //数据格式错误
 	PASSWORD_LACK         = 1012
 	UPDATE_PROP_CONF_FAIL = 1013
+	RELOAD_CONFIG_FAIL    = 1014
 )
 
 var ErrMsg = map[int]string{
 	FORMAT_FAIL:           "数据格式错误. ",
 	UPDATE_PROP_CONF_FAIL: "更新物件配置错误. ",
+	RELOAD_CONFIG_FAIL:    "重新加载配置失败. ",
 }
 
 var success = NewError(SUCCESS, "成功")

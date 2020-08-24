@@ -23,6 +23,7 @@ type C2S_CreateEdyOrder struct {
 const (
 	ErrCreateEdyOrderSuccess     = 0 //成功
 	ErrCreateEdyOrderNotRealAuth = 1 //未实名
+	ErrCreateEdyOrderOverRange   = 2 //超出范围
 )
 
 type S2C_CreateEdyOrder struct {

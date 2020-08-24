@@ -14,12 +14,12 @@ import (
 )
 
 type BankCard struct {
-	Userid      int
-	BankName    string
-	BankCardNo  string
-	Province    string
-	City        string
-	OpeningBank string
+	Userid        int
+	BankName      string
+	BankCardNo    string
+	Province      string
+	City          string
+	OpeningBank   string
 	OpeningBankNo string
 }
 

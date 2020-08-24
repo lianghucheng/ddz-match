@@ -120,6 +120,7 @@ func SendPriceMenu(user *player.User, model int) {
 	//m := &msg.S2C_PriceMenu{
 	//	PriceItems: *msgGoodsTypes,
 	//}
+
 	cf := config.GetPropBaseConfig
 	log.Debug("获取到的缓存道具基本信息：%v", cf(values.PropTypeCoupon))
 
