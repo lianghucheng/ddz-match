@@ -2,6 +2,7 @@ package values
 
 import (
 	"ddz/msg"
+	"ddz/utils"
 	"strconv"
 	"strings"
 
@@ -88,6 +89,7 @@ type NormalCofig struct {
 	MatchIcon        string // 赛事图标
 	SonMatchID       string // 自赛事id
 	TotalMatch       int    // 总赛事场次
+	UseMatch         int    // 已使用场次
 	Eliminate        []int  // 淘汰人数
 	AwardList        string // 奖励
 	// StartTimer             *timer.Timer // 上架倒计时
@@ -301,6 +303,18 @@ func ParseAward(award string) float64 {
 	return b
 }
 
+// ParseAwardName 解析奖励的名称
+func ParseAwardName(award string) string {
+	// log.Debug("parse award:%v", award)
+	str := []byte{}
+	for _, s := range []byte(award) {
+		if !(s <= 57 && s >= 46) {
+			str = append(str, s)
+		}
+	}
+	return string(str)
+}
+
 // GetMoneyAward 获取奖励字段中的奖金之和
 func GetMoneyAward(award string) float64 {
 	var amount float64
@@ -343,7 +357,10 @@ func SplitScoreAward(award string) (score, other string) {
 	s := strings.Split(award, ",")
 	for _, one := range s {
 		if strings.Index(one, "分") != -1 {
-			scoreStr += one
+			num := ParseAward(one)
+			name := ParseAwardName(one)
+			numStr := utils.RoundFloat(num, 1)
+			scoreStr += numStr + name
 		} else {
 			otherStr += one
 		}

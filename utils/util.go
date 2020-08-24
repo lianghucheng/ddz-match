@@ -207,9 +207,9 @@ func FormatFloat(num float64, decimal int) string {
 
 // RoundFloat 取小数点后n位非零小数,四舍五入
 func RoundFloat(num float64, decimal int) string {
-	if math.Trunc(num) == num || decimal == 0 {
-		return fmt.Sprintf("%.f", math.Trunc(num))
-	}
+	// if math.Trunc(num) == num || decimal == 0 {
+	// 	return fmt.Sprintf("%.f", math.Trunc(num))
+	// }
 	for i := 0; i < decimal; i++ {
 		num = num * 10
 	}

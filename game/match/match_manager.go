@@ -300,10 +300,11 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 		sTime = sc.ReadyTime - time.Now().Unix()
 	}
 	data := &msg.S2C_RaceDetail{
-		ID:            sc.MatchID,
-		Desc:          sc.MatchName,
-		AwardDesc:     sc.AwardDesc,
-		AwardList:     sc.AwardList,
+		ID:        sc.MatchID,
+		Desc:      sc.MatchName,
+		AwardDesc: sc.AwardDesc,
+		// AwardList:     sc.AwardList,
+		AwardList:     getNoneScoreAward(sc.Award),
 		MatchType:     sc.MatchType,
 		RoundNum:      sc.RoundNum,
 		StartTime:     sTime,

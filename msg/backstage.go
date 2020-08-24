@@ -70,6 +70,7 @@ type RPC_EditMatch struct {
 	MatchID       string // 赛事id号
 	MatchName     string // 赛事名称
 	TotalMatch    int    // 后台配置的该种比赛可创建的比赛次数
+	UseMatch      int    // 已使用次数
 	Eliminate     []int  // 每轮淘汰人数
 	EnterFee      *int64 // 报名费
 	AwardList     string // 奖励列表

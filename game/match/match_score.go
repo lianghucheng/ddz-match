@@ -1077,14 +1077,21 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 
 	userMatchReview := values.UserMatchReview{}
 	wins := 0
+	champion := 0
 	fails := 0
 
 	var moneyAwardCount float64
-	if player.Rank-1 < len(base.Award) {
+	if player.Rank >= len(sc.matchPlayers)/3 {
 		wins = 1
-		moneyAwardCount = values.GetMoneyAward(base.Award[player.Rank-1])
 	} else {
 		fails = 1
+	}
+	if player.Rank-1 < len(base.Award) {
+		moneyAwardCount = values.GetMoneyAward(base.Award[player.Rank-1])
+	}
+
+	if player.Rank == 1 {
+		champion = 1
 	}
 
 	update := values.UserMatchReview{
@@ -1103,6 +1110,10 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 	gameData := &values.GameData{}
 	accountID := user.BaseData.UserData.AccountID
 
+	user.BaseData.UserData.SportCenter.TotalCount++
+	user.BaseData.UserData.SportCenter.TotalWin += wins
+	user.BaseData.UserData.SportCenter.TotalChampion += champion
+
 	// 赛事总览以及玩家数据记录
 	game.GetSkeleton().Go(
 		func() {
@@ -1110,6 +1121,7 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 			// db.InsertMatchRecord(record)
 			userMatchReview, err = db.GetUserMatchReview(uid, base.NormalCofig.MatchType, base.NormalCofig.MatchID)
 			gameData = db.GetUserGameData(uid)
+			UpdateUserData(uid, bson.M{"$set": bson.M{"sportcenter": user.BaseData.UserData.SportCenter}})
 		}, func() {
 			if err == nil {
 				// log.Error("err:%v", err)
@@ -1131,7 +1143,7 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 			}
 			if gameData != nil {
 				// 无数据初始化
-				if gameData.MatchData == nil {
+				if gameData.UID <= 0 {
 					db.UpsertUserGameData(bson.M{"uid": uid}, values.GameData{
 						UID:       uid,
 						AccountID: accountID,
@@ -1141,6 +1153,14 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 							MonthCount: 1,
 							RecordTime: time.Now().Unix(),
 						}})
+
+				} else if gameData.MatchData == nil {
+					db.UpsertUserGameData(bson.M{"uid": uid}, bson.M{"$set": bson.M{"matchdata": values.MatchData{
+						TotalCount: 1,
+						WeekCount:  1,
+						MonthCount: 1,
+						RecordTime: time.Now().Unix(),
+					}}})
 				} else {
 					log.Debug("data:%+v", gameData)
 					// 先判断记录时间点
@@ -1185,8 +1205,9 @@ func (sc *scoreMatch) recordPlayer(uid int) {
 
 	// 将单个玩家的数据写入rank中
 	sc.myConfig.Rank = append(sc.myConfig.Rank, Rank{
-		Level:      player.Rank,
-		NickName:   user.BaseData.UserData.Nickname,
+		Level: player.Rank,
+		// NickName:   user.BaseData.UserData.Nickname,
+		NickName:   strconv.Itoa(user.BaseData.UserData.AccountID),
 		Count:      base.CurrentRound,
 		Total:      player.TotalScore,
 		Last:       player.LastScore,
@@ -1414,11 +1435,12 @@ func (sc *scoreMatch) SendMatchInfo(uid int) {
 	log.Debug("players:%v", base.AllPlayers)
 	for _, p := range base.AllPlayers {
 		info := msg.S2C_MatchInfo{
-			RoundNum:       sc.myConfig.RoundNum,
-			Process:        fmt.Sprintf("第%v轮 第1副", base.CurrentRound),
-			Level:          fmt.Sprintf("%v/%v", p.BaseData.MatchPlayer.Rank, len(base.AllPlayers)),
-			Competition:    fmt.Sprintf("前%v晋级", eliminate),
-			AwardList:      base.AwardList,
+			RoundNum:    sc.myConfig.RoundNum,
+			Process:     fmt.Sprintf("第%v轮 第1副", base.CurrentRound),
+			Level:       fmt.Sprintf("%v/%v", p.BaseData.MatchPlayer.Rank, len(base.AllPlayers)),
+			Competition: fmt.Sprintf("前%v晋级", eliminate),
+			// AwardList:      base.AwardList,
+			AwardList:      getNoneScoreAward(base.Award),
 			MatchName:      base.NormalCofig.MatchName,
 			Duration:       p.BaseData.MatchPlayer.OpTime,
 			WinCnt:         p.BaseData.MatchPlayer.Wins,

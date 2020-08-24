@@ -205,12 +205,14 @@ func editMatch(args []interface{}) {
 	if c.MatchSource == MatchSourceSportsCenter {
 		tmp := struct {
 			TotalMatch    int
+			UseMatch      int
 			ShelfTime     int64
 			DownShelfTime int64
 			StartTime     int64
 			Eliminate     []int // 每轮淘汰人数
 		}{
 			data.TotalMatch,
+			data.UseMatch,
 			data.ShelfTime,
 			data.DownShelfTime,
 			data.StartTime,
@@ -228,6 +230,7 @@ func editMatch(args []interface{}) {
 			ShelfTime     int64
 			DownShelfTime int64
 			TotalMatch    int
+			UseMatch      int
 		}{
 			data.MatchName,
 			data.Card,
@@ -238,6 +241,7 @@ func editMatch(args []interface{}) {
 			data.ShelfTime,
 			data.DownShelfTime,
 			data.TotalMatch,
+			data.UseMatch,
 		}
 		utils.StructCopy(c, &tmp)
 	}

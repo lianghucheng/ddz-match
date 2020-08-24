@@ -14,15 +14,15 @@ import (
 )
 
 func WithDraw(user *player.User) {
-	//checkWithdraw(user)
-	//if user.GetUserData().IsWithdraw {
-	//	user.WriteMsg(&msg.S2C_WithDraw{
-	//		Amount: utils.Decimal(FeeAmount(user.UID())),
-	//		Error:  msg.ErrWithDrawMore,
-	//		ErrMsg: "每天只能提奖一次哦～",
-	//	})
-	//	return
-	//}
+	checkWithdraw(user)
+	if user.GetUserData().IsWithdraw {
+		user.WriteMsg(&msg.S2C_WithDraw{
+			Amount: utils.Decimal(FeeAmount(user.UID())),
+			Error:  msg.ErrWithDrawMore,
+			ErrMsg: "每天只能提奖一次哦～",
+		})
+		return
+	}
 	withDraw(user, edy_api.WithDrawAPI)
 }
 

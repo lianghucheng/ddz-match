@@ -75,6 +75,9 @@ type UserData struct {
 }
 
 type SportCenterData struct {
+	TotalCount      int     // 总局数
+	TotalWin        int     // 总胜局
+	TotalChampion   int     // 总冠军数
 	BlueScore       float64 // 蓝分
 	RedScore        float64 // 红分
 	SilverScore     float64 // 银分
@@ -299,20 +302,26 @@ func CalcOnlineCnt(userIDUsers map[int]*User) int {
 func (user *User) SendUserInfo() {
 	send := map[string]interface{}{}
 	type Sports struct {
-		BlueScore   string
-		RedScore    string
-		SilverScore string
-		GoldScore   string
-		Level       string
-		Ranking     int // 排名
+		BlueScore     string
+		RedScore      string
+		SilverScore   string
+		GoldScore     string
+		Level         string
+		Ranking       int // 排名
+		TotalCount    int // 总局数
+		TotalWin      int // 总胜局
+		TotalChampion int // 总冠军数
 	}
 	sports := Sports{
-		BlueScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.BlueScore, 1),
-		RedScore:    utils.RoundFloat(user.BaseData.UserData.SportCenter.RedScore, 1),
-		SilverScore: utils.RoundFloat(user.BaseData.UserData.SportCenter.SilverScore, 1),
-		GoldScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
-		Level:       user.BaseData.UserData.SportCenter.Level,
-		Ranking:     user.BaseData.UserData.SportCenter.Ranking,
+		BlueScore:     utils.RoundFloat(user.BaseData.UserData.SportCenter.BlueScore, 1),
+		RedScore:      utils.RoundFloat(user.BaseData.UserData.SportCenter.RedScore, 1),
+		SilverScore:   utils.RoundFloat(user.BaseData.UserData.SportCenter.SilverScore, 1),
+		GoldScore:     utils.RoundFloat(user.BaseData.UserData.SportCenter.GoldScore, 1),
+		Level:         user.BaseData.UserData.SportCenter.Level,
+		Ranking:       user.BaseData.UserData.SportCenter.Ranking,
+		TotalChampion: user.BaseData.UserData.SportCenter.TotalChampion,
+		TotalCount:    user.BaseData.UserData.SportCenter.TotalCount,
+		TotalWin:      user.BaseData.UserData.SportCenter.TotalWin,
 	}
 	send["Sports"] = sports
 

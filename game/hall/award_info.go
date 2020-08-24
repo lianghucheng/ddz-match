@@ -28,7 +28,7 @@ func sendAwardInfo(user *player.User) {
 func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 	rt := new([]msg.WithDrawData)
 	for _, v := range *flowDatas {
-		status := ""
+		status := FlowDataStatusMsg[v.Status]
 		if v.FlowType == FlowTypeAward {
 			status = FlowDataStatusMsg[FlowDataStatusNormal]
 		} else if v.FlowType == FlowTypeGift {
@@ -36,9 +36,17 @@ func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 		} else {
 			status = FlowDataStatusMsg[v.Status]
 		}
+		matchID := v.MatchID
+		if v.Status == FlowDataStatusAction {
+			matchID = "平台审核中,请稍后"
+		} else if v.Status == FlowDataStatusOver {
+			matchID = "提奖成功"
+		} else if v.Status == FlowDataStatusBack {
+			matchID = v.Desc
+		}
 		*rt = append(*rt, msg.WithDrawData{
 			FlowType:  v.FlowType,
-			MatchID:   v.MatchID,
+			MatchID:   matchID,
 			Amount:    v.ChangeAmount,
 			Status:    status,
 			CreatedAt: v.CreatedAt,

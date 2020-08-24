@@ -42,7 +42,7 @@
  LandlordDiscardNothing = 3  #要不起准备时间 秒
  LandloadMatchPrepare         = 2500 # 满三人开赛准备时间 毫秒
  LandlordEndPrepare           = 1500 # 结算的准备时间    毫秒
- LandlordNextStart            = 6000  # 下一轮开始时间    毫秒
+ LandlordNextStart            = 8000  # 下一轮开始时间    毫秒
 [[CfgDailySign]]
     Chips=1
 [[CfgDailySign]]
