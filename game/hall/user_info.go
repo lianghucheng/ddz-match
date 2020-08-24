@@ -280,7 +280,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 	for _, knapsack := range *knapsacks {
 		temp := new(msg.KnapsackProp)
 		temp.PropID = knapsack.PropType
-		temp.Name = knapsack.Name
+		temp.Name = config.GetPropBaseConfig(knapsack.PropType).Name
 		temp.Num = knapsack.Num
 		temp.IsUse = knapsack.IsUse
 		temp.Expiredat = knapsack.Expiredat
