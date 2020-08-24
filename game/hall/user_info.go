@@ -235,7 +235,7 @@ func TakenFirstCoupon(user *player.User) {
 		player.SaveUserData(ud)
 	}, func() {
 		user.WriteMsg(&msg.S2C_TakenFirstCoupon{})
-		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.NormalOpt, db.InitPlayer)
+		UpdateUserCoupon(user, 5, ud.Coupon-5, ud.Coupon, db.ActivityOpt, db.InitPlayer)
 	})
 }
 

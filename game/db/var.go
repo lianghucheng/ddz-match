@@ -9,6 +9,7 @@ const (
 	DailySignOpt
 	MailOpt
 	ActivityOpt
+	PlatformOpt
 )
 
 // 定义获取物品的方式
