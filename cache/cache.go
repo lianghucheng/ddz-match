@@ -11,7 +11,7 @@ import (
 
 func Init() {
 	if err := UpdatePropBaseConfig(); err != nil {
-		log.Fatal("更新道具基本配置信息失败：" + err.Error())
+		log.Error("更新道具基本配置信息失败：" + err.Error())
 	}
 }
 

@@ -40,16 +40,18 @@ func DailySign(user *player.User) {
 func checkDailySign(user *player.User) {
 	dead := user.GetUserData().DailySignDeadLine
 	if dead < time.Now().Unix() {
+		if user.GetUserData().SignTimes >= 7 && !user.GetUserData().NotNewDailySign {
+			user.GetUserData().NotNewDailySign = true
+		}
 		week := time.Unix(dead, 0).Weekday()
 		dist := 0
 		if week > time.Sunday {
 			dist = 7 - int(week)
 		}
 		if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
-			if dead != 0 {
-				user.GetUserData().NewDailySign = true
+			if user.GetUserData().NotNewDailySign {
+				user.GetUserData().SignTimes = 0
 			}
-			user.GetUserData().SignTimes = 0
 		}
 
 		user.GetUserData().DailySignDeadLine = utils.OneDay0ClockTimestamp(time.Now().Add(24 * time.Hour))
@@ -62,7 +64,7 @@ func SendDailySignItems(user *player.User) {
 	checkDailySign(user)
 	ud := user.GetUserData()
 	cfgDs := config.GetCfgDailySignItem()
-	if !user.GetUserData().NewDailySign {
+	if !user.GetUserData().NotNewDailySign {
 		cfgDs = config.GetCfgNewUserDailySignItem()
 	}
 	dailySignItems := []msg.DailySignItems{}
@@ -84,15 +86,18 @@ func SendDailySignItems(user *player.User) {
 			Status: msg.SignAccess,
 			ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
 		})
-	} else {
-		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
-			PropID: (*cfgDs)[ud.SignTimes].PropType,
-			Amount: (*cfgDs)[ud.SignTimes].Amount,
-			Status: msg.SignDeny,
-			ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
-		})
 	}
+	//else {
+	//	log.Debug("*********滴滴滴，调试签到。签到次数：%v，是否已签到：%v", ud.SignTimes, ud.DailySign)
+	//	log.Debug("签到奖励表：%+v  (*cfgDs)[%v]: %+v", (*cfgDs), ud.SignTimes, (*cfgDs)[ud.SignTimes])
+	//	dailySignItems = append(dailySignItems, msg.DailySignItems{
+	//		Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
+	//		PropID: (*cfgDs)[ud.SignTimes].PropType,
+	//		Amount: (*cfgDs)[ud.SignTimes].Amount,
+	//		Status: msg.SignDeny,
+	//		ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
+	//	})
+	//}
 
 	for i := user.GetUserData().SignTimes + 1; i < 7; i++ {
 		dailySignItems = append(dailySignItems, msg.DailySignItems{

@@ -20,6 +20,7 @@ type BankCard struct {
 	Province    string
 	City        string
 	OpeningBank string
+	OpeningBankNo string
 }
 
 func (ctx *BankCard) save() error {
@@ -80,7 +81,9 @@ func (ctx *BankCard) addBankCard(user *player.User, api func(accountid int, bank
 			err = errors.New("查询不到联行号，请联系客服解决～")
 			return
 		}
-		err = api(ud.AccountID, bankCode, ctx.BankName, ctx.BankCardNo)
+		ctx.OpeningBankNo = bankCode
+		aid := ud.AccountID
+		err = api(aid, bankCode, ctx.BankName, ctx.BankCardNo)
 	}, func() {
 		if err != nil {
 			SendAddBankCard(user, msg.ErrAddBankCardBusiness, err.Error())

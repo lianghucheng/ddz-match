@@ -49,6 +49,13 @@
       "IsTowardKnapsack": false,
       "Desc": "平台内通用货币，人民币兑换1:1",
       "Amount": 2.0
+    },
+    {
+      "PropType": 1,
+      "Name": "点券",
+      "IsTowardKnapsack": false,
+      "Desc": "平台内通用货币，人民币兑换1:1",
+      "Amount": 2.0
     }
   ],
   "CfgPay": {
@@ -120,6 +127,13 @@
       "IsTowardKnapsack": true,
       "Desc": "20个点券碎片兑换一个点券",
       "Amount": 50.0
+    },
+    {
+      "PropType": 1,
+      "Name": "点券",
+      "IsTowardKnapsack": false,
+      "Desc": "平台内通用货币，人民币兑换1:1",
+      "Amount": 5.0
     },
     {
       "PropType": 1,
