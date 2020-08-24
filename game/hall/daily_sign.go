@@ -27,7 +27,7 @@ func DailySign(user *player.User) {
 		AddSundries(item.PropType, ud, item.Amount, db.DailySignOpt, db.DailySign, "")
 	}, func() {
 		user.WriteMsg(&msg.S2C_DailySign{
-			Name:   item.Name,
+			Name:   config.GetPropBaseConfig(item.PropType).Name,
 			PropID: item.PropType,
 			Amount: item.Amount,
 			ImgUrl: config.GetPropBaseConfig(item.PropType).ImgUrl,
