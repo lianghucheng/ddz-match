@@ -62,7 +62,7 @@ type UserData struct {
 	SignTimes         int
 	DailySign         bool
 	DailySignDeadLine int64
-	NotNewDailySign bool
+	NotNewDailySign   bool
 	LastTakenMail     int64
 	RealName          string
 	IDCardNo          string
@@ -360,32 +360,6 @@ func (u *User) GetDailyWelfareInfo() {
 		for i := range info.AdditionalAward {
 			propType := values.PropID2Type[info.AdditionalAward[i].Item]
 			info.AdditionalAward[i].URL = config.GetPropBaseConfig(propType).ImgUrl
-		}
-	})
-}
-
-// DrawDailyWelfare 领取每日福利
-func (u *User) DrawDailyWelfare(dailyType, awardIndex int) {
-	var err error
-	reply := &rpc.RPCRet{}
-	game.GetSkeleton().Go(func() {
-		err = rpc.CallActivityServer("DailyWelfareObj.DrawDailyWelfare",
-			rpc.RPCDrawDailyWelfare{AccountID: u.BaseData.UserData.AccountID, DailyType: dailyType, AwardIndex: awardIndex}, reply)
-	}, func() {
-		code := reply.Code
-		desc := reply.Desc
-		defer func() {
-			u.WriteMsg(&msg.S2C_GetDailyWelfareInfo{
-				Code: code,
-				Desc: desc,
-			})
-		}()
-		if err != nil {
-			code = 1
-			desc = "领取失败!"
-			if len(reply.Desc) > 0 {
-				desc = reply.Desc
-			}
 		}
 	})
 }

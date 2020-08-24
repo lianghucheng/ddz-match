@@ -8,6 +8,7 @@ const (
 	FragChangeOpt
 	DailySignOpt
 	MailOpt
+	ActivityOpt
 )
 
 // 定义获取物品的方式
@@ -23,6 +24,7 @@ const (
 	Backstage    = "后台发放" // 后台发放
 	CouponFrag   = "点券碎片" // 点券碎片
 	Mail         = "邮件"
+	DailyWelfare = "每日福利"
 )
 
 // ItemLog 物品日志

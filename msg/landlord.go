@@ -163,4 +163,8 @@ type OneMatch struct {
 	IsSign       bool
 	MatchType    string
 	MatchIcon    string
+	ShowHall     bool
+	Award        float64
+	ConDes       string //赛事开赛条件
+	Eliminate    []int
 }

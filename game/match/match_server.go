@@ -153,6 +153,12 @@ func GetMatchManagerInfo(opt int) interface{} {
 			if m.State != Signing {
 				continue
 			}
+			var award float64
+			if len(m.Award) > 0 {
+				for _, v := range m.Award {
+					award += values.GetMoneyAward(v)
+				}
+			}
 			sTime := m.StartTime
 			if m.StartType == 2 {
 				sTime = m.ReadyTime - time.Now().Unix()
@@ -167,9 +173,13 @@ func GetMatchManagerInfo(opt int) interface{} {
 				EnterFee:     m.EnterFee,
 				StartTime:    sTime,
 				StartType:    m.StartType,
+				Award:        award,
 				IsSign:       false,
 				MatchType:    m.MatchType,
 				MatchIcon:    m.MatchIcon,
+				ShowHall:     m.ShowHall,
+				ConDes:       m.MatchDesc,
+				Eliminate:    m.Eliminate,
 			})
 		}
 		return list
@@ -190,7 +200,7 @@ func sortMatch(list []values.MatchManager) {
 
 // BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
 func BroadcastMatchInfo() {
-	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	RaceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
 	// if len(RaceInfo) == 0 {
 	// 	return
 	// }
@@ -198,7 +208,7 @@ func BroadcastMatchInfo() {
 		if ma, ok := UserIDMatch[uid]; ok {
 			myMatchID := ma.NormalCofig.MatchID
 			for i, v := range RaceInfo {
-				if v.ID == myMatchID {
+				if v.MatchID == myMatchID {
 					RaceInfo[i].IsSign = true
 				} else {
 					RaceInfo[i].IsSign = false
@@ -209,8 +219,8 @@ func BroadcastMatchInfo() {
 				RaceInfo[i].IsSign = false
 			}
 		}
-		user.WriteMsg(&msg.S2C_RaceInfo{
-			Races: RaceInfo,
+		user.WriteMsg(&msg.S2C_GetMatchList{
+			List: RaceInfo,
 		})
 	}
 }

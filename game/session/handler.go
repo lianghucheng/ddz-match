@@ -485,11 +485,11 @@ func handleRaceInfoHall(args []interface{}) {
 	if user == nil {
 		return
 	}
-	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	RaceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
 	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		myMatchID := ma.NormalCofig.MatchID
 		for i, v := range RaceInfo {
-			if v.ID == myMatchID {
+			if v.MatchID == myMatchID {
 				RaceInfo[i].IsSign = true
 				break
 			}
@@ -665,7 +665,8 @@ func handleDrawDailyWelfareInfo(args []interface{}) {
 	if user == nil {
 		return
 	}
-	user.DrawDailyWelfare(m.DailyType, m.AwardIndex)
+	// user.DrawDailyWelfare(m.DailyType, m.AwardIndex)
+	hall.DrawDailyWelfare(user, m.DailyType, m.AwardIndex)
 }
 func handleTakenAndReadAllMail(args []interface{}) {
 	m := args[0].(*msg.C2S_TakenAndReadAllMail)

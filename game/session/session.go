@@ -135,7 +135,7 @@ func rpcSendRaceInfo(args []interface{}) {
 		return
 	}
 	m := args[0].(*msg.RPC_SendRaceInfo)
-	RaceInfo := GetMatchManagerInfo(1).([]msg.RaceInfo)
+	RaceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
 	if user, ok := UserIDUsers[m.ID]; ok {
 		user.WriteMsg(&msg.S2C_RaceInfo{
 			Races: RaceInfo,

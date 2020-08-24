@@ -75,6 +75,7 @@ type BaseMatch struct {
 	AwardList     string // 赛事奖励列表
 	Round         int    // 几局制
 	CreateTime    int64  // 比赛创建时间
+	EndTime       int64  // 结束时间
 
 	AllPlayers map[int]*User // 比赛剩余玩家对象
 	Rooms      []*Room       // 所有比赛房间对象
@@ -202,6 +203,7 @@ func (base *BaseMatch) Start() {
 func (base *BaseMatch) End() {
 	base.State = Ending
 	base.Manager.End(base.SonMatchID)
+	base.EndTime = time.Now().Unix()
 
 	if base.myMatch != nil {
 		base.myMatch.End()

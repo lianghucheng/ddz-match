@@ -5,9 +5,11 @@ import (
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/game/rpc"
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
+	"encoding/json"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -416,4 +418,56 @@ func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way
 		AddRedScore(ud.UserID, ud.AccountID, amount, opt,
 			way, matchID)
 	}
+}
+
+// DrawDailyWelfare 领取每日福利
+func DrawDailyWelfare(u *player.User, dailyType, awardIndex int) {
+	var err error
+	reply := &rpc.RPCRet{}
+	game.GetSkeleton().Go(func() {
+		err = rpc.CallActivityServer("DailyWelfareObj.DrawDailyWelfare",
+			rpc.RPCDrawDailyWelfare{AccountID: u.BaseData.UserData.AccountID, DailyType: dailyType, AwardIndex: awardIndex}, reply)
+	}, func() {
+		log.Debug("player %v draw daily welfare", u.BaseData.UserData.AccountID)
+		code := reply.Code
+		desc := reply.Desc
+		defer func() {
+			u.WriteMsg(&msg.S2C_DrawDailyWelfareInfo{
+				Code: code,
+				Desc: desc,
+			})
+		}()
+		if err != nil {
+			code = 1
+			desc = "领取失败!"
+			if len(reply.Desc) > 0 {
+				desc = reply.Desc
+			}
+			return
+		}
+		if reply.Data == nil {
+			code = 1
+			desc = "领取失败!"
+			return
+		}
+		b, ok := reply.Data.([]byte)
+		if !ok {
+			code = 1
+			desc = "领取失败!"
+			return
+		}
+		var data = struct {
+			ItemID int
+			Amount int
+		}{}
+		if err := json.Unmarshal(b, &data); err != nil {
+			code = 1
+			desc = "领取失败!"
+			return
+		}
+		log.Debug("player %v draw daily welfare:%v", u.BaseData.UserData.AccountID, data)
+		// ok
+		id := values.PropID2Type[data.ItemID]
+		AddSundries(id, u.BaseData.UserData, float64(data.Amount), db.ActivityOpt, db.DailyWelfare, "")
+	})
 }
