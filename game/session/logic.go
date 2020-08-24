@@ -211,6 +211,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	if bankCard.BankCardNo != "" {
 		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
 	}
+	hall.SendDailySignItems(user)
 	user.WriteMsg(&msg.S2C_Login{
 		AccountID:         user.BaseData.UserData.AccountID,
 		Nickname:          user.BaseData.UserData.Nickname,
@@ -236,6 +237,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 		BankName:       bankCard.BankName,
 		BankCardNoTail: tail,
 		SetNickName:    user.GetUserData().SetNickNameCount > 0,
+		IsNewUser:      !user.GetUserData().NotNewDailySign,
 	})
 
 	// hall.UpdateUserCoupon(user, 0, "")
@@ -244,7 +246,6 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	})
 	hall.UpdateUserAfterTaxAward(user)
 	hall.SendMail(user)
-	hall.SendDailySignItems(user)
 	hall.SendFirstRecharge(user)
 	// hall.SendRaceInfo(user.BaseData.UserData.UserID)
 	hall.SendAwardInfo(user)

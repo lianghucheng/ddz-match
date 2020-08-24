@@ -51,6 +51,7 @@ type FlowData struct {
 	TakenFee     float64
 	AtferTaxFee  float64
 	Desc         string
+	PassStatus   int //1是已通过，0是未通过
 }
 
 func (ctx *FlowData) save() {
@@ -119,4 +120,42 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID str
 	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo", &msg.RPC_UpdateAwardInfo{
 		Uid: uid,
 	})
+}
+
+func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int) {
+	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
+	ud := player.ReadUserDataByID(uid)
+	flowData := new(FlowData)
+	flowData.Userid = ud.UserID
+
+	flowData.ChangeAmount = utils.Decimal(amount)
+	flowData.FlowType = flowType
+	flowData.MatchType = matchType
+	flowData.MatchID = matchID
+	flowData.CreatedAt = time.Now().Unix()
+	flowData.FlowIDs = flows
+	flowData.Realname = ud.RealName
+	flowData.TakenFee = ud.TakenFee
+	flowData.AtferTaxFee = ud.Fee
+	flowData.Accountid = ud.AccountID
+	flowData.PassStatus = 1
+	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
+	flowData.Status = FlowDataStatusOver
+	flowData.save()
+	paymentByFlowIDs(flows)
+	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo", &msg.RPC_UpdateAwardInfo{
+		Uid: uid,
+	})
+}
+
+func paymentByFlowIDs(flowIDs []int) {
+	for _, v := range flowIDs {
+		fd := db.ReadFlowDataByID(v)
+		fd.Status = FlowDataStatusOver
+		data := new(FlowData)
+		if err := utils.Transfer(fd, data); err != nil {
+			log.Error(err.Error())
+		}
+		data.save()
+	}
 }

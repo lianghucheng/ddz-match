@@ -50,6 +50,7 @@ type Config struct {
 	CfgPropBases             map[int]*CfgPropBase
 	CfgLianHang              *CfgLianHang
 	CfgNewUserDailySignItems *[]CfgDailySignItem
+	CfgNormal				 *CfgNormal
 }
 
 func (ctx *Config) print() {
@@ -115,6 +116,10 @@ type CfgLianHang struct {
 	AppCode     string
 	Host        string
 	LianHangUrl string
+}
+
+type CfgNormal struct {
+	AmountLimit float64
 }
 
 var cfg *Config
@@ -297,4 +302,8 @@ func GetPropBaseConfig(propType int) *CfgPropBase {
 
 func GetCfgLianHang() *CfgLianHang {
 	return cfg.CfgLianHang
+}
+
+func GetCfgNormal() *CfgNormal {
+	return cfg.CfgNormal
 }

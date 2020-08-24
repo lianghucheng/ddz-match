@@ -188,3 +188,18 @@ func UpdateRestart(selector interface{}, update interface{}) error {
 	}
 	return nil
 }
+
+func ReadFlowDataByID(id int) *values.FlowData {
+	query := bson.M{"_id": id}
+	flowData := new(values.FlowData)
+	readOneByQuery(flowData, query, "flowdata")
+	return flowData
+}
+
+func readOneByQuery(rt interface{}, query bson.M, coll string) {
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	if err := se.DB(DB).C(coll).Find(query).One(rt); err != nil && err != mgo.ErrNotFound {
+		log.Error(err.Error())
+	}
+}

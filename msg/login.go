@@ -136,6 +136,7 @@ type S2C_Login struct {
 	BankName          string //银行名称
 	BankCardNoTail    string //银行卡号后四位
 	SetNickName       bool
+	IsNewUser         bool
 }
 
 type S2C_FirstRechage struct {

@@ -38,6 +38,7 @@ func DailySign(user *player.User) {
 }
 
 func checkDailySign(user *player.User) {
+	log.Debug("***********************")
 	dead := user.GetUserData().DailySignDeadLine
 	if dead < time.Now().Unix() {
 		if user.GetUserData().SignTimes >= 7 && !user.GetUserData().NotNewDailySign {
@@ -48,7 +49,9 @@ func checkDailySign(user *player.User) {
 		if week > time.Sunday {
 			dist = 7 - int(week)
 		}
-		if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() {
+		log.Debug("&&&&&&&&&&&&&&&&&&&&%v", week == time.Monday)
+		if week == time.Monday || time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix() <= time.Now().Unix() || user.GetUserData().SignTimes == 7 {
+			log.Debug("&&&&&&&&&&&&&&&&&&&&%v  %v", time.Unix(dead, 0).Add(time.Duration(dist+1)*24*time.Hour).Unix(), time.Now().Unix())
 			if user.GetUserData().NotNewDailySign {
 				user.GetUserData().SignTimes = 0
 			}
@@ -61,6 +64,8 @@ func checkDailySign(user *player.User) {
 }
 
 func SendDailySignItems(user *player.User) {
+
+	log.Debug("&&&&&&&&&&&&&&&&&&&&")
 	checkDailySign(user)
 	ud := user.GetUserData()
 	cfgDs := config.GetCfgDailySignItem()
@@ -99,14 +104,8 @@ func SendDailySignItems(user *player.User) {
 			ImgUrl: cf((*cfgDs)[i].PropType).ImgUrl,
 		})
 	}
-	if !user.GetUserData().DailySign {
-		dailySignItems = append(dailySignItems, msg.DailySignItems{
-			Name:   cf((*cfgDs)[ud.SignTimes].PropType).Name,
-			PropID: (*cfgDs)[ud.SignTimes].PropType,
-			Amount: (*cfgDs)[ud.SignTimes].Amount,
-			Status: msg.SignAccess,
-			ImgUrl: cf((*cfgDs)[ud.SignTimes].PropType).ImgUrl,
-		})
+	if !user.GetUserData().DailySign && ud.SignTimes < 7{
+		dailySignItems[ud.SignTimes].Status = msg.SignAccess
 	}
 	user.WriteMsg(&msg.S2C_DailySignItems{
 		SignItems: dailySignItems,

@@ -2,15 +2,15 @@ package hall
 
 import (
 	"ddz/conf"
+	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/player"
 	"ddz/msg"
 	"ddz/utils"
 	"fmt"
-	"time"
-
 	"github.com/szxby/tools/log"
+	"time"
 )
 
 func WithDraw(user *player.User) {
@@ -64,15 +64,37 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		return
 	}
 
-	if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
-		log.Error(err.Error())
-		user.WriteMsg(&msg.S2C_WithDraw{
-			Amount: fee,
-			Error:  msg.ErrWithDrawFail,
-			ErrMsg: "三方接口失败",
-		})
-		return
+	if changeAmount > config.GetCfgNormal().AmountLimit {
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteWithdrawFinalFlowData)
+	} else {
+		if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
+			log.Error(err.Error())
+			user.WriteMsg(&msg.S2C_WithDraw{
+				Amount: fee,
+				Error:  msg.ErrWithDrawFail,
+				ErrMsg: err.Error(),
+			})
+			return
+		}
+		//ud := user.GetUserData()
+		//ud.Fee -= changeAmount
+		//user.WriteMsg(&msg.S2C_WithDraw{
+		//	Amount: fee,
+		//	Error:  msg.ErrWithDrawSuccess,
+		//	ErrMsg: "成功",
+		//})
+		//game.GetSkeleton().Go(func() {
+		//	player.SaveUserData(ud)
+		//	WriteFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
+		//}, func() {
+		//	sendAwardInfo(user)
+		//	UpdateUserAfterTaxAward(user)
+		//})
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteFlowData)
 	}
+}
+
+func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []int, writeFlowData func(uid int, amount float64, flowType int, matchType, matchID string, flows []int)) {
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
 	user.WriteMsg(&msg.S2C_WithDraw{
@@ -82,7 +104,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	})
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(ud)
-		WriteFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
+		writeFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
 	}, func() {
 		sendAwardInfo(user)
 		UpdateUserAfterTaxAward(user)
