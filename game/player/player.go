@@ -4,7 +4,6 @@ import (
 	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
-	"ddz/game/db"
 	. "ddz/game/db"
 	"ddz/game/rpc"
 	"ddz/game/values"
@@ -216,22 +215,22 @@ func (user *User) AcountID() int {
 func (user *User) RefreshData() {
 	one := user.BaseData.UserData
 	// 检查是否每日首次登录,是则插入一条登录日志
-	t := time.Now().Format("2006-01-02")
-	t1, _ := time.Parse("2006-01-02", t)
-	today := t1.Unix() - 8*60*60
-	if one.Logintime < today {
-		game.GetSkeleton().Go(func() {
-			// 首次登录插入日志
-			db.InsertItemLog(db.ItemLog{
-				UID:        user.BaseData.UserData.AccountID,
-				Way:        db.FirstLogin,
-				Before:     user.BaseData.UserData.Coupon,
-				After:      user.BaseData.UserData.Coupon,
-				OptType:    db.NormalOpt,
-				CreateTime: time.Now().Unix(),
-			})
-		}, nil)
-	}
+	//t := time.Now().Format("2006-01-02")
+	//t1, _ := time.Parse("2006-01-02", t)
+	//today := t1.Unix() - 8*60*60
+	//if one.Logintime < today {
+	//	game.GetSkeleton().Go(func() {
+	//		// 首次登录插入日志
+	//		db.InsertItemLog(db.ItemLog{
+	//			UID:        user.BaseData.UserData.AccountID,
+	//			Way:        db.FirstLogin,
+	//			Before:     user.BaseData.UserData.Coupon,
+	//			After:      user.BaseData.UserData.Coupon,
+	//			OptType:    db.NormalOpt,
+	//			CreateTime: time.Now().Unix(),
+	//		})
+	//	}, nil)
+	//}
 
 	// 检查体总数据是否同步,每三小时同步一次
 	// if utils.GetZeroTime(time.Unix(one.SportCenter.SyncTime, 0)) != utils.GetZeroTime(time.Now()) && len(one.IDCardNo) > 0 {

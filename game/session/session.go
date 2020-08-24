@@ -269,7 +269,7 @@ func rpcAddAward(args []interface{}) {
 		return
 	}
 	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
-	hall.AddFee(ud.UserID, ud.AccountID, m.Amount, db.NormalOpt, db.Backstage, "")
+	hall.AddFee(ud.UserID, ud.AccountID, m.Amount, db.PlatformOpt, db.Backstage, "")
 
 	// if user, ok := UserIDUsers[m.Uid]; ok {
 	// 	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
@@ -394,7 +394,7 @@ func rpcUpdateCoupon(args []interface{}) {
 	// 	ud.Coupon += int64(m.Amount)
 	// 	SaveUserData(ud)
 	// }
-	hall.AddCoupon(ud.UserID, ud.AccountID, int64(m.Amount), db.NormalOpt, db.Backstage, "")
+	hall.AddCoupon(ud.UserID, ud.AccountID, int64(m.Amount), db.PlatformOpt, db.Backstage, "")
 }
 
 func rpcUpdateHeadImg(args []interface{}) {
@@ -431,7 +431,7 @@ func rpcAddCouponFrag(args []interface{}) {
 		return
 	}
 	// hall.AddPropAmount(config.PropTypeCouponFrag, m.Accountid, m.Amount)
-	hall.AddFragment(ud.UserID, ud.AccountID, int64(m.Amount), db.NormalOpt, db.Backstage, "")
+	hall.AddFragment(ud.UserID, ud.AccountID, int64(m.Amount), db.PlatformOpt, db.Backstage, "")
 	log.Debug("成功！！！远程调用加点券碎片")
 }
 
