@@ -71,6 +71,7 @@ type MatchPlayer struct {
 type NormalCofig struct {
 	MatchSource      int // 赛事来源
 	MatchID          string
+	MatchLevel       int // 体总赛事级别
 	MatchName        string
 	MatchType        string // 赛事类型
 	MatchDesc        string
