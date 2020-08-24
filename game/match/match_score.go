@@ -141,7 +141,7 @@ func NewScoreMatch(c *ScoreConfig) *BaseMatch {
 	base.Round = c.Round
 	base.AllPlayers = make(map[int]*User)
 	base.NormalCofig = c.GetNormalConfig()
-	base.CreateTime = time.Now().Unix()
+	// base.CreateTime = time.Now().Unix()
 	base.Manager = c
 
 	score.base = base

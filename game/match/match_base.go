@@ -194,6 +194,7 @@ func (base *BaseMatch) Start() {
 			MatchID:    base.SonMatchID,
 		})
 	}
+	base.CreateTime = time.Now().Unix()
 	BroadcastMatchInfo()
 	base.Manager.CheckNewConfig()
 }
