@@ -274,7 +274,7 @@ func (sc *scoreMatch) End() {
 	// 刷新排行榜
 	for _, p := range sc.matchPlayers {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
-		if p.rank <= len(base.Award) {
+		if p.rank <= len(sc.matchPlayers)/3 {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
@@ -1403,7 +1403,7 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 		if player.uid == uid {
 			var award []string
 			var imgUrl []string
-			//var awardDatas []map[string]string
+			var awardDatas []map[string]string
 			if player.rank-1 < len(base.Award) {
 				for _, one := range strings.Split(base.Award[player.rank-1], ",") {
 					awardData := make(map[string]string)
@@ -1412,12 +1412,13 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 					propType := AwardWordToPropType[awardWord]
 					imgUrl = append(imgUrl, cf(propType).ImgUrl)
 					awardData[one] = cf(propType).ImgUrl
-					//awardDatas = append(awardDatas, awardData)
+					log.Debug("最终结算")
+					awardDatas = append(awardDatas, awardData)
 				}
 			}
 			user.WriteMsg(&msg.S2C_MineRoundRank{
 				RankOrder: player.rank,
-				Award:     award,
+				Award:     awardDatas,
 			})
 			break
 		}

@@ -62,6 +62,8 @@ func init() {
 	handler(&msg.C2S_GetDailyWelfareInfo{}, handleGetDailyWelfareInfo)
 	handler(&msg.C2S_DrawDailyWelfareInfo{}, handleDrawDailyWelfareInfo)
 	handler(&msg.C2S_TakenAndReadAllMail{}, handleTakenAndReadAllMail)
+	handler(&msg.C2S_GetAllMail{}, handleGetSetMail)
+	handler(&msg.C2S_DeleteAllMail{}, handleDeleteAllMail)
 }
 
 func handler(m interface{}, h interface{}) {
@@ -681,4 +683,47 @@ func handleTakenAndReadAllMail(args []interface{}) {
 	}
 
 	hall.TakenAndReadAllMail(user)
+}
+
+func handleGetSetMail(args []interface{}) {
+	m := args[0].(*msg.C2S_GetAllMail)
+	_ = m
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		log.Error("leaf UserData is nil. ")
+		return
+	}
+
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		log.Error("system UserData is nil. ")
+		return
+	}
+
+	hall.SendMail(user)
+}
+
+func checkAgent(a gate.Agent) (*User, bool) {
+	if a.UserData() == nil {
+		log.Error("leaf UserData is nil. ")
+		return nil, false
+	}
+
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		log.Error("system UserData is nil. ")
+		return nil, false
+	}
+	return user, true
+}
+
+func handleDeleteAllMail(args []interface{}) {
+	m := args[0].(*msg.C2S_DeleteAllMail)
+	_ = m
+	a := args[1].(gate.Agent)
+	if user, ok := checkAgent(a); !ok {
+		return
+	} else {
+		hall.DeleteAllMail(user)
+	}
 }

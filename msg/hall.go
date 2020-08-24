@@ -23,6 +23,7 @@ type KnapsackProp struct {
 	IsUse     bool   //是否可使用
 	Expiredat int64  //过期时间，-1表示永久
 	Desc      string //描述
+	Imgurl    string //
 	Createdat int64  //创建时间
 }
 

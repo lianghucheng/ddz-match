@@ -58,7 +58,16 @@ func CreateOrder(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	//	CreatePaymentUrl: cfgPay.PayHost + cfgPay.CreatePaymentUrl,
 	//})
 
+	if user.RealName() == "" {
+		user.WriteMsg(&msg.S2C_CreateEdyOrder{
+			Error:  msg.ErrCreateEdyOrderNotRealAuth,
+			ErrMsg: "未实名认证",
+		})
+		return
+	}
+
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
+		ErrMsg:   "成功",
 		AppID:    0,
 		AppToken: "",
 		Amount:   int(pm.Fee),

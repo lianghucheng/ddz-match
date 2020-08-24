@@ -286,6 +286,7 @@ func knapsack2Msg(knapsacks *[]KnapsackProp) *[]msg.KnapsackProp {
 		temp.Expiredat = knapsack.Expiredat
 		temp.Desc = knapsack.Desc
 		temp.Createdat = temp.Createdat
+		temp.Imgurl = config.GetPropBaseConfig(knapsack.PropType).ImgUrl
 		*kps = append(*kps, *temp)
 	}
 	return kps
@@ -399,7 +400,7 @@ func SendGoods(userID, amount int) {
 	}
 }
 
-func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way, matchID string){
+func AddSundries(propType int, ud *player.UserData, amount float64, opt int, way, matchID string) {
 	switch propType {
 	case values.PropTypeAward:
 		WriteFlowData(ud.UserID, amount, FlowTypeSign, "", "", []int{})

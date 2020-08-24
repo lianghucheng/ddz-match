@@ -22,7 +22,7 @@ const (
 	MatchAward   = "赛事奖励" // 赛事奖励
 	Backstage    = "后台发放" // 后台发放
 	CouponFrag   = "点券碎片" // 点券碎片
-	Mail 		 = "邮件"
+	Mail         = "邮件"
 )
 
 // ItemLog 物品日志
