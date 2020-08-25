@@ -11,6 +11,7 @@ import (
 	"ddz/msg"
 	"ddz/utils"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/name5566/leaf/timer"
@@ -142,8 +143,9 @@ func (game *LandlordMatchRoom) initRoom() {
 	case 3:
 		game.cards = utils.Shuffle(poker.LandlordAllCards)
 	}
+	dealerID := rand.Intn(game.rule.MaxPlayers)
 	// 确定庄家
-	game.dealerUserID = game.PositionUserIDs[0]
+	game.dealerUserID = game.PositionUserIDs[dealerID]
 	if game.finisherUserID > 0 {
 		game.dealerUserID = game.finisherUserID
 	}

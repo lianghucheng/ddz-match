@@ -46,6 +46,7 @@ func connectToActivityServer() {
 		return
 	}
 	activityClient = client
+	// log.Debug("call data:%v", dailyDataQueue.list.Front())
 	for dailyDataQueue.list.Front() != nil {
 		e := dailyDataQueue.list.Front()
 		req := e.Value.(*RPCReq)
@@ -59,36 +60,44 @@ func connectToActivityServer() {
 
 // PushData 当请求失败时,存在队列中,请求成功后再一次发送
 func PushData(data interface{}) {
+	log.Debug("pushData:%v", data)
 	game.GetSkeleton().Go(func() {
 		dailyDataQueue.RWC <- true
 		defer func() {
 			<-dailyDataQueue.RWC
 		}()
 		dailyDataQueue.list.PushBack(data)
+		log.Debug("data:%v", dailyDataQueue.list.Front())
 	}, nil)
 }
 
 // CallActivityServer 向活动服发送数据
 func CallActivityServer(method string, send interface{}, reply *RPCRet) error {
-	req := RPCReq{
+	log.Debug("call activity:%v,%v,%v", method, send, reply)
+	req := &RPCReq{
 		Method: method,
 		Send:   send,
+	}
+	push := false
+	if reply == nil {
+		push = true
+		reply = &RPCRet{}
 	}
 	if activityClient == nil {
 		if connectTimer == nil {
 			connectToActivityServer()
 		}
-		if reply == nil {
+		if push {
 			PushData(req)
 		}
 		return errors.New("call client err")
 	}
 	err := activityClient.Call(method, send, reply)
-	if err != nil {
-		if reply == nil {
+	if err == rpc.ErrShutdown {
+		if push {
 			PushData(req)
 		}
-		if err == rpc.ErrShutdown {
+		if connectTimer == nil {
 			connectToActivityServer()
 		}
 		log.Error("err:%v", err)
