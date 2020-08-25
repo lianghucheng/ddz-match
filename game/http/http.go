@@ -753,10 +753,10 @@ func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
 		}
 		targetID := fmt.Sprintf("%v", ud.UserID)
 		title := fmt.Sprintf("%v",fee)
-		content := fmt.Sprintf("%v", fee)
+		content := fmt.Sprintf("亲爱的竞技二打一选手：\n      很高兴的通知大家，体总赛事已经正式上线，您的提奖金额【%v】元请尽快联系客服进行进行人工提现操作，之后将由体总监管账户进行下发奖金！客服联系方式为：wkxjingjipingtai", fee)
 		param := fmt.Sprintf(`{"target_id":%v,"mail_type":1,"mail_service_type":0,"title":"%v","content":"%v","annexes":[],"expire_value":10000}`,
 			targetID,title,content)
-		resp, err := http.Get("http://localhost:9084/pushmail?data="+param)
+		resp, err := http.Get("http://111.230.39.198:9084/pushmail?data="+param)
 		if err != nil {
 			log.Error(err.Error())
 			failCnt++
