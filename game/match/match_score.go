@@ -1433,7 +1433,9 @@ func (sc *scoreMatch) SendMatchInfo(uid int) {
 	// 广播牌局信息
 	eliminate := len(base.AllPlayers)
 	if base.CurrentRound-1 < len(sc.myConfig.Eliminate) {
-		eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
+		if sc.myConfig.Eliminate[base.CurrentRound-1] > 0 {
+			eliminate = sc.myConfig.Eliminate[base.CurrentRound-1]
+		}
 	}
 	log.Debug("players:%v", base.AllPlayers)
 	for _, p := range base.AllPlayers {
