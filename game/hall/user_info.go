@@ -146,7 +146,7 @@ func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID 
 		CreateTime: time.Now().Unix(),
 		Before:     before,
 		After:      after,
-		OptType:    db.MatchOpt,
+		OptType:    opt,
 		MatchID:    matchID,
 	})
 }
@@ -185,7 +185,7 @@ func AddRedScore(uid, accountID int, amount float64, opt int, way string, matchI
 					CreateTime: time.Now().Unix(),
 					Before:     before,
 					After:      after,
-					OptType:    db.MatchOpt,
+					OptType:    opt,
 					MatchID:    matchID,
 				})
 				player.UpdateUserData(uid, bson.M{"$set": bson.M{"sportcenter": sportCenter}})

@@ -65,7 +65,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 
 	if changeAmount > config.GetCfgNormal().AmountLimit {
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteWithdrawFinalFlowData)
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteFlowData)
 	} else {
 		if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
 			log.Error(err.Error())
@@ -90,7 +90,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		//	sendAwardInfo(user)
 		//	UpdateUserAfterTaxAward(user)
 		//})
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteFlowData)
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteWithdrawFinalFlowData)
 	}
 }
 
