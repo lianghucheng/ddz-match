@@ -20,6 +20,11 @@ func DailySign(user *player.User) {
 
 	ud.DailySign = true
 	cfgDs := config.GetCfgDailySignItem()
+
+	if !user.GetUserData().NotNewDailySign {
+		cfgDs = config.GetCfgNewUserDailySignItem()
+	}
+
 	item := (*cfgDs)[ud.SignTimes]
 	ud.SignTimes++
 	game.GetSkeleton().Go(func() {

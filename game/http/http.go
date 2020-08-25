@@ -562,6 +562,7 @@ func handlePushMail(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	data := r.FormValue("data")
+	log.Debug("调试发送邮件   %v", data)
 	param := new(hall.MailBoxParam)
 	if err := json.Unmarshal([]byte(data), param); err != nil {
 		log.Error(err.Error())
