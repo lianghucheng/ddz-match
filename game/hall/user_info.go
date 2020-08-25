@@ -126,7 +126,7 @@ func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
 
 // AddFragment 碎片奖励
 func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID string) {
-	data := KnapsackProp{}
+	data := &KnapsackProp{}
 	data.Accountid = accountID
 	data.PropType = values.PropTypeCouponFrag
 	data.ReadByAidPtype()
@@ -134,7 +134,9 @@ func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID 
 	data.Num += int(amount)
 	after := int64(data.Num)
 
-	data.Save()
+	AddPropAmount(data.PropType, accountID, int(amount))
+
+	// data.Save()
 	// hall.AddPropAmount(config.PropIDCouponFrag, user.BaseData.UserData.AccountID, int(amount))
 	db.InsertItemLog(db.ItemLog{
 		UID:        accountID,

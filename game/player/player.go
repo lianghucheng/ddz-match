@@ -347,6 +347,8 @@ func (u *User) GetDailyWelfareInfo() {
 			})
 		}()
 		if err != nil {
+			reply.Code = 1
+			reply.Desc = "请求失败请重试!"
 			return
 		}
 		if err := json.Unmarshal([]byte(reply.Data.(string)), &info); err != nil {

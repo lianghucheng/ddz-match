@@ -958,9 +958,10 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 		one := strings.Split(awardStr, ",")
 		for _, oneAward := range one {
 			log.Debug("award oneAward:%v,type:%v", oneAward, values.GetAwardType(oneAward))
-			awardAmount := values.ParseAward(oneAward) * 0.8
+			awardAmount := values.ParseAward(oneAward)
 			// 现金奖励
 			if values.GetAwardType(oneAward) == values.Money {
+				awardAmount *= 0.8
 				// 体总赛事需要对方给了发奖状态才会发奖
 				if base.NormalCofig.MatchSource == MatchSourceSportsCenter {
 					awardAmount = 0
@@ -1043,7 +1044,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 		}
 		db.InsertMatchRecord(record)
 		rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
-			rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, &rpc.RPCRet{})
+			rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, nil)
 	}, nil)
 }
 
