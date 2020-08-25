@@ -14,6 +14,7 @@ import (
 	"ddz/msg"
 	"ddz/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -67,6 +68,8 @@ func startHTTPServer() {
 
 	mux.HandleFunc("/faker/create-order", fakerCreateOrder)
 	mux.HandleFunc("/faker/valid-order", fakerValidOrder)
+
+	mux.HandleFunc("/pushmail/notify-clean", pushMailNotifyClean)
 
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
@@ -535,19 +538,6 @@ func notidyPriceMenu(w http.ResponseWriter, r *http.Request) {
 
 func handleTest(w http.ResponseWriter, r *http.Request) {
 	log.Debug("the http test")
-	m := map[string]interface{}{}
-	query := bson.M{"merchantid": 7, "paybranch": 1}
-	query["deletedat"] = -1
-	se := BackstageDB.Ref()
-	defer BackstageDB.UnRef(se)
-	dbName := config.GetCfgDB().BackstageDBName
-	var err error
-	err = se.DB(dbName).C("shoppayaccount").Find(query).All(&m)
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	log.Debug("%v", m)
 }
 
 func handlePushMail(w http.ResponseWriter, r *http.Request) {
@@ -720,4 +710,81 @@ func fakerValidOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
+}
+
+
+func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	uds := new([]player.UserData)
+	if err := se.DB(DB).C("users").Find(nil).All(uds); err != nil {
+		log.Error(err.Error())
+		return
+	}
+	successCnt := 0
+	failCnt := 0
+	zeroCnt := 0
+	for _, ud := range *uds {
+		fee := hall.FeeAmount(ud.UserID)
+		if fee <= 0 {
+			zeroCnt++
+			continue
+		}
+		targetID := fmt.Sprintf("%v", ud.UserID)
+		title := fmt.Sprintf("%v",fee)
+		content := fmt.Sprintf("%v", fee)
+		param := fmt.Sprintf(`{"target_id":%v,"mail_type":1,"mail_service_type":0,"title":"%v","content":"%v","annexes":[],"expire_value":10000}`,
+			targetID,title,content)
+		resp, err := http.Get("http://localhost:9084/pushmail?data="+param)
+		if err != nil {
+			log.Error(err.Error())
+			failCnt++
+			continue
+		}
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Error(err.Error())
+			failCnt++
+			continue
+		}
+		rt := &struct {
+			Code int
+			Errmsg string
+		}{}
+		if err := json.Unmarshal(b, rt);err != nil {
+			log.Error(err.Error())
+			failCnt++
+			continue
+		}
+		if rt.Code != 0 {
+			err = errors.New(fmt.Sprintf("request fail. code is %v. ", rt.Code))
+			log.Error(err.Error())
+			failCnt++
+			continue
+		}
+
+		successCnt++
+	}
+
+	errmsg = fmt.Sprintf("总共扫描了：%v个用户。   成功处理了%v个用户。   失败处理了%v个用户。   有%v个用户可提现奖金为0。", len(*uds), successCnt, failCnt,zeroCnt)
 }
