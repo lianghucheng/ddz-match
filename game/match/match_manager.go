@@ -276,6 +276,7 @@ func (sc *ScoreConfig) GetAwardItem() {
 	}
 	sc.Award = awards
 	log.Debug("match award:%v", sc.Award)
+	// log.Debug("items:%v", getNoneScoreAward(sc.Award))
 }
 
 // SendMatchDetail 发送赛事详情
