@@ -77,6 +77,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 			changeGameWithDraw(user, changeAmount, fee, flowIDs,err.Error(), WriteWithdrawFinalFlowData2)
 			return
 		}
+		user.GetUserData().IsWithdraw = true
 		//ud := user.GetUserData()
 		//ud.Fee -= changeAmount
 		//user.WriteMsg(&msg.S2C_WithDraw{

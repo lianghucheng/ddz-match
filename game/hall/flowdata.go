@@ -155,7 +155,7 @@ func WriteWithdrawFinalFlowData2(uid int, amount float64, flowType int, matchTyp
 	flowData := new(FlowData)
 	flowData.Userid = ud.UserID
 
-	flowData.ChangeAmount = 0
+	flowData.ChangeAmount = utils.Decimal(amount)
 	flowData.FlowType = flowType
 	flowData.MatchType = matchType
 	flowData.MatchID = matchID
