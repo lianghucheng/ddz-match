@@ -73,6 +73,9 @@ type UserMail struct {
 
 func ReadMail(mid int64) {
 	mail := readUserMailByID(mid)
+	if mail.Status != NotReadUserMail {
+		return
+	}
 	mail.Status = ReadUserMail
 	mail.ExpiredAt = time.Now().Unix() + int64(mail.ExpireValue*86400)
 	log.Debug("邮件过期时间：%v", mail.ExpiredAt)

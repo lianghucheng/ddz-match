@@ -65,7 +65,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 
 	if changeAmount > config.GetCfgNormal().AmountLimit {
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteFlowData)
+		changeGameWithDraw(user, changeAmount, fee, flowIDs,"", WriteFlowData)
 	} else {
 		if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
 			log.Error(err.Error())
@@ -74,8 +74,10 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 				Error:  msg.ErrWithDrawFail,
 				ErrMsg: err.Error(),
 			})
+			changeGameWithDraw(user, changeAmount, fee, flowIDs,err.Error(), WriteWithdrawFinalFlowData2)
 			return
 		}
+		user.GetUserData().IsWithdraw = true
 		//ud := user.GetUserData()
 		//ud.Fee -= changeAmount
 		//user.WriteMsg(&msg.S2C_WithDraw{
@@ -90,11 +92,11 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		//	sendAwardInfo(user)
 		//	UpdateUserAfterTaxAward(user)
 		//})
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, WriteWithdrawFinalFlowData)
+		changeGameWithDraw(user, changeAmount, fee, flowIDs,"提现成功", WriteWithdrawFinalFlowData)
 	}
 }
 
-func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []int, writeFlowData func(uid int, amount float64, flowType int, matchType, matchID string, flows []int)) {
+func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []int,desc string , writeFlowData func(uid int, amount float64, flowType int, matchType, matchID string, flows []int,desc string)) {
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
 	user.WriteMsg(&msg.S2C_WithDraw{
@@ -104,7 +106,7 @@ func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []
 	})
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(ud)
-		writeFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs)
+		writeFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs,desc)
 	}, func() {
 		sendAwardInfo(user)
 		UpdateUserAfterTaxAward(user)

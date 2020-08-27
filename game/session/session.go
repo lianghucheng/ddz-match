@@ -268,7 +268,7 @@ func rpcAddAward(args []interface{}) {
 		log.Error("unknown user:%+v", m)
 		return
 	}
-	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{})
+	hall.WriteFlowData(m.Uid, m.Amount, hall.FlowTypeGift, "", "", []int{}, "")
 	hall.AddFee(ud.UserID, ud.AccountID, m.Amount, db.PlatformOpt, db.Backstage, "")
 
 	// if user, ok := UserIDUsers[m.Uid]; ok {
