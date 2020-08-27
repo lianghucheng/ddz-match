@@ -328,11 +328,12 @@ func optUser(args []interface{}) {
 		return
 	}
 	if user, ok := UserIDUsers[data.UID]; ok && data.Opt == -1 {
+		user.BaseData.UserData.Role = RoleBlack
 		user.Close()
 	}
-	skeleton.Go(func() {
-		UpdateUserData(data.UID, bson.M{"$set": bson.M{"role": data.Opt}})
-	}, nil)
+	// skeleton.Go(func() {
+	// 	UpdateUserData(data.UID, bson.M{"$set": bson.M{"role": data.Opt}})
+	// }, nil)
 }
 
 func clearInfo(args []interface{}) {
