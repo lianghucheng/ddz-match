@@ -164,6 +164,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 	order.ID, _ = MongoDBNextSeq("edyorder")
 	order.Accountid = a
 	order.Merchant = values.ZrddzAliPay
+	order.Status = true
 	order.PayStatus = 1
 	Save("edyorder", order, bson.M{"_id": order.ID})
 	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
