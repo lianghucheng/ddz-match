@@ -11,6 +11,7 @@ func init() {
 	Processor.Register(&S2C_GetDailyWelfareInfo{})
 	Processor.Register(&C2S_DrawDailyWelfareInfo{})
 	Processor.Register(&S2C_DrawDailyWelfareInfo{})
+	Processor.Register(&S2C_HorseRaceLamp{})
 }
 
 type C2S_Knapsack struct {
@@ -91,4 +92,15 @@ type OneItemAward struct {
 	AwardAmount  int    `bson:"AwardAmount"`  // 奖励数量
 	TargetAmount int64  `bson:"TargetAmount"` // 达成条件
 	Status       int    `bson:"Status"`       // 领取状态1未完成,2已完成未领取,3已领取
+}
+
+type HorseRaceLamp struct {
+	UserName string
+	MatchName string
+	Amount float64
+}
+
+type S2C_HorseRaceLamp struct {
+	Template string
+	//Info []map[string]string
 }

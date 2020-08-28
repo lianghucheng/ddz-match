@@ -145,6 +145,8 @@
     }
   ],
   "CfgNormal": {
-    "AmountLimit": 10000.0
+    "AmountLimit": 10000.0,
+    "Templates": ["<color=#FFFFFF>恭喜 </color><color=#FFE749>%v</color><color=#FFFFFF> 在 </color><color=#FFE749>%v</color><color=#FFFFFF> 中实力赢得 </color><color=#FFE749>%v</color><color=#FFFFFF> 奖金，真是慕煞旁人！ </color>",
+      "<color=#FFFFFF>玩家 </color><color=#FFE749>%v</color><color=#FFFFFF> 在 </color><color=#FFE749>%v</color><color=#FFFFFF> 中获得 </color><color=#FFE749>%v</color><color=#FFFFFF> 奖金！恭喜！恭喜！ </color>"]
   }
 }

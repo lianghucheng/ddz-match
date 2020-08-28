@@ -120,6 +120,7 @@ type CfgLianHang struct {
 
 type CfgNormal struct {
 	AmountLimit float64
+	Templates []string
 }
 
 var cfg *Config

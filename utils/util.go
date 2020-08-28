@@ -247,3 +247,25 @@ func Transfer(src interface{}, dir interface{}) error {
 	}
 	return nil
 }
+
+func TransferMapStringSlice(data interface{}) ([]map[string]string, error) {
+	rt := []map[string]string{}
+	b1, err := json.Marshal(data)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(b1, &m); err != nil {
+		log.Debug(err.Error())
+		err.Error()
+		return nil, err
+	}
+	for k, v := range m {
+		temp := make(map[string]string)
+		temp[k] = fmt.Sprintf("%v", v)
+		rt = append(rt, temp)
+	}
+
+	return rt, nil
+}
