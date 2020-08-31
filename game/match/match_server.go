@@ -9,16 +9,18 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/name5566/leaf/timer"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // 保存所有赛事列表
 var (
-	MatchList        = map[string]*BaseMatch{}
-	UserIDMatch      = map[int]*BaseMatch{}
-	MatchManagerList = map[string]values.MatchManager{}
-	MatchConfigQueue = map[string]*values.NormalCofig{} // 后台修改赛事的队列，在比赛开始后下一场生效
+	MatchList              = map[string]*BaseMatch{}
+	UserIDMatch            = map[int]*BaseMatch{}
+	MatchManagerList       = map[string]values.MatchManager{}
+	MatchConfigQueue       = map[string]*values.NormalCofig{} // 后台修改赛事的队列，在比赛开始后下一场生效
+	MatchPlayersCountTimer *timer.Timer
 )
 
 func init() {
@@ -28,6 +30,8 @@ func init() {
 	if err := initMatchTypeConfig(); err != nil {
 		log.Fatal("init match config fail,err:%v", err)
 	}
+	// 启动赛事计时器,一段时间修改假人数
+	RefreshPlayersCount()
 }
 
 // match
@@ -138,7 +142,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				EnterFee:     float64(info.EnterFee),
 				ConDes:       info.MatchDesc,
 				JoinNum:      len(info.AllSignInPlayers),
-				AllPlayerNum: info.AllPlayingPlayersCount,
+				AllPlayerNum: v.GetAllPlayersCount(),
 				StartTime:    sTime,
 				StartType:    info.StartType,
 				MatchType:    info.MatchType,
@@ -148,8 +152,8 @@ func GetMatchManagerInfo(opt int) interface{} {
 		return raceInfo
 	case 2: // 赛事列表信息推送
 		list := []msg.OneMatch{}
-		for _, m := range matchManager {
-			m := m.GetNormalConfig()
+		for _, mm := range matchManager {
+			m := mm.GetNormalConfig()
 			if m.State != Signing {
 				continue
 			}
@@ -167,7 +171,7 @@ func GetMatchManagerInfo(opt int) interface{} {
 				MatchID:      m.MatchID,
 				MatchName:    m.MatchName,
 				SignInNum:    len(m.AllSignInPlayers),
-				AllPlayerNum: m.AllPlayingPlayersCount,
+				AllPlayerNum: mm.GetAllPlayersCount(),
 				Recommend:    m.Recommend,
 				MaxPlayer:    m.MaxPlayer,
 				EnterFee:     m.EnterFee,
@@ -224,3 +228,43 @@ func BroadcastMatchInfo() {
 		})
 	}
 }
+
+// RefreshPlayersCount 刷新人数
+func RefreshPlayersCount() {
+	// 首先获取当前时间距离整数点时间差
+	_, m, s := time.Now().Clock()
+	next := (60-m-1)*60 + (60 - s)
+	setFakePlayersCount()
+	log.Debug("next:%v", next)
+	game.GetSkeleton().AfterFunc(time.Duration(next)*time.Second, RefreshPlayersCount)
+}
+
+func setFakePlayersCount() {
+	h, _, _ := time.Now().Clock()
+	for _, v := range MatchManagerList {
+		c := v.GetNormalConfig()
+		if c.LimitPlayer == 3 || c.LimitPlayer == 6 || c.LimitPlayer == 9 {
+			index := c.LimitPlayer/3 - 1
+			v.RefreshFakePlayersCount(FakePlayers[index][h])
+		}
+	}
+}
+
+// GetFakePlayersCount 获取赛事假人数
+func GetFakePlayersCount() int {
+	count := 0
+	for _, v := range MatchManagerList {
+		c := v.GetNormalConfig()
+		count += c.FakePlayers
+	}
+	return count
+}
+
+// 假人数
+var (
+	FakePlayers = [][]int{
+		[]int{6, 3, 3, 3, 3, 3, 3, 3, 6, 6, 3, 3, 6, 6, 3, 12, 6, 12, 12, 6, 9, 6, 6, 3},
+		[]int{0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 13, 18, 13, 13, 17, 12, 6, 19, 17, 12, 12, 18, 12, 6},
+		[]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 0, 9, 19, 9, 9, 9, 20, 9, 9, 0},
+	}
+)

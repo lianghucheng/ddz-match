@@ -83,6 +83,7 @@ type ScoreConfig struct {
 	ReadyTime              int64        `bson:"-"` // 比赛开始时间
 	StartTimer             *timer.Timer `bson:"-"` // 上架倒计时
 	DownShelfTimer         *timer.Timer `bson:"-"` // 下架倒计时
+	FakePlayers            int          `bson:"-"` // 假的赛事总人数
 }
 
 type sConfig struct {
