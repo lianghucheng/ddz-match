@@ -6,6 +6,7 @@ import (
 	. "ddz/game/db"
 	"ddz/game/hall"
 	"ddz/game/http"
+	"ddz/game/match"
 	. "ddz/game/match"
 	. "ddz/game/player"
 	. "ddz/game/room"
@@ -183,7 +184,7 @@ func logout(user *User) {
 		}
 	}
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: CalcOnlineCnt(UserIDUsers),
+		Num: CalcOnlineCnt(UserIDUsers) + match.GetFakePlayersCount(),
 	})
 }
 
@@ -252,7 +253,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendPriceMenu(user, hall.SendSingle)
 	hall.SendPayAccount(user, hall.SendSingle)
 	Broadcast(&msg.S2C_OnlineUserNum{
-		Num: CalcOnlineCnt(UserIDUsers),
+		Num: CalcOnlineCnt(UserIDUsers) + match.GetFakePlayersCount(),
 	})
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {

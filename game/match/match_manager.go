@@ -148,7 +148,7 @@ func (sc *ScoreConfig) onSign(uid int) {
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId:      sc.MatchID,
 		Count:        len(sc.AllSignInPlayers),
-		AllPlayerNum: sc.AllPlayingPlayersCount,
+		AllPlayerNum: sc.GetAllPlayersCount(),
 	})
 
 	// 赛事结束
@@ -195,7 +195,7 @@ func (sc *ScoreConfig) SignOut(uid int, matchID string) {
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId:      sc.MatchID,
 		Count:        len(sc.AllSignInPlayers),
-		AllPlayerNum: sc.AllPlayingPlayersCount,
+		AllPlayerNum: sc.GetAllPlayersCount(),
 	})
 
 	// 如果当前赛事玩家全部退出，那么检查一次是否有新赛事配置更新
@@ -332,7 +332,7 @@ func (sc *ScoreConfig) End(matchID string) {
 	Broadcast(&msg.S2C_MatchNum{
 		MatchId:      sc.MatchID,
 		Count:        len(sc.AllSignInPlayers),
-		AllPlayerNum: sc.AllPlayingPlayersCount,
+		AllPlayerNum: sc.GetAllPlayersCount(),
 	})
 
 	// 如果是后台下架赛事,赛事使用次数返回
@@ -602,4 +602,15 @@ func (sc *ScoreConfig) Delete() {
 
 	// 刷新数据库
 	sc.Save()
+}
+
+// GetAllPlayersCount 获取赛事总人数(包括假人数)
+func (sc *ScoreConfig) GetAllPlayersCount() int {
+	return sc.AllPlayingPlayersCount + sc.FakePlayers
+}
+
+// RefreshFakePlayersCount 刷新赛事总人数(包括假人数)
+func (sc *ScoreConfig) RefreshFakePlayersCount(count int) {
+	log.Debug("match %v refresh fake %v", sc.MatchName, count)
+	sc.FakePlayers = count
 }

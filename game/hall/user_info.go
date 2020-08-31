@@ -124,6 +124,41 @@ func AddFee(uid, accountID int, amount float64, opt int, way, matchID string) {
 	}
 }
 
+// AddFeeWithTime 奖金变动
+func AddFeeWithTime(uid, accountID int, amount float64, opt int, way, matchID string, timestamp int64) {
+	user, ok := player.UserIDUsers[uid]
+	var before, after int64
+	changeAmount := FeeAmount(uid)
+	// 玩家在线
+	if ok {
+		user.GetUserData().Fee = changeAmount
+		// game.GetSkeleton().Go(func() {
+		// 	player.SaveUserData(user.GetUserData())
+		// }, nil)
+		UpdateUserAfterTaxAward(user)
+	}
+	after = int64(changeAmount * 100)
+	before = after - int64(amount*100)
+	if amount != 0 {
+		game.GetSkeleton().Go(
+			func() {
+				data := db.ItemLog{
+					UID:        accountID,
+					Item:       "奖金",
+					Way:        way,
+					Amount:     int64(amount * 100),
+					Before:     before,
+					After:      after,
+					OptType:    opt,
+					CreateTime: timestamp,
+					MatchID:    matchID,
+				}
+				db.InsertItemLog(data)
+				player.UpdateUserData(uid, bson.M{"$set": bson.M{"fee": changeAmount}})
+			}, nil)
+	}
+}
+
 // AddFragment 碎片奖励
 func AddFragment(uid, accountID int, amount int64, opt int, way string, matchID string) {
 	data := &KnapsackProp{}

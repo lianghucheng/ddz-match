@@ -70,6 +70,7 @@ func addMatch(args []interface{}) {
 			// NewScoreManager(sConfig)
 			sConfig.NewManager()
 		}
+		setFakePlayersCount()
 	default:
 		code = 1
 		desc = "新增赛事未知，请重新确认！"

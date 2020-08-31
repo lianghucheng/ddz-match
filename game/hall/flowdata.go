@@ -122,6 +122,32 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID str
 	})
 }
 
+func WriteFlowDataWithTime(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string, timestamp int64) {
+	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
+	ud := player.ReadUserDataByID(uid)
+	flowData := new(FlowData)
+	flowData.Userid = ud.UserID
+
+	flowData.ChangeAmount = utils.Decimal(amount)
+	flowData.FlowType = flowType
+	flowData.MatchType = matchType
+	flowData.MatchID = matchID
+	flowData.CreatedAt = timestamp
+	flowData.FlowIDs = flows
+	flowData.Realname = ud.RealName
+	flowData.TakenFee = ud.TakenFee
+	flowData.AtferTaxFee = ud.Fee
+	flowData.Accountid = ud.AccountID
+	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
+	if flowType == FlowTypeWithDraw {
+		flowData.Status = FlowDataStatusAction
+	}
+	flowData.save()
+	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo", &msg.RPC_UpdateAwardInfo{
+		Uid: uid,
+	})
+}
+
 func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string) {
 	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
 	ud := player.ReadUserDataByID(uid)

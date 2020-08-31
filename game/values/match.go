@@ -47,9 +47,11 @@ type MatchManager interface {
 	CloseMatch()
 	SetStartTimer(timer *timer.Timer)
 	SetDownShelfTimer(timer *timer.Timer)
-	DownShelf() // 下架
-	Shelf()     // 上架
-	Delete()    // 删除
+	DownShelf()                        // 下架
+	Shelf()                            // 上架
+	Delete()                           // 删除
+	RefreshFakePlayersCount(count int) // 刷新假人数
+	GetAllPlayersCount() int
 }
 
 // MatchPlayer 比赛玩家对象
@@ -100,6 +102,7 @@ type NormalCofig struct {
 	Round                  int   // 几局制 '添加赛事时的必填字段'
 	Card                   int   // 几副制 '添加赛事时的必填字段'
 	LimitPlayer            int   // 比赛开始的最少人数 '添加赛事时的必填字段'
+	FakePlayers            int   // 假的赛事总人数
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等
