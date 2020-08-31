@@ -26,7 +26,7 @@ func WithDraw(user *player.User) {
 	withDraw(user, edy_api.WithDrawAPI)
 }
 
-func withDraw(user *player.User, callWithDraw func(userid int, amount float64) error) {
+func withDraw(user *player.User, callWithDraw func(userid int, amount float64) (map[string]interface{}, error)) {
 	fee := utils.Decimal(FeeAmount(user.UID()))
 	if callWithDraw == nil {
 		user.WriteMsg(&msg.S2C_WithDraw{
@@ -65,16 +65,17 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 	}
 
 	if changeAmount > config.GetCfgNormal().AmountLimit {
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, "", WriteFlowData)
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, nil, WriteFlowData)
 	} else {
-		if err := callWithDraw(user.BaseData.UserData.UserID, changeAmount); err != nil {
+		data, err := callWithDraw(user.BaseData.UserData.UserID, changeAmount)
+		if err != nil {
 			log.Error(err.Error())
 			user.WriteMsg(&msg.S2C_WithDraw{
 				Amount: fee,
 				Error:  msg.ErrWithDrawFail,
 				ErrMsg: err.Error(),
 			})
-			changeGameWithDraw(user, changeAmount, fee, flowIDs, err.Error(), WriteWithdrawFinalFlowData2)
+			changeGameWithDraw(user, changeAmount, fee, flowIDs, data, WriteWithdrawFinalFlowData2)
 			return
 		}
 		user.GetUserData().IsWithdraw = true
@@ -92,11 +93,12 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) e
 		//	sendAwardInfo(user)
 		//	UpdateUserAfterTaxAward(user)
 		//})
-		changeGameWithDraw(user, changeAmount, fee, flowIDs, "提现成功", WriteWithdrawFinalFlowData)
+		data["resp_msg"] = "提现成功"
+		changeGameWithDraw(user, changeAmount, fee, flowIDs, data, WriteWithdrawFinalFlowData)
 	}
 }
 
-func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []int, desc string, writeFlowData func(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string)) {
+func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []int, data map[string]interface{}, writeFlowData func(uid int, amount float64, flowType int, matchType, matchID string, flows []int, data map[string]interface{})) {
 	ud := user.GetUserData()
 	ud.Fee -= changeAmount
 	user.WriteMsg(&msg.S2C_WithDraw{
@@ -106,7 +108,7 @@ func changeGameWithDraw(user *player.User, changeAmount, fee float64, flowIDs []
 	})
 	game.GetSkeleton().Go(func() {
 		player.SaveUserData(ud)
-		writeFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs, desc)
+		writeFlowData(user.UID(), changeAmount, FlowTypeWithDraw, "", "", flowIDs, data)
 	}, func() {
 		sendAwardInfo(user)
 		UpdateUserAfterTaxAward(user)

@@ -988,7 +988,7 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 				}
 				// moneyAwardCount += utils.Decimal(awardAmount * 0.8)
 				hall.WriteFlowData(uid, utils.Decimal(awardAmount), hall.FlowTypeAward,
-					base.NormalCofig.MatchType, base.NormalCofig.SonMatchID, []int{}, "")
+					base.NormalCofig.MatchType, base.NormalCofig.SonMatchID, []int{}, nil)
 				hall.AddFee(uid, player.accountID, utils.Decimal(awardAmount),
 					db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", base.NormalCofig.MatchName), base.SonMatchID)
 			} else if values.GetAwardType(oneAward) == values.Coupon { // 点券奖励

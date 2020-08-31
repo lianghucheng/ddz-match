@@ -100,7 +100,7 @@ func ReadUserDataByID(id int) *UserData {
 	return userData
 }
 
-func WithDrawAPI(userid int, amount float64) error {
+func WithDrawAPI(userid int, amount float64) (map[string]interface{}, error) {
 	ud := ReadUserDataByID(userid)
 	req := new(PlayerCashoutReq)
 	req.Cp_id = base.CpID
@@ -108,9 +108,9 @@ func WithDrawAPI(userid int, amount float64) error {
 	req.Player_id_number = ud.IDCardNo
 	data, err := PlayerCashout(*req)
 	if err != nil {
-		return errors.New(data["resp_msg"].(string))
+		return nil, errors.New(data["resp_msg"].(string))
 	}
-	return nil
+	return data, nil
 }
 
 type PlayerCashoutReq struct {

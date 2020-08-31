@@ -52,6 +52,7 @@ type FlowData struct {
 	AtferTaxFee  float64
 	Desc         string
 	PassStatus   int //1是已通过，0是未通过
+	ActMoney     string
 }
 
 func (ctx *FlowData) save() {
@@ -96,7 +97,7 @@ func (ctx *FlowData) readAllNormal() *[]FlowData {
 	return rt
 }
 
-func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string) {
+func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, data map[string]interface{}) {
 	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
 	ud := player.ReadUserDataByID(uid)
 	flowData := new(FlowData)
@@ -148,7 +149,7 @@ func WriteFlowDataWithTime(uid int, amount float64, flowType int, matchType, mat
 	})
 }
 
-func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string) {
+func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, data map[string]interface{}) {
 	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
 	ud := player.ReadUserDataByID(uid)
 	flowData := new(FlowData)
@@ -165,7 +166,8 @@ func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.PassStatus = 1
-	flowData.Desc = desc
+	flowData.Desc = data["resp_msg"].(string)
+	flowData.ActMoney = data["act_money"].(string)
 	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
 	flowData.Status = FlowDataStatusOver
 	flowData.save()
@@ -175,7 +177,7 @@ func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType
 	})
 }
 
-func WriteWithdrawFinalFlowData2(uid int, amount float64, flowType int, matchType, matchID string, flows []int, desc string) {
+func WriteWithdrawFinalFlowData2(uid int, amount float64, flowType int, matchType, matchID string, flows []int, data map[string]interface{}) {
 	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
 	ud := player.ReadUserDataByID(uid)
 	flowData := new(FlowData)
@@ -192,7 +194,7 @@ func WriteWithdrawFinalFlowData2(uid int, amount float64, flowType int, matchTyp
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.PassStatus = 1
-	flowData.Desc = desc
+	flowData.Desc = data["resp_msg"].(string)
 	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
 	flowData.Status = FlowDataStatusBack
 	flowData.save()
