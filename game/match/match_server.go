@@ -243,6 +243,9 @@ func setFakePlayersCount() {
 	h, _, _ := time.Now().Clock()
 	for _, v := range MatchManagerList {
 		c := v.GetNormalConfig()
+		if !c.ShowHall || c.State != Signing {
+			continue
+		}
 		if c.LimitPlayer == 3 || c.LimitPlayer == 6 || c.LimitPlayer == 9 {
 			index := c.LimitPlayer/3 - 1
 			v.RefreshFakePlayersCount(FakePlayers[index][h])
