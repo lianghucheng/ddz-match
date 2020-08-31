@@ -109,7 +109,7 @@ func SendDailySignItems(user *player.User) {
 			ImgUrl: cf((*cfgDs)[i].PropType).ImgUrl,
 		})
 	}
-	if !user.GetUserData().DailySign && ud.SignTimes < 7{
+	if !user.GetUserData().DailySign && ud.SignTimes < 7 {
 		dailySignItems[ud.SignTimes].Status = msg.SignAccess
 	}
 	user.WriteMsg(&msg.S2C_DailySignItems{

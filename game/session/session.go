@@ -45,6 +45,7 @@ func init() {
 	skeleton.RegisterChanRPC("UpdateHeadImg", rpcUpdateHeadImg)
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
 	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
+	skeleton.RegisterChanRPC("UpdateBankCardNo", rpcUpdateBankCardNo)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -549,4 +550,20 @@ func rpcSendPayAccount(args []interface{}) {
 	m := args[0].(*msg.RPC_SendPayAccount)
 	_ = m
 	hall.SendPayAccount(nil, hall.SendBroacast)
+}
+
+func rpcUpdateBankCardNo(args []interface{}) {
+	if len(args) != 1 {
+		return
+	}
+	m := args[0].(*msg.RPC_UpdateBankCardNo)
+	user, ok := UserIDUsers[m.Userid]
+	if ok {
+		user.GetUserData().BankCardNo = m.BankCardNo
+		SaveUserData(user.GetUserData())
+	} else {
+		ud := ReadUserDataByID(m.Userid)
+		ud.BankCardNo = m.BankCardNo
+		SaveUserData(ud)
+	}
 }

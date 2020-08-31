@@ -70,6 +70,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/faker/valid-order", fakerValidOrder)
 
 	mux.HandleFunc("/pushmail/notify-clean", pushMailNotifyClean)
+	mux.HandleFunc("/bind/lianhanghao", handleLianHangHao)
 
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
@@ -714,7 +715,6 @@ func fakerValidOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-
 func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	code := 0
@@ -753,11 +753,11 @@ func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		targetID := fmt.Sprintf("%v", ud.UserID)
-		title := fmt.Sprintf("%v",fee)
+		title := fmt.Sprintf("%v", fee)
 		content := fmt.Sprintf("亲爱的竞技二打一选手：\n      很高兴的通知大家，体总赛事已经正式上线，您的提奖金额【%v】元请尽快联系客服进行进行人工提现操作，之后将由体总监管账户进行下发奖金！客服联系方式为：wkxjingjipingtai", fee)
 		param := fmt.Sprintf(`{"target_id":%v,"mail_type":1,"mail_service_type":0,"title":"%v","content":"%v","annexes":[],"expire_value":10000}`,
-			targetID,title,content)
-		resp, err := http.Get("http://111.230.39.198:9084/pushmail?data="+param)
+			targetID, title, content)
+		resp, err := http.Get("http://111.230.39.198:9084/pushmail?data=" + param)
 		if err != nil {
 			log.Error(err.Error())
 			failCnt++
@@ -770,10 +770,10 @@ func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		rt := &struct {
-			Code int
+			Code   int
 			Errmsg string
 		}{}
-		if err := json.Unmarshal(b, rt);err != nil {
+		if err := json.Unmarshal(b, rt); err != nil {
 			log.Error(err.Error())
 			failCnt++
 			continue
@@ -788,5 +788,75 @@ func pushMailNotifyClean(w http.ResponseWriter, r *http.Request) {
 		successCnt++
 	}
 
-	errmsg = fmt.Sprintf("总共扫描了：%v个用户。   成功处理了%v个用户。   失败处理了%v个用户。   有%v个用户可提现奖金为0。", len(*uds), successCnt, failCnt,zeroCnt)
+	errmsg = fmt.Sprintf("总共扫描了：%v个用户。   成功处理了%v个用户。   失败处理了%v个用户。   有%v个用户可提现奖金为0。", len(*uds), successCnt, failCnt, zeroCnt)
+}
+
+func handleLianHangHao(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	accountid := r.FormValue("accountid")
+	bankName := r.FormValue("bankName")
+	bankCardNo := r.FormValue("bankCardNo")
+	province := r.FormValue("province")
+	city := r.FormValue("city")
+	openingBank := r.FormValue("openingBank")
+	openingBankNo := r.FormValue("openingBankNo")
+
+	if accountid == "" || bankName == "" || bankCardNo == "" || province == "" || city == "" || openingBank == "" || openingBankNo == "" {
+		code = 1
+		errmsg = "参数为空"
+	}
+
+	aid, _ := strconv.Atoi(accountid)
+	se := MongoDB.Ref()
+	defer MongoDB.UnRef(se)
+	ud := new(player.UserData)
+	if err := se.DB(DB).C("users").Find(bson.M{"accountid": aid}).One(ud); err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	b := &hall.BankCard{
+		Userid:        ud.UserID,
+		BankName:      bankName,
+		BankCardNo:    bankCardNo,
+		Province:      province,
+		City:          city,
+		OpeningBank:   openingBank,
+		OpeningBankNo: openingBankNo,
+	}
+	if err := edy_api.BandBankCardAPI(aid, b.OpeningBankNo, b.BankName, b.BankCardNo); err != nil {
+		code = 1
+		errmsg = err.Error()
+		return
+	}
+	ud.BankCardNo = b.BankCardNo
+	if _, err := se.DB(DB).C("bankcard").Upsert(bson.M{"userid": b.Userid}, b); err != nil {
+		code = 1
+		errmsg = err.Error()
+		return
+	}
+
+	game.GetSkeleton().ChanRPCServer.Go("UpdateBankCardNo", &msg.RPC_UpdateBankCardNo{
+		Userid:     ud.UserID,
+		BankCardNo: ud.BankCardNo,
+	})
 }

@@ -113,7 +113,6 @@ func WithDrawAPI(userid int, amount float64) error {
 	return nil
 }
 
-
 type PlayerCashoutReq struct {
 	Cp_id            string `json:"cp_id"`
 	Player_id        string `json:"player_id"`

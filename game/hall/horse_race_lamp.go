@@ -11,18 +11,18 @@ import (
 	"time"
 )
 
-func init(){
+func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-func SendHorseRaceLamp(username , matchName ,award string){
-	log.Debug("发送跑马灯")
+func SendHorseRaceLamp(username, matchName, award string) {
+	log.Debug("发送跑马灯,%v", award)
 	if len(award) == 0 || values.GetMoneyAward(award) == 0 {
 		return
 	}
 
 	templates := config.GetCfgNormal().Templates
-	if len(templates) == 0{
+	if len(templates) == 0 {
 		log.Error("没有配置跑马灯模版")
 		return
 	}
@@ -38,7 +38,7 @@ func SendHorseRaceLamp(username , matchName ,award string){
 	//	return
 	//}
 	player.Broadcast(&msg.S2C_HorseRaceLamp{
-		Template:  fmt.Sprintf(templates[rand.Intn(len(templates))], username, matchName, values.GetMoneyAward(award)),
+		Template: fmt.Sprintf(templates[rand.Intn(len(templates))], username, matchName, values.GetMoneyAward(award)),
 		//Info: info,
 	})
 }

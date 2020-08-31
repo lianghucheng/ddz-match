@@ -50,7 +50,7 @@ type Config struct {
 	CfgPropBases             map[int]*CfgPropBase
 	CfgLianHang              *CfgLianHang
 	CfgNewUserDailySignItems *[]CfgDailySignItem
-	CfgNormal				 *CfgNormal
+	CfgNormal                *CfgNormal
 }
 
 func (ctx *Config) print() {
@@ -120,7 +120,7 @@ type CfgLianHang struct {
 
 type CfgNormal struct {
 	AmountLimit float64
-	Templates []string
+	Templates   []string
 }
 
 var cfg *Config

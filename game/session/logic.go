@@ -213,14 +213,14 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	}
 	hall.SendDailySignItems(user)
 	user.WriteMsg(&msg.S2C_Login{
-		AccountID:         user.BaseData.UserData.AccountID,
-		Nickname:          user.BaseData.UserData.Nickname,
-		Headimgurl:        user.BaseData.UserData.Headimgurl,
-		Sex:               user.BaseData.UserData.Sex,
-		Role:              user.BaseData.UserData.Role,
-		Token:             user.BaseData.UserData.Token,
-		AnotherLogin:      anotherLogin,
-		FirstLogin:        firstLogin,
+		AccountID:    user.BaseData.UserData.AccountID,
+		Nickname:     user.BaseData.UserData.Nickname,
+		Headimgurl:   user.BaseData.UserData.Headimgurl,
+		Sex:          user.BaseData.UserData.Sex,
+		Role:         user.BaseData.UserData.Role,
+		Token:        user.BaseData.UserData.Token,
+		AnotherLogin: anotherLogin,
+		FirstLogin:   firstLogin,
 		//SignIcon:          conf.GetCfgHall().SignIcon,
 		//NewWelfareIcon:    conf.GetCfgHall().NewWelfareIcon,
 		//FirstRechargeIcon: conf.GetCfgHall().FirstRechargeIcon,

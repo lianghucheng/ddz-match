@@ -95,9 +95,9 @@ type OneItemAward struct {
 }
 
 type HorseRaceLamp struct {
-	UserName string
+	UserName  string
 	MatchName string
-	Amount float64
+	Amount    float64
 }
 
 type S2C_HorseRaceLamp struct {
