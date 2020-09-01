@@ -278,10 +278,12 @@ func (sc *scoreMatch) End() {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
 		if p.rank <= len(sc.matchPlayers)/3 {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			cfg := base.NormalCofig
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
-			hall.SendHorseRaceLamp(p.nickname, cfg.MatchName, base.Award[p.rank-1])
+			if p.rank-1 >= 0 && p.rank <= len(base.Award) {
+				cfg := base.NormalCofig
+				ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
+				hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
+				hall.SendHorseRaceLamp(p.nickname, cfg.MatchName, base.Award[p.rank-1])
+			}
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
