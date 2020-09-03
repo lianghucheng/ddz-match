@@ -1,7 +1,5 @@
 package values
 
-import "sync"
-
 type DDZGameRecord struct {
 	UserId    int      //用户ID
 	MatchId   string   //赛事ID
@@ -44,4 +42,18 @@ type Result struct {
 	ThreeCards []int //底牌
 }
 
-var Mutex = &sync.Mutex{}
+// IllegalGameRecord 异常赛事记录
+type IllegalGameRecord struct {
+	UserID         int // 用户ID
+	AccountID      int
+	MatchID        string // 赛事ID
+	SonMatchID     string // 子赛事ID
+	MatchType      string // 赛事类型
+	MatchName      string // 赛事
+	Round          int    // 淘汰轮次
+	CreateTIme     int64  // 时间
+	CallbackStatus int    // 回调体总发奖状态 1,未成功,2成功
+	Award          string // 奖励
+}
+
+// var Mutex = &sync.Mutex{}

@@ -41,6 +41,28 @@ func InsertMatchRecord(record values.DDZGameRecord) {
 	}
 }
 
+// InsertIllegalMatchRecord 插入玩家异常赛事记录
+func InsertIllegalMatchRecord(record values.IllegalGameRecord) {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	err := db.DB(DB).C("gameillegalrecord").Insert(record)
+	if err != nil {
+		log.Error("save gamerecord %v data error: %v", record, err)
+	}
+}
+
+// UpdateIllegalMatchRecord 更新异常赛事
+func UpdateIllegalMatchRecord(selector interface{}, update interface{}) error {
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+
+	err := db.DB(DB).C("gameillegalrecord").Update(selector, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateMatchManager 修改比赛赛事配置数据
 func UpdateMatchManager(matchID string, update interface{}) error {
 	db := MongoDB.Ref()

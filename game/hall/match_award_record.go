@@ -3,9 +3,10 @@ package hall
 import (
 	"ddz/game/db"
 	"ddz/game/player"
+	"time"
+
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 type MatchAwardRecord struct {
@@ -39,6 +40,23 @@ func WriteMatchAwardRecord(uid int, matchType, matchID, matchName, awardContent 
 	matchAwardRecord.MatchType = matchType
 	matchAwardRecord.MatchID = matchID
 	matchAwardRecord.CreatedAt = time.Now().Unix()
+	matchAwardRecord.Realname = ud.RealName
+	matchAwardRecord.Accountid = ud.AccountID
+	matchAwardRecord.ID, _ = db.MongoDBNextSeq("matchawardrecord")
+	matchAwardRecord.MatchName = matchName
+	matchAwardRecord.AwardContent = awardContent
+	matchAwardRecord.save()
+}
+
+func WriteMatchAwardRecordWithTime(uid int, matchType, matchID, matchName, awardContent string, timestamp int64) {
+	log.Debug("比赛奖励：uid: %v, matchType: %v, matchID: %v, matchName: %v, awardContent: %v. ", uid, matchType, matchID, matchType, matchName, awardContent)
+	ud := player.ReadUserDataByID(uid)
+	matchAwardRecord := new(MatchAwardRecord)
+	matchAwardRecord.Userid = ud.UserID
+
+	matchAwardRecord.MatchType = matchType
+	matchAwardRecord.MatchID = matchID
+	matchAwardRecord.CreatedAt = timestamp
 	matchAwardRecord.Realname = ud.RealName
 	matchAwardRecord.Accountid = ud.AccountID
 	matchAwardRecord.ID, _ = db.MongoDBNextSeq("matchawardrecord")

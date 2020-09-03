@@ -53,6 +53,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/editWhiteList", editWhiteList)
 	mux.HandleFunc("/getOnline", getOnline)
 	mux.HandleFunc("/restart", restartServer)
+	mux.HandleFunc("/dealIllegalMatch", dealIllegalMatch)
 
 	mux.HandleFunc("/addaward", addAward)
 	mux.HandleFunc("/update-headimg", updateHeadImg)
