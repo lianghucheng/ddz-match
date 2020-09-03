@@ -42,12 +42,12 @@ type Result struct {
 	ThreeCards []int //底牌
 }
 
-
 type HorseRaceLamp struct {
 	UserName  string
 	MatchName string
-	Award    string
+	Award     string
 }
+
 // IllegalGameRecord 异常赛事记录
 type IllegalGameRecord struct {
 	UserID         int // 用户ID

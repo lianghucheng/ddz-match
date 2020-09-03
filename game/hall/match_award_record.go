@@ -6,6 +6,7 @@ import (
 	"ddz/game/player"
 	"ddz/game/values"
 	"time"
+
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -21,7 +22,7 @@ type MatchAwardRecord struct {
 	CreatedAt    int64
 	Realname     string
 	Desc         string
-	IsMoney 	 bool
+	IsMoney      bool
 }
 
 func (ctx *MatchAwardRecord) save() {
@@ -61,8 +62,7 @@ func ReadMatchAwardRecord(query bson.M) *[]MatchAwardRecord {
 
 	datas := new([]MatchAwardRecord)
 
-
-	if err := se.DB(db.DB).C("matchawardrecord").Find(query).Limit(config.GetCfgNormal().HorseLampSizeLimit).All(datas);err != nil {
+	if err := se.DB(db.DB).C("matchawardrecord").Find(query).Limit(config.GetCfgNormal().HorseLampSizeLimit).All(datas); err != nil {
 		log.Error(err.Error())
 	}
 
