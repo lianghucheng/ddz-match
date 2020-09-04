@@ -98,12 +98,17 @@ func (base *BaseMatch) SignIn(uid int) error {
 		log.Error("unknow user:%v", uid)
 		return errors.New("unknown user")
 	}
-	if _, ok := UserIDMatch[uid]; ok {
-		log.Debug("already sign other %v", uid)
-		user.WriteMsg(&msg.S2C_Apply{
-			Error: msg.S2C_Error_Match,
-		})
-		return errors.New("already signUp")
+	if signMatchs, ok := UserIDSign[uid]; ok {
+		log.Debug("signs:%v", signMatchs)
+		for _, v := range signMatchs {
+			if v.MatchID == base.NormalCofig.MatchID {
+				log.Debug("player %v already sign %v,%v", uid, v.MatchID, v.MatchName)
+				user.WriteMsg(&msg.S2C_Apply{
+					Error: msg.S2C_Error_Action,
+				})
+				return errors.New("already signUp")
+			}
+		}
 	}
 	if user.RealName() == "" && !user.IsTest() && !user.IsRobot() {
 		log.Debug("no real name. ")
@@ -119,7 +124,22 @@ func (base *BaseMatch) SignIn(uid int) error {
 	}
 	base.SignInPlayers = append(base.SignInPlayers, uid)
 	base.AllPlayers[uid] = user
-	UserIDMatch[uid] = base
+
+	// 多赛事报名
+	matchs := UserIDSign[uid]
+	thisSign := SignList{
+		MatchID:    base.NormalCofig.MatchID,
+		SonMatchID: base.SonMatchID,
+		MatchName:  base.NormalCofig.MatchName,
+		MatchDesc:  base.NormalCofig.MatchDesc,
+	}
+	if matchs == nil {
+		UserIDSign[uid] = []SignList{thisSign}
+	} else {
+		matchs = append(matchs, thisSign)
+		UserIDSign[uid] = matchs
+	}
+
 	// 每签到一个玩家检查一次
 	if base.NormalCofig.StartType == 1 {
 		base.CheckStart()
@@ -161,7 +181,28 @@ func (base *BaseMatch) SignOut(uid int) error {
 		// base.AllPlayers = append(base.AllPlayers[:index], base.AllPlayers[index+1:]...)
 	}
 
-	delete(UserIDMatch, uid)
+	// 多赛事报名
+	signs := UserIDSign[uid]
+	if signs != nil {
+		if len(signs) == 1 {
+			delete(UserIDSign, uid)
+		} else {
+			for i, v := range signs {
+				if v.MatchID == base.NormalCofig.MatchID {
+					if i == len(UserIDSign[uid])-1 {
+						signs = signs[:i]
+					} else {
+						signs = append(signs[:i], signs[i+1:]...)
+					}
+					UserIDSign[uid] = signs
+					log.Debug("uid:%v,signs:%v", uid, signs)
+					break
+				}
+			}
+		}
+	}
+
+	// delete(UserIDMatch, uid)
 	delete(base.AllPlayers, uid)
 	return nil
 }
@@ -173,6 +214,15 @@ func (base *BaseMatch) CheckStart() {
 }
 
 func (base *BaseMatch) Start() {
+	// 首先将玩家报名的其他赛事清理
+	base.cleanUpPlayerSigns()
+	for _, p := range base.AllPlayers {
+		UserIDMatch[p.BaseData.UserData.UserID] = base
+		// if user, ok := UserIDUsers[p.BaseData.UserData.UserID]; ok {
+		// 	base.AllPlayers[p.BaseData.UserData.UserID] = user
+		// }
+	}
+
 	base.State = Playing
 	base.CurrentRound++
 	base.CurrentCardCount++
@@ -198,6 +248,28 @@ func (base *BaseMatch) Start() {
 	base.CreateTime = time.Now().Unix()
 	BroadcastMatchInfo()
 	base.Manager.CheckNewConfig()
+}
+
+// 清理玩家报名的其他赛事
+func (base *BaseMatch) cleanUpPlayerSigns() {
+	for _, p := range base.AllPlayers {
+		uid := p.BaseData.UserData.UserID
+		if UserIDSign[uid] != nil {
+			log.Debug("signs:%v", UserIDSign[uid])
+			cleanMatchs := []string{}
+			for _, v := range UserIDSign[uid] {
+				if v.MatchID == base.NormalCofig.MatchID {
+					continue
+				}
+				cleanMatchs = append(cleanMatchs, v.MatchID)
+			}
+			for _, matchID := range cleanMatchs {
+				m := MatchManagerList[matchID]
+				m.SignOut(uid, matchID)
+			}
+		}
+		delete(UserIDSign, uid)
+	}
 }
 
 func (base *BaseMatch) End() {
