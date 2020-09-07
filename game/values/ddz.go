@@ -45,3 +45,9 @@ type Result struct {
 }
 
 var Mutex = &sync.Mutex{}
+
+type HorseRaceLamp struct {
+	UserName  string
+	MatchName string
+	Award    string
+}

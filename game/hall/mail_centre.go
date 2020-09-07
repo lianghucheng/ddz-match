@@ -105,7 +105,7 @@ func (ctx *UserMail) save() {
 
 //玩家登录调用一次，系统发邮件时调用一次
 func SendMail(user *player.User) {
-	mails := readMailBox(user.BaseData.UserData.UserID, user.GetUserData().LastTakenMail)
+	mails := readMailBox(user, user.GetUserData().LastTakenMail)
 	if len(*mails) > 0 {
 		user.GetUserData().LastTakenMail = (*mails)[len(*mails)-1].ID
 	}
@@ -124,13 +124,13 @@ func SendMail(user *player.User) {
 	})
 }
 
-func readMailBox(userid int, lastId int64) *[]MailBox {
+func readMailBox(user *player.User, lastId int64) *[]MailBox {
 	se := db.MongoDB.Ref()
 	defer db.MongoDB.UnRef(se)
 
 	rt := new([]MailBox)
 
-	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}, "$or": []bson.M{{"targetid": userid}, {"targetid": -1}}}).All(rt)
+	err := se.DB(db.DB).C("mailbox").Find(bson.M{"_id": bson.M{"$gt": lastId}, "$or": []bson.M{{"targetid": user.UID()}, {"targetid": -1}}, "createdat": bson.M{"$gt": user.BaseData.UserData.CreatedAt}}).All(rt)
 	if err != nil {
 		log.Error(err.Error())
 	}

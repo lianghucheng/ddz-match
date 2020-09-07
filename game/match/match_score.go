@@ -281,7 +281,7 @@ func (sc *scoreMatch) End() {
 			cfg := base.NormalCofig
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
 			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
-			hall.SendHorseRaceLamp(p.nickname, cfg.MatchName, base.Award[p.rank-1])
+			hall.SendHorseCurrTimer(p.nickname, cfg.MatchName, base.Award[p.rank-1])
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
