@@ -631,10 +631,10 @@ func dealIllegalMatch(args []interface{}) {
 		desc = "回调体总失败！"
 		return
 	}
-	hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
-		data.MatchType, data.SonMatchID, []int{}, data.CreateTime)
+	// hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
+	// 	data.MatchType, data.SonMatchID, []int{}, data.CreateTime)
 	hall.AddFeeWithTime(data.UID, data.AccountID, utils.Decimal(awardAmount),
 		db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", data.MatchName), data.SonMatchID, data.CreateTime)
-	hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
-	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
+	// hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
+	// db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
 }

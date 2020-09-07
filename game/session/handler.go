@@ -552,6 +552,7 @@ func handleGetMatchList(args []interface{}) {
 }
 
 func handleGetMatchSignList(args []interface{}) {
+	data := args[0].(*msg.C2S_GetMatchSignList)
 	a := args[1].(gate.Agent)
 	if a.UserData() == nil {
 		return
@@ -568,7 +569,8 @@ func handleGetMatchSignList(args []interface{}) {
 	}
 
 	user.WriteMsg(&msg.S2C_GetMatchSignList{
-		List: list,
+		MatchID: data.MatchID,
+		List:    list,
 	})
 }
 
