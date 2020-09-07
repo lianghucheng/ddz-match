@@ -37,7 +37,9 @@ func withDrawList(flowDatas *[]FlowData) *[]msg.WithDrawData {
 			status = FlowDataStatusMsg[v.Status]
 		}
 		matchID := v.MatchID
-		if v.Status == FlowDataStatusAction {
+		if v.FlowType == FlowTypeAward {
+
+		} else if v.Status == FlowDataStatusAction {
 			matchID = "平台审核中,请稍后"
 		} else if v.Status == FlowDataStatusOver {
 			matchID = "提奖成功"

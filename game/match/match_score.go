@@ -1067,8 +1067,11 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
 		}
 		db.InsertMatchRecord(record)
-		rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
-			rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, nil)
+		// 每日福利
+		if base.NormalCofig.EnterFee > 0 {
+			rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
+				rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, nil)
+		}
 	}, nil)
 }
 
