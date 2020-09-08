@@ -87,18 +87,19 @@ type ScoreConfig struct {
 }
 
 type sConfig struct {
-	BaseScore   int             // 基础分数
-	StartTime   int64           // 比赛开始时间
-	LimitPlayer int             // 比赛开始的最少人数
-	TablePlayer int             // 一桌的游戏人数
-	Round       int             // 几局制
-	RoundNum    string          // 赛制制(2局1副)
-	StartType   int             // 开赛条件（满三人开赛）
-	Eliminate   []int           // 每轮淘汰人数
-	Rank        []Rank          // 整个比赛的总排行
-	Record      [][]MatchRecord // 整个比赛的总记录
-	MoneyAward  float64         // 赛事金钱总奖励
-	CouponAward float64         // 赛事点券总奖励
+	BaseScore     int             // 基础分数
+	StartTime     int64           // 比赛开始时间
+	LimitPlayer   int             // 比赛开始的最少人数
+	TablePlayer   int             // 一桌的游戏人数
+	Round         int             // 几局制
+	RoundNum      string          // 赛制制(2局1副)
+	StartType     int             // 开赛条件（满三人开赛）
+	Eliminate     []int           // 每轮淘汰人数
+	Rank          []Rank          // 整个比赛的总排行
+	Record        [][]MatchRecord // 整个比赛的总记录
+	MoneyAward    float64         // 赛事金钱总奖励
+	CouponAward   float64         // 赛事点券总奖励
+	FragmentAward float64         // 赛事碎片总奖励
 }
 
 type scoreMatch struct {
@@ -276,12 +277,16 @@ func (sc *scoreMatch) End() {
 	// 刷新排行榜
 	for _, p := range sc.matchPlayers {
 		ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeJoinNum, "", "")
+		cfg := base.NormalCofig
+		if p.rank <= len(base.Award) {
+			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
+		}
 		if p.rank <= len(sc.matchPlayers)/3 {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeWinNum, "", "")
-			cfg := base.NormalCofig
-			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
-			hall.WriteMatchAwardRecord(p.uid, cfg.MatchType, cfg.MatchID, cfg.MatchName, base.Award[p.rank-1])
-			hall.SendHorseCurrTimer(p.nickname, cfg.MatchName, base.Award[p.rank-1])
+			if p.rank-1 >= 0 && p.rank <= len(base.Award) {
+				ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeAward, base.Award[p.rank-1], cfg.MatchType)
+				hall.SendHorseCurrTimer(p.nickname, cfg.MatchName, base.Award[p.rank-1])
+			}
 		} else {
 			ddz.FlushRank(hall.RankGameTypeAward, p.uid, conf.GetCfgHall().RankTypeFailNum, "", "")
 		}
@@ -1033,20 +1038,40 @@ func (sc *scoreMatch) AwardPlayer(uid int) {
 		CreateDat: time.Now().Unix(),
 		Status:    status,
 	}
+
 	// 自己的奖励
 	awardStr := ""
 	if player.rank-1 < len(base.Award) {
 		awardStr = base.Award[player.rank-1]
 	}
+
+	// 异常赛事记录
+	illegalRecord := values.IllegalGameRecord{
+		UserID:         uid,
+		AccountID:      player.accountID,
+		MatchID:        base.NormalCofig.MatchID,
+		SonMatchID:     base.SonMatchID,
+		MatchType:      base.NormalCofig.MatchType,
+		MatchName:      base.NormalCofig.MatchName,
+		Round:          player.eliminateRound,
+		Award:          awardStr,
+		CreateTIme:     time.Now().Unix(),
+		CallbackStatus: 1,
+	}
+
 	game.GetSkeleton().Go(func() {
 		if status == AwardStatusNormal {
 			hall.MatchEndPushMail(uid, base.NormalCofig.MatchName, player.rank, awardStr)
 		} else {
+			db.InsertIllegalMatchRecord(illegalRecord)
 			hall.GamePushMail(uid, "比赛通知", fmt.Sprintf("您在【%v】的参赛结果上报异常，请在战绩中找到对应赛事ID联系客服。谢谢合作", base.NormalCofig.MatchName))
 		}
 		db.InsertMatchRecord(record)
-		rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
-			rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, nil)
+		// 每日福利
+		if base.NormalCofig.EnterFee > 0 {
+			rpc.CallActivityServer("DailyWelfareObj.UploadMatchInfo",
+				rpc.RPCUploadMatchInfo{AccountID: player.accountID, OptTime: time.Now().Unix() - base.CreateTime}, nil)
+		}
 	}, nil)
 }
 

@@ -123,6 +123,7 @@ type CfgNormal struct {
 	Templates   []string
 	CircleTTL   int
 	HorseLampSizeLimit int
+	EndRoundHorseTTL int
 }
 
 var cfg *Config

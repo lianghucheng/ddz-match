@@ -2,6 +2,7 @@ package session
 
 import (
 	"ddz/conf"
+	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/hall"
@@ -12,6 +13,8 @@ import (
 	"ddz/msg"
 	"ddz/utils"
 	"encoding/json"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,6 +49,7 @@ func init() {
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
 	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 	skeleton.RegisterChanRPC("UpdateBankCardNo", rpcUpdateBankCardNo)
+	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch) // 获取在线人数
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -566,4 +570,71 @@ func rpcUpdateBankCardNo(args []interface{}) {
 		ud.BankCardNo = m.BankCardNo
 		SaveUserData(ud)
 	}
+}
+
+func dealIllegalMatch(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_IllegalMatch)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("illegalMatch data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	matchID := []byte(data.SonMatchID)
+	if len(matchID) < 20 {
+		code = 1
+		desc = "请求赛事ID有误!"
+		return
+	}
+	round := []byte(fmt.Sprintf("%02d", data.Round))
+	matchID[len(matchID)-8] = round[0]
+	matchID[len(matchID)-7] = round[1]
+	// 拉取体总发奖结果
+	results, err := edy_api.AwardResult(string(matchID), 1, 100)
+	if err != nil {
+		code = 1
+		desc = "回调体总失败！"
+		return
+	}
+	var awardAmount float64
+	for _, v := range results.Result_list {
+		if v.Player_id == strconv.Itoa(data.AccountID) {
+			if v.Status != "2" {
+				log.Error("err award :%+v", v)
+				code = 1
+				desc = "体总未发奖！"
+				return
+			}
+			var err error
+			awardAmount, err = strconv.ParseFloat(v.Bonous, 64)
+			if err != nil {
+				log.Error("err award :%+v", v)
+				code = 1
+				desc = "体总回调数据出错！"
+				return
+			}
+			break
+		}
+	}
+	if awardAmount <= 0 {
+		code = 1
+		desc = "回调体总失败！"
+		return
+	}
+	hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
+		data.MatchType, data.SonMatchID, []int{}, data.CreateTime)
+	hall.AddFeeWithTime(data.UID, data.AccountID, utils.Decimal(awardAmount),
+		db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", data.MatchName), data.SonMatchID, data.CreateTime)
+	hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
+	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
 }

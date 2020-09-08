@@ -149,7 +149,8 @@
     "Color": "#49FF78",
     "Templates": ["<color=#FFFFFF>恭喜 </color><color=#49FF78>%v</color><color=#FFFFFF> 在 </color><color=#49FF78>%v</color><color=#FFFFFF> 中实力赢得 </color><color=#49FF78>%v</color><color=#FFFFFF> 奖金，真是慕煞旁人！ </color>",
       "<color=#FFFFFF>玩家 </color><color=#49FF78>%v</color><color=#FFFFFF> 在 </color><color=#49FF78>%v</color><color=#FFFFFF> 中获得 </color><color=#49FF78>%v</color><color=#FFFFFF> 奖金！恭喜！恭喜！ </color>"],
-    "CircleTTL": 4,
-    "HorseLampSizeLimit": 20
+    "CircleTTL": 12,
+    "HorseLampSizeLimit": 20,
+    "EndRoundHorseTTL": 6
   }
 }

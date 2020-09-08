@@ -110,6 +110,7 @@ func showHall(args []interface{}) {
 		m.Save()
 		// 通知客户端
 		BroadcastMatchInfo()
+		setFakePlayersCount()
 	}
 }
 
@@ -313,4 +314,5 @@ func optMatch(args []interface{}) {
 		desc = "未知操作！"
 		return
 	}
+	setFakePlayersCount()
 }

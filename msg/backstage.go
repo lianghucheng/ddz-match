@@ -16,6 +16,7 @@ func init() {
 	Processor.Register(&RPC_Restart{})
 	Processor.Register(&RPC_EditWhiteList{})
 	Processor.Register(&RPC_GetOnline{})
+	Processor.Register(&RPC_IllegalMatch{})
 }
 
 // RPC_AddManagerReq 后台调用游戏服新增赛事
@@ -138,6 +139,22 @@ type RPC_EditWhiteList struct {
 
 // RPC_GetOnline 后台获取在线人数
 type RPC_GetOnline struct {
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_IllegalMatch 后台重新回调异常赛事
+type RPC_IllegalMatch struct {
+	UID        int
+	AccountID  int
+	MatchID    string
+	SonMatchID string
+	Round      int
+	MatchType  string
+	MatchName  string
+	CreateTime int64
+	Award      string
+
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter
 }

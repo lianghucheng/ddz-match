@@ -94,4 +94,5 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_GetAllMail{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_DeleteAllMail{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_UpdateBankCardNo{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_IllegalMatch{}, game.ChanRPC)
 }

@@ -96,13 +96,14 @@ type NormalCofig struct {
 	Eliminate        []int  // 淘汰人数
 	AwardList        string // 奖励
 	// StartTimer             *timer.Timer // 上架倒计时
-	AllPlayingPlayersCount int   // 正在参与赛事的玩家总数
-	ShelfTime              int64 // 上架时间
-	DownShelfTime          int64 // 下架时间
-	Round                  int   // 几局制 '添加赛事时的必填字段'
-	Card                   int   // 几副制 '添加赛事时的必填字段'
-	LimitPlayer            int   // 比赛开始的最少人数 '添加赛事时的必填字段'
-	FakePlayers            int   // 假的赛事总人数
+	AllPlayingPlayersCount int     // 正在参与赛事的玩家总数
+	ShelfTime              int64   // 上架时间
+	DownShelfTime          int64   // 下架时间
+	Round                  int     // 几局制 '添加赛事时的必填字段'
+	Card                   int     // 几副制 '添加赛事时的必填字段'
+	LimitPlayer            int     // 比赛开始的最少人数 '添加赛事时的必填字段'
+	FakePlayers            int     // 假的赛事总人数
+	MoneyAward             float64 // 赛事金钱总奖励
 }
 
 // MatchRecord 记录一局比赛所有玩家的手牌，输赢信息等

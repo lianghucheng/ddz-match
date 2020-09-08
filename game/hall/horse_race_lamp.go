@@ -77,7 +77,7 @@ func SendHorseCurrTimer(username, matchName, award string) {
 		HorseCurrTimer = nil
 	}
 
-	game.GetSkeleton().AfterFunc(8 * time.Second, func() {
+	game.GetSkeleton().AfterFunc(time.Duration(config.GetCfgNormal().EndRoundHorseTTL) * time.Second, func() {
 		SendHorseRaceLamp(username, matchName, award)
 	})
 
@@ -88,9 +88,10 @@ func SendHorseCurrTimer(username, matchName, award string) {
 	})
 
 	HorseCurrTimer = game.GetSkeleton().AfterFunc(time.Duration(config.GetCfgNormal().CircleTTL) * time.Second, func() {
+		log.Debug("开启轮播老数据定时器")
 		horseQueueIndex = 0
-		SendHorsePrevTimer()
 		HorseCurrTimer = nil
+		SendHorsePrevTimer()
 	})
 }
 
