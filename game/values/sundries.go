@@ -1,5 +1,7 @@
 package values
 
+const MAX = 9400000000
+
 const (
 	PropTypeCoupon     = 1
 	PropTypeAward      = 2
