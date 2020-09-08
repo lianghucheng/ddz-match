@@ -49,7 +49,8 @@ func init() {
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
 	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 	skeleton.RegisterChanRPC("UpdateBankCardNo", rpcUpdateBankCardNo)
-	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch) // 获取在线人数
+	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch)
+	skeleton.RegisterChanRPC("shareAward", shareAward)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -569,6 +570,31 @@ func rpcUpdateBankCardNo(args []interface{}) {
 		ud := ReadUserDataByID(m.Userid)
 		ud.BankCardNo = m.BankCardNo
 		SaveUserData(ud)
+	}
+}
+
+func shareAward(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_ShareAward)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("share award data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	err := hall.ShareAwardPushMail(data.AccountID, data.Item, data.AwardNum)
+	if err != nil {
+		code = 1
+		desc = err.Error()
 	}
 }
 
