@@ -24,3 +24,26 @@ type FlowData struct {
 	Desc         string
 	PassStatus   int //1是已通过，0是未通过
 }
+
+func lengthOfLongestSubstring(s string) int {
+	mp := make(map[byte]int)
+	i := 0
+	max := 0
+	for j:=0;j< len(s);j++ {
+		if _, ok := mp[s[j]]; ok {
+			i = maxval(i, mp[s[j]] + 1)
+		}
+		mp[s[j]] = j
+		max = maxval(max, j - i + 1)
+	}
+	return max
+}
+
+func maxval(a, b int) int{
+	if a > b {
+
+		return a
+	} else {
+		return b
+	}
+}
