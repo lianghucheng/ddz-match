@@ -50,7 +50,7 @@ func CheckMatch(matchID string) ([]byte, error) {
 }
 
 // SignMatch 报名比赛
-func SignMatch(matchID, name, uid string) ([]byte, error) {
+func SignMatch(matchID, name, uid string, callCounts int) ([]byte, error) {
 	data := struct {
 		Cp_id       string `json:"cp_id"`
 		Match_id    string `json:"match_id"`
@@ -69,6 +69,10 @@ func SignMatch(matchID, name, uid string) ([]byte, error) {
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			SignMatch(matchID, name, uid, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -78,7 +82,7 @@ func SignMatch(matchID, name, uid string) ([]byte, error) {
 }
 
 // SendMatchResultWithRobot 人机对局结果上报
-func SendMatchResultWithRobot(data values.SportsCenterReportRobot) ([]byte, error) {
+func SendMatchResultWithRobot(data values.SportsCenterReportRobot, callCounts int) ([]byte, error) {
 	data.Cp_id = base.CpID
 	str, _ := json.Marshal(data)
 	log.Debug("str:%v", string(str))
@@ -87,6 +91,10 @@ func SendMatchResultWithRobot(data values.SportsCenterReportRobot) ([]byte, erro
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			SendMatchResultWithRobot(data, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -96,7 +104,7 @@ func SendMatchResultWithRobot(data values.SportsCenterReportRobot) ([]byte, erro
 }
 
 // SendMatchResultWithPerson 人人对局结果上报
-func SendMatchResultWithPerson(data values.SportsCenterReportPersonal) ([]byte, error) {
+func SendMatchResultWithPerson(data values.SportsCenterReportPersonal, callCounts int) ([]byte, error) {
 	data.Cp_id = base.CpID
 	str, _ := json.Marshal(data)
 	log.Debug("str:%v", string(str))
@@ -105,6 +113,10 @@ func SendMatchResultWithPerson(data values.SportsCenterReportPersonal) ([]byte, 
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			SendMatchResultWithPerson(data, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -114,7 +126,7 @@ func SendMatchResultWithPerson(data values.SportsCenterReportPersonal) ([]byte, 
 }
 
 // RoundRankReport 轮次排名上报
-func RoundRankReport(data values.SportsCenterRankResult) ([]byte, error) {
+func RoundRankReport(data values.SportsCenterRankResult, callCounts int) ([]byte, error) {
 	data.Cp_id = base.CpID
 	str, _ := json.Marshal(data)
 	log.Debug("str:%v", string(str))
@@ -123,6 +135,10 @@ func RoundRankReport(data values.SportsCenterRankResult) ([]byte, error) {
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			RoundRankReport(data, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -132,7 +148,7 @@ func RoundRankReport(data values.SportsCenterRankResult) ([]byte, error) {
 }
 
 // FinalRankReport  最终排名上报
-func FinalRankReport(data values.SportsCenterFinalRankResult) ([]byte, error) {
+func FinalRankReport(data values.SportsCenterFinalRankResult, callCounts int) ([]byte, error) {
 	data.Cp_id = base.CpID
 	str, _ := json.Marshal(data)
 	log.Debug("str:%v", string(str))
@@ -141,6 +157,10 @@ func FinalRankReport(data values.SportsCenterFinalRankResult) ([]byte, error) {
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			FinalRankReport(data, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -150,7 +170,7 @@ func FinalRankReport(data values.SportsCenterFinalRankResult) ([]byte, error) {
 }
 
 // RankReportFinish  排名上报完毕
-func RankReportFinish(matchID string) ([]byte, error) {
+func RankReportFinish(matchID string, callCounts int) ([]byte, error) {
 	data := struct {
 		Cp_id    string `json:"cp_id"`
 		Match_id string `json:"match_id"`
@@ -165,6 +185,10 @@ func RankReportFinish(matchID string) ([]byte, error) {
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			RankReportFinish(matchID, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {
@@ -174,7 +198,7 @@ func RankReportFinish(matchID string) ([]byte, error) {
 }
 
 // HXMatchPromotionReport  海选赛晋级名单上报
-func HXMatchPromotionReport(matchID, promotionMatchID string, players []int) ([]byte, error) {
+func HXMatchPromotionReport(matchID, promotionMatchID string, players []int, callCounts int) ([]byte, error) {
 	type PlayerID struct {
 		Player_id string `json:"player_id"`
 	}
@@ -200,6 +224,10 @@ func HXMatchPromotionReport(matchID, promotionMatchID string, players []int) ([]
 	ret, err := c.DoPost()
 	if err != nil {
 		log.Error("err:%v", err)
+		if callCounts < 5 {
+			callCounts++
+			HXMatchPromotionReport(matchID, promotionMatchID, players, callCounts)
+		}
 		return nil, err
 	}
 	if err := checkCode(ret); err != nil {

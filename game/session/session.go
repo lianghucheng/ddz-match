@@ -635,6 +635,18 @@ func dealIllegalMatch(args []interface{}) {
 	var awardAmount float64
 	for _, v := range results.Result_list {
 		if v.Player_id == strconv.Itoa(data.AccountID) {
+			if v.Status == "3" {
+				log.Error("err award :%+v", v)
+				code = 2
+				desc = "体总已驳回!"
+				return
+			}
+			if v.Status == "4" {
+				log.Error("err award :%+v", v)
+				code = 3
+				desc = "体总返回异常赛事!"
+				return
+			}
 			if v.Status != "2" {
 				log.Error("err award :%+v", v)
 				code = 1

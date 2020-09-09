@@ -312,10 +312,10 @@ func (sc *scoreMatch) End() {
 			if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
 				Match_id: string(matchID),
 				Ranks:    ranks,
-			}); err != nil {
+			}, 0); err != nil {
 				log.Error("err:%v", err)
 			} else { // 结果上传完毕
-				if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+				if _, err := edy_api.RankReportFinish(string(matchID), 0); err != nil {
 					log.Error("err:%v", err)
 				}
 			}
@@ -636,7 +636,7 @@ func (sc *scoreMatch) NextRound() {
 					Player_position: v.Player_position,
 					Status:          v.Status,
 					Passive:         v.Passive,
-				}); err != nil {
+				}, 0); err != nil {
 					log.Error("err:%v", err)
 				}
 			}
@@ -652,7 +652,7 @@ func (sc *scoreMatch) NextRound() {
 				Round_id:  strconv.Itoa(base.CurrentRound),
 				Rank_list: rankList,
 			}
-			if _, err := edy_api.RoundRankReport(roundRankResult); err != nil {
+			if _, err := edy_api.RoundRankReport(roundRankResult, 0); err != nil {
 				log.Error("err:%v", err)
 			}
 
@@ -660,10 +660,10 @@ func (sc *scoreMatch) NextRound() {
 			if _, err := edy_api.FinalRankReport(SportsCenterFinalRankResult{
 				Match_id: string(matchID),
 				Ranks:    ranks,
-			}); err != nil {
+			}, 0); err != nil {
 				log.Error("err:%v", err)
 			} else { // 结果上传完毕
-				if _, err := edy_api.RankReportFinish(string(matchID)); err != nil {
+				if _, err := edy_api.RankReportFinish(string(matchID), 0); err != nil {
 					log.Error("err:%v", err)
 				}
 			}

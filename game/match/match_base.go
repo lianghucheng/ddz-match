@@ -293,7 +293,7 @@ func (base *BaseMatch) SplitTable() {
 			matchID[len(matchID)-8] = currentRound[0]
 			matchID[len(matchID)-7] = currentRound[1]
 			for _, p := range base.AllPlayers {
-				if _, err := edy_api.SignMatch(string(matchID), p.BaseData.UserData.RealName, strconv.Itoa(p.BaseData.UserData.AccountID)); err != nil {
+				if _, err := edy_api.SignMatch(string(matchID), p.BaseData.UserData.RealName, strconv.Itoa(p.BaseData.UserData.AccountID), 0); err != nil {
 					log.Error("err:%v", err)
 					// base.CloseMatch()
 					// base.Manager.CreateOneMatch()
