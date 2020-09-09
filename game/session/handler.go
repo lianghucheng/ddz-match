@@ -583,7 +583,7 @@ func handleCreateEdyOrder(args []interface{}) {
 		return
 	}
 
-	pay.CreateOrder(user, m)
+	pay.CreateOrderTiZong(user, m)
 }
 
 func handleCreateOrderSuccess(args []interface{}) {

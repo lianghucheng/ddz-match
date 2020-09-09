@@ -195,3 +195,50 @@ func FakerCreateOrder(aid int, pid int) (int, string) {
 
 	return 0, "成功，订单号" + order.TradeNo
 }
+
+
+func CreateOrderTiZong(user *player.User, m *msg.C2S_CreateEdyOrder) {
+	//todo: 暂时的支付
+	pm := hall.GetTempPrice()[m.PriceID]
+	if user.RealName() == "" {
+		user.WriteMsg(&msg.S2C_CreateEdyOrder{
+			Error:  msg.ErrCreateEdyOrderNotRealAuth,
+			ErrMsg: "未实名认证",
+		})
+		return
+	}
+	order := new(values.EdyOrder)
+	order.TradeNo = utils.GetOutTradeNo()
+	order.Createdat = time.Now().Unix()
+	order.ID, _ = db.MongoDBNextSeq("edyorder")
+	order.Accountid = user.AcountID()
+	order.Merchant = values.MerchantSportCentralAthketicAssociation
+	order.Fee = pm.Fee
+	order.Amount = pm.Amount + pm.GiftAmount
+	db.Save("edyorder", order, bson.M{"_id": order.ID})
+
+	cfgPay := config.GetCfgPay()["1"]
+	user.WriteMsg(&msg.S2C_CreateEdyOrder{
+		AppID:    cfgPay.AppID,
+		AppToken: cfgPay.AppToken,
+		Amount:   int(pm.Fee),
+		//todo: payType要修改
+		PayType: cfgPay.PayType,
+		//DefPayType:m.DefPayType,
+		Subject:          pm.Name,
+		Description:      strconv.Itoa(int(pm.Fee/100)) + pm.Name,
+		OpenOrderID:      order.TradeNo,
+		OpenNotifyUrl:    cfgPay.NotifyHost + cfgPay.NotifyUrl,
+		CreatePaymentUrl: cfgPay.PayHost + cfgPay.CreatePaymentUrl,
+	})
+
+	//若干时间后，判定为支付失败
+	game.GetSkeleton().AfterFunc(5*time.Minute, func() {
+		data := new(values.EdyOrder)
+		db.Read("edyorder", data, bson.M{"tradeno": order.TradeNo})
+		if data.PayStatus != 1 {
+			data.PayStatus = 2
+			db.Save("edyorder", data, bson.M{"_id": order.ID})
+		}
+	})
+}
