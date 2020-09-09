@@ -443,7 +443,7 @@ func (sc *ScoreConfig) EndMatchManager() {
 	BroadcastMatchInfo()
 	// 修改赛事配置数据
 	game.GetSkeleton().Go(func() {
-		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": End}})
 	}, nil)
 }
 

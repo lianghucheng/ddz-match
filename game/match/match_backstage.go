@@ -293,6 +293,11 @@ func optMatch(args []interface{}) {
 			desc = "赛事已上架!"
 			return
 		}
+		if c.State == End && c.UseMatch == c.TotalMatch {
+			code = 1
+			desc = "赛事已结束,无可用场次!"
+			return
+		}
 		m.Shelf()
 	case 2: // 下架
 		if c.State != Signing {

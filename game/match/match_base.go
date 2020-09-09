@@ -32,6 +32,7 @@ const (
 	Ending         // 结算中
 	Cancel         // 下架赛事
 	Delete         // 删除赛事
+	End            // 赛事结束
 )
 
 // 赛事来源

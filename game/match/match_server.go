@@ -49,7 +49,7 @@ func initMatchConfig() error {
 	defer db.MongoDB.UnRef(s)
 	one := map[string]interface{}{}
 	log.Debug("init MatchConfig........")
-	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$lt": Delete}}).Iter()
+	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$ne": Delete}}).Iter()
 	for iter.Next(&one) {
 		if one["matchtype"] == nil || one["matchid"] == nil {
 			log.Error("unknow match:%v", one)
@@ -73,7 +73,7 @@ func initMatchConfig() error {
 			}
 			if sConfig.UseMatch >= sConfig.TotalMatch {
 				game.GetSkeleton().Go(func() {
-					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": End}})
 				}, nil)
 				continue
 			}
