@@ -40,6 +40,14 @@ func GenerateSign(param string) string {
 
 	return strings.ToUpper(hex.EncodeToString(m.Sum(nil)))
 }
+func GenerateSignTemp(param string) string {
+	cfgPay := config.GetCfgPay()["1"]
+	m := md5.New()
+	log.Debug("*************%v", cfgPay.AppToken+"&"+param+"&"+cfgPay.AppSecret)
+	m.Write([]byte(cfgPay.AppToken + "&" + param + "&" + cfgPay.AppSecret))
+
+	return strings.ToUpper(hex.EncodeToString(m.Sum(nil)))
+}
 
 func GetOutTradeNo() string {
 	return time.Now().Format("0102150405") + fmt.Sprintf("%05d", rand.Intn(100000))

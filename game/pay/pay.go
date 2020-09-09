@@ -9,6 +9,7 @@ import (
 	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
+	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"time"
@@ -218,6 +219,21 @@ func CreateOrderTiZong(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	db.Save("edyorder", order, bson.M{"_id": order.ID})
 
 	cfgPay := config.GetCfgPay()["1"]
+
+	log.Debug("******************:   %+v", msg.S2C_CreateEdyOrder{
+		AppID:    cfgPay.AppID,
+		AppToken: cfgPay.AppToken,
+		Amount:   int(pm.Fee),
+		//todo: payType要修改
+		PayType: cfgPay.PayType,
+		//DefPayType:m.DefPayType,
+		Subject:          pm.Name,
+		Description:      strconv.Itoa(int(pm.Fee/100)) + pm.Name,
+		OpenOrderID:      order.TradeNo,
+		OpenNotifyUrl:    cfgPay.NotifyHost + cfgPay.NotifyUrl,
+		CreatePaymentUrl: cfgPay.PayHost + cfgPay.CreatePaymentUrl,
+	})
+
 	user.WriteMsg(&msg.S2C_CreateEdyOrder{
 		AppID:    cfgPay.AppID,
 		AppToken: cfgPay.AppToken,

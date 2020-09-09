@@ -60,6 +60,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/give-coupon-frag", giveCouponFrag)
 	//电竞二打一支付回调
 	mux.HandleFunc("/edy/pay-bc", edyPayBackCall)
+	mux.HandleFunc("/edy/pay-bc-temp", edyPayBackCallTemp)
 	mux.HandleFunc("/conf/robot-maxnum", confRobotMaxNum)
 	mux.HandleFunc("/add/coupon-frag", addCouponFrag)
 	mux.HandleFunc("/notify/payaccount", notifyPayAccount)
@@ -343,6 +344,71 @@ func edyPayBackCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sign := edy_api.GenerateSign(param)
+	log.Debug("【生成的签名】%v", sign)
+	if sign != edyPayNotifyReq.Sign {
+		log.Debug("sign error. ")
+		return
+	}
+
+	//存订单
+	order := new(values.EdyOrder)
+	Read("edyorder", order, bson.M{"tradeno": edyPayNotifyReq.OpenOrderID, "status": false})
+	if order.PayStatus != values.PayStatusAction {
+		log.Debug("支付失败，不发货")
+		return
+	}
+	order.TradeNoReceive = edyPayNotifyReq.OrderID
+	order.Status = true
+	order.PayStatus = values.PayStatusSuccess
+	Save("edyorder", order, bson.M{"_id": order.ID})
+	//通知完成支付，进行发货
+	game.GetSkeleton().ChanRPCServer.Go("NotifyPayOK", &msg.RPC_NotifyPayOK{
+		TotalFee:  int(order.Fee),
+		AccountID: order.Accountid,
+		Amount:    order.Amount,
+	})
+	//通知第三方支付流程已完成，封装响应数据
+	edyPayNotifyResp := new(edy_api.EdyPayNotifyResp)
+	edyPayNotifyResp.OrderResult = "success"
+	edyPayNotifyResp.OrderAmount = fmt.Sprintf("%v", order.Fee)
+	ts := time.Now().Unix()
+	edyPayNotifyResp.OrderTime = time.Unix(ts, 0).Format("2006-01-02 03:04:05")
+	edyPayNotifyResp.Ts = ts
+	param2, err := edy_api.GetUrlKeyValStr(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	edyPayNotifyResp.Sign = edy_api.GenerateSign(param2)
+	b, err := json.Marshal(edyPayNotifyResp)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+}
+
+func edyPayBackCallTemp(w http.ResponseWriter, r *http.Request) {
+	edyPayNotifyReq := new(edy_api.EdyPayNotifyReq)
+	//todo:解析到CreateOrderReq
+	edyPayNotifyReq.Amount, _ = strconv.Atoi(r.FormValue("amount"))
+	edyPayNotifyReq.AppID, _ = strconv.Atoi(r.FormValue("appID"))
+	edyPayNotifyReq.OpenExtend = r.FormValue("openExtend")
+	edyPayNotifyReq.OpenOrderID = r.FormValue("openOrderID")
+	edyPayNotifyReq.OrderID = r.FormValue("orderID")
+	edyPayNotifyReq.OrderTime = r.FormValue("orderTime")
+	edyPayNotifyReq.PayType, _ = strconv.Atoi(r.FormValue("payType"))
+	edyPayNotifyReq.PayTime = r.FormValue("payTime")
+	edyPayNotifyReq.Ts, _ = strconv.ParseInt(r.FormValue("ts"), 10, 64)
+	edyPayNotifyReq.Sign = r.FormValue("sign")
+	log.Debug("【请求参数】%+v", *edyPayNotifyReq)
+	param, err := edy_api.GetUrlKeyValStr(edyPayNotifyReq)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	sign := edy_api.GenerateSignTemp(param)
 	log.Debug("【生成的签名】%v", sign)
 	if sign != edyPayNotifyReq.Sign {
 		log.Debug("sign error. ")
