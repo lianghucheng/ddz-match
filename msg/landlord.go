@@ -144,6 +144,17 @@ type S2C_GetMatchList struct {
 	List []OneMatch
 }
 
+// C2S_GetMatchSignList 获取报名列表
+type C2S_GetMatchSignList struct {
+	MatchID string
+}
+
+// S2C_GetMatchSignList 返回报名列表
+type S2C_GetMatchSignList struct {
+	MatchID string
+	List    interface{}
+}
+
 type OneMatchType struct {
 	MatchTypeID   int    `bson:"MatchTypeID"`
 	MatchType     string `bson:"MatchType"`
