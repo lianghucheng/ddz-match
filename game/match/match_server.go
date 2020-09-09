@@ -18,10 +18,19 @@ import (
 var (
 	MatchList              = map[string]*BaseMatch{}
 	UserIDMatch            = map[int]*BaseMatch{}
+	UserIDSign             = map[int][]SignList{}
 	MatchManagerList       = map[string]values.MatchManager{}
 	MatchConfigQueue       = map[string]*values.NormalCofig{} // 后台修改赛事的队列，在比赛开始后下一场生效
 	MatchPlayersCountTimer *timer.Timer
 )
+
+// SignList 多场次报名列表
+type SignList struct {
+	MatchID    string
+	SonMatchID string `json:"-"`
+	MatchName  string
+	MatchDesc  string
+}
 
 func init() {
 	if err := initMatchConfig(); err != nil {
@@ -40,7 +49,7 @@ func initMatchConfig() error {
 	defer db.MongoDB.UnRef(s)
 	one := map[string]interface{}{}
 	log.Debug("init MatchConfig........")
-	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$lt": Delete}}).Iter()
+	iter := s.DB(db.DB).C("matchmanager").Find(bson.M{"state": bson.M{"$ne": Delete}}).Iter()
 	for iter.Next(&one) {
 		if one["matchtype"] == nil || one["matchid"] == nil {
 			log.Error("unknow match:%v", one)
@@ -64,7 +73,7 @@ func initMatchConfig() error {
 			}
 			if sConfig.UseMatch >= sConfig.TotalMatch {
 				game.GetSkeleton().Go(func() {
-					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+					db.UpdateMatchManager(sConfig.MatchID, bson.M{"$set": bson.M{"state": End}})
 				}, nil)
 				continue
 			}
@@ -204,29 +213,69 @@ func sortMatch(list []values.MatchManager) {
 
 // BroadcastMatchInfo 当赛事发生变化时，全服广播赛事信息
 func BroadcastMatchInfo() {
-	RaceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
+	raceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
 	// if len(RaceInfo) == 0 {
 	// 	return
 	// }
 	for uid, user := range player.UserIDUsers {
-		if ma, ok := UserIDMatch[uid]; ok {
-			myMatchID := ma.NormalCofig.MatchID
-			for i, v := range RaceInfo {
-				if v.MatchID == myMatchID {
-					RaceInfo[i].IsSign = true
-				} else {
-					RaceInfo[i].IsSign = false
-				}
-			}
-		} else {
-			for i := range RaceInfo {
-				RaceInfo[i].IsSign = false
+		// myMatchID := ma.NormalCofig.MatchID
+		signList := []msg.OneMatch{}
+		unsignList := []msg.OneMatch{}
+		for _, v := range raceInfo {
+			if IsSign(uid, v.MatchID) {
+				one := v
+				one.IsSign = true
+				signList = append(signList, one)
+				log.Debug("signList1:%v", signList)
+			} else {
+				unsignList = append(unsignList, v)
 			}
 		}
+
+		sendList := append(signList, unsignList...)
 		user.WriteMsg(&msg.S2C_GetMatchList{
-			List: RaceInfo,
+			List: sendList,
 		})
 	}
+}
+
+// SendMatchInfo 对单个玩家发送
+func SendMatchInfo(uid int) {
+	raceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
+	user, ok := player.UserIDUsers[uid]
+	if !ok {
+		return
+	}
+	signList := []msg.OneMatch{}
+	unsignList := []msg.OneMatch{}
+	for _, v := range raceInfo {
+		if IsSign(uid, v.MatchID) {
+			one := v
+			one.IsSign = true
+			signList = append(signList, one)
+			log.Debug("signList1:%v", signList)
+		} else {
+			unsignList = append(unsignList, v)
+		}
+	}
+	sendList := append(signList, unsignList...)
+	user.WriteMsg(&msg.S2C_GetMatchList{
+		List: sendList,
+	})
+}
+
+// IsSign 玩家是否已报名该赛事
+func IsSign(uid int, matchID string) bool {
+	matchs, ok := UserIDSign[uid]
+	if !ok {
+		return false
+	}
+	for _, v := range matchs {
+		if v.MatchID == matchID {
+			return true
+		}
+	}
+	return false
 }
 
 // RefreshPlayersCount 刷新人数

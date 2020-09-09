@@ -261,6 +261,14 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	Broadcast(&msg.S2C_OnlineUserNum{
 		Num: CalcOnlineCnt(UserIDUsers) + match.GetFakePlayersCount(),
 	})
+	// 重新为每个赛事存储的玩家副本赋值
+	if signs, ok := UserIDSign[user.BaseData.UserData.UserID]; ok {
+		for _, v := range signs {
+			if _, ok := MatchList[v.SonMatchID]; ok {
+				MatchList[v.SonMatchID].AllPlayers[user.BaseData.UserData.UserID] = user
+			}
+		}
+	}
 	if s, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
 		// for uid, p := range s.AllPlayers {
 		// 	if p.BaseData.UserData.UserID == user.BaseData.UserData.UserID {
