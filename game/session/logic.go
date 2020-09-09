@@ -189,6 +189,11 @@ func logout(user *User) {
 }
 
 func onLogin(user *User, firstLogin bool, anotherLogin bool) {
+	log.Debug("***********玩家卡: ")
+	log.Debug("***********玩家卡: ")
+	log.Debug("***********玩家卡: ")
+	log.Debug("***********玩家卡: ")
+	log.Debug("***********玩家卡: ")
 	user.BaseData.UserData.LoginIP = strings.Split(user.RemoteAddr().String(), ":")[0]
 	user.BaseData.UserData.Token = utils.GetToken(32)
 	user.BaseData.UserData.ExpireAt = time.Now().Add(2 * time.Hour).Unix()
@@ -209,6 +214,7 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	bankCard.Userid = user.UID()
 	bankCard.Read()
 	tail := ""
+	log.Debug("***********玩家银行卡: %v", bankCard.BankCardNo)
 	if bankCard.BankCardNo != "" {
 		tail = bankCard.BankCardNo[len(bankCard.BankCardNo)-4:]
 	}

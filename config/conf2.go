@@ -121,6 +121,9 @@ type CfgLianHang struct {
 type CfgNormal struct {
 	AmountLimit float64
 	Templates   []string
+	CircleTTL   int
+	HorseLampSizeLimit int
+	EndRoundHorseTTL int
 }
 
 var cfg *Config

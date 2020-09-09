@@ -657,10 +657,45 @@ func dealIllegalMatch(args []interface{}) {
 		desc = "回调体总失败！"
 		return
 	}
-	// hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
-	// 	data.MatchType, data.SonMatchID, []int{}, data.CreateTime)
+
+	fid := 0
+
+	overFlowdata := db.ReadFlowdataLateOver(data.CreateTime)
+	end := int64(0)
+	if overFlowdata == nil {
+		fid = hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
+			data.MatchType, data.SonMatchID, []int{}, data.CreateTime, hall.FlowDataStatusNormal)
+		if fid <= 0 {
+			code = 1
+			desc = "回调体总失败！"
+			return
+		}
+		end = values.MAX
+	} else {
+		fid = hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
+			data.MatchType, data.SonMatchID, []int{}, data.CreateTime, hall.FlowDataStatusOver)
+		if fid <= 0 {
+			code = 1
+			desc = "回调体总失败！"
+			return
+		}
+		overFlowdata.FlowIDs = append(overFlowdata.FlowIDs, fid)
+		overFlowdata.ChangeAmount += utils.Decimal(awardAmount)
+		db.SaveFlowdata(overFlowdata)
+
+		end = overFlowdata.CreatedAt
+	}
+
+	backFlowdatas := db.ReadFlowdataBack(data.CreateTime, end)
+	if backFlowdatas != nil {
+		for _, v := range *backFlowdatas {
+			v.FlowIDs = append(v.FlowIDs, fid)
+			v.ChangeAmount += utils.Decimal(awardAmount)
+			db.SaveFlowdata(&v)
+		}
+	}
 	hall.AddFeeWithTime(data.UID, data.AccountID, utils.Decimal(awardAmount),
 		db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", data.MatchName), data.SonMatchID, data.CreateTime)
-	// hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
-	// db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
+	//hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
+	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 3}})
 }

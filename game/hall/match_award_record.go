@@ -1,8 +1,10 @@
 package hall
 
 import (
+	"ddz/config"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/game/values"
 	"time"
 
 	"github.com/szxby/tools/log"
@@ -20,6 +22,7 @@ type MatchAwardRecord struct {
 	CreatedAt    int64
 	Realname     string
 	Desc         string
+	IsMoney      bool
 }
 
 func (ctx *MatchAwardRecord) save() {
@@ -45,7 +48,25 @@ func WriteMatchAwardRecord(uid int, matchType, matchID, matchName, awardContent 
 	matchAwardRecord.ID, _ = db.MongoDBNextSeq("matchawardrecord")
 	matchAwardRecord.MatchName = matchName
 	matchAwardRecord.AwardContent = awardContent
+
+	if len(awardContent) >= 0 && values.GetMoneyAward(awardContent) >= 0 {
+		matchAwardRecord.IsMoney = true
+	}
+
 	matchAwardRecord.save()
+}
+
+func ReadMatchAwardRecord(query bson.M) *[]MatchAwardRecord {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+
+	datas := new([]MatchAwardRecord)
+
+	if err := se.DB(db.DB).C("matchawardrecord").Find(query).Limit(config.GetCfgNormal().HorseLampSizeLimit).All(datas); err != nil {
+		log.Error(err.Error())
+	}
+
+	return datas
 }
 
 func WriteMatchAwardRecordWithTime(uid int, matchType, matchID, matchName, awardContent string, timestamp int64) {
