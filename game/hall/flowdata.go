@@ -143,7 +143,7 @@ func WriteFlowDataWithTime(uid int, amount float64, flowType int, matchType, mat
 	if flowType == FlowTypeWithDraw {
 		flowData.Status = FlowDataStatusAction
 	}
-	flowData.Status=status
+	flowData.Status = status
 	flowData.save()
 	game.GetSkeleton().ChanRPCServer.Go("UpdateAwardInfo", &msg.RPC_UpdateAwardInfo{
 		Uid: uid,

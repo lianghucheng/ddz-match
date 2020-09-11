@@ -34,6 +34,7 @@ type C2S_RaceDetail struct {
 }
 
 type S2C_RaceDetail struct {
+	Error         int
 	ID            string  //赛事ID
 	Desc          string  //
 	AwardDesc     string  //奖励描述

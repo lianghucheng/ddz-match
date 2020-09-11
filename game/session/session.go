@@ -50,6 +50,8 @@ func init() {
 	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 	skeleton.RegisterChanRPC("UpdateBankCardNo", rpcUpdateBankCardNo)
 	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch) // 获取在线人数
+	skeleton.RegisterChanRPC("StartHorseLamp", StartHorseLamp)
+	skeleton.RegisterChanRPC("StopHorseLamp", StopHorseLamp)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -672,4 +674,32 @@ func dealIllegalMatch(args []interface{}) {
 		db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", data.MatchName), data.SonMatchID, data.CreateTime)
 	//hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
 	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
+}
+
+func StartHorseLamp(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	m, ok := args[0].(*msg.RPC_HorseLamp)
+	_ = m
+	if !ok {
+		log.Error("m, ok := args[0].(*msg.RPC_HorseLamp). error")
+		return
+	}
+	//hall.StartHorseLamp(m)
+}
+
+func StopHorseLamp(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	m, ok := args[0].(*msg.RPC_HorseLamp)
+	_ = m
+	if !ok {
+		log.Error("m, ok := args[0].(*msg.RPC_HorseLamp). error")
+		return
+	}
+	//hall.StopHorseLamp(m.ID)
 }

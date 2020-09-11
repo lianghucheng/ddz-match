@@ -103,4 +103,5 @@ type HorseRaceLamp struct {
 type S2C_HorseRaceLamp struct {
 	Template string
 	//Info []map[string]string
+	LinkMatchID string
 }

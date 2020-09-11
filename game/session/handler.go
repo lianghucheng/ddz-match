@@ -9,10 +9,9 @@ import (
 	. "ddz/game/room"
 	"ddz/game/values"
 	"ddz/msg"
-	"reflect"
-
 	"github.com/name5566/leaf/gate"
 	"github.com/szxby/tools/log"
+	"reflect"
 )
 
 func init() {
@@ -310,6 +309,10 @@ func handleRaceDetail(args []interface{}) {
 		// }
 
 		// user.WriteMsg(data)
+	} else {
+		user.WriteMsg(&msg.S2C_RaceDetail{
+			Error: 1,
+		})
 	}
 }
 

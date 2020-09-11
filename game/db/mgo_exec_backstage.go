@@ -126,3 +126,14 @@ func ReadPropBaseConfig() *[]values.PropBaseConfig {
 	log.Debug("道具配置基本信息： %v", *datas)
 	return datas
 }
+
+func SaveBkHorseLamp(id, status int) {
+	data := new(values.HorseRaceLampControl)
+	read("horselampcontrol", data, bson.M{"_id": id}, readOne)
+	log.Debug("商家数据： %v", *data)
+	data.Status = status
+
+	se := BackstageDB.Ref()
+	defer BackstageDB.UnRef(se)
+	se.DB(BkDBName).C("horselampcontrol").Upsert(bson.M{"_id": id}, data)
+}

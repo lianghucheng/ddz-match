@@ -73,6 +73,8 @@ func startHTTPServer() {
 
 	mux.HandleFunc("/pushmail/notify-clean", pushMailNotifyClean)
 	mux.HandleFunc("/bind/lianhanghao", handleLianHangHao)
+	mux.HandleFunc("/horse/start", handleHorseStart)
+	mux.HandleFunc("/horse/stop", handleHorseStop)
 
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
@@ -444,7 +446,7 @@ func edyPayBackCallTemp(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		return
 	}
-	edyPayNotifyResp.Sign = edy_api.GenerateSign(param2)
+	edyPayNotifyResp.Sign = edy_api.GenerateSignTemp(param2)
 	b, err := json.Marshal(edyPayNotifyResp)
 	if err != nil {
 		log.Error(err.Error())
@@ -926,4 +928,66 @@ func handleLianHangHao(w http.ResponseWriter, r *http.Request) {
 		Userid:     ud.UserID,
 		BankCardNo: ud.BankCardNo,
 	})
+}
+
+func handleHorseStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	req := new(msg.RPC_HorseLamp)
+	code, errmsg = utils.ParseJsonParam(r, req)
+	if code != utils.Success {
+		code = utils.FormatFail
+		errmsg = utils.ErrMsg[code]
+		return
+	}
+	game.GetSkeleton().ChanRPCServer.Go("StartHorseLamp", req)
+}
+
+func handleHorseStop(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	req := new(msg.RPC_HorseLamp)
+	code, errmsg = utils.ParseJsonParam(r, req)
+	if code != utils.Success {
+		code = utils.FormatFail
+		errmsg = utils.ErrMsg[code]
+		return
+	}
+	game.GetSkeleton().ChanRPCServer.Go("StopHorseLamp", req)
 }

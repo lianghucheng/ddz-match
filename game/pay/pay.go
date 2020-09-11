@@ -197,7 +197,6 @@ func FakerCreateOrder(aid int, pid int) (int, string) {
 	return 0, "成功，订单号" + order.TradeNo
 }
 
-
 func CreateOrderTiZong(user *player.User, m *msg.C2S_CreateEdyOrder) {
 	//todo: 暂时的支付
 	pm := hall.GetTempPrice()[m.PriceID]

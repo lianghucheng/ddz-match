@@ -269,3 +269,23 @@ func TransferMapStringSlice(data interface{}) ([]map[string]string, error) {
 
 	return rt, nil
 }
+
+func ParseJsonParam(req *http.Request, rt interface{}) (code int, desc string) {
+	code = Success
+	desc = ErrMsg[code]
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Error(err.Error())
+		code = Fail
+		desc = ErrMsg[code]
+		return
+	}
+	log.Debug("【接收到的参数】%v", string(data))
+	if err := json.Unmarshal(data, rt); err != nil {
+		log.Error(err.Error())
+		code = FormatFail
+		desc = ErrMsg[code]
+		return
+	}
+	return
+}

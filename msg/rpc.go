@@ -17,6 +17,7 @@ func init() {
 	Processor.Register(&RPC_AddCouponFrag{})
 	Processor.Register(&RPC_SendPayAccount{})
 	Processor.Register(&RPC_UpdateBankCardNo{})
+	Processor.Register(&RPC_HorseLamp{})
 }
 
 type C2S_EndMatch struct {
@@ -101,4 +102,14 @@ type RPC_SendPayAccount struct {
 type RPC_UpdateBankCardNo struct {
 	Userid     int
 	BankCardNo string
+}
+
+type RPC_HorseLamp struct {
+	ID           int
+	Template     string
+	ExpiredAt    int    //过期时间戳
+	TakeEffectAt int    //发布时间戳
+	Duration     int    //间隔时长，单位s
+	LinkMatchID  string //关联赛事id
+	Level        int
 }
