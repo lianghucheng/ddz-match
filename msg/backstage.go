@@ -17,6 +17,7 @@ func init() {
 	Processor.Register(&RPC_EditWhiteList{})
 	Processor.Register(&RPC_GetOnline{})
 	Processor.Register(&RPC_IllegalMatch{})
+	Processor.Register(&RPC_ShareAward{})
 }
 
 // RPC_AddManagerReq 后台调用游戏服新增赛事
@@ -154,6 +155,16 @@ type RPC_IllegalMatch struct {
 	MatchName  string
 	CreateTime int64
 	Award      string
+
+	WG    *sync.WaitGroup
+	Write http.ResponseWriter
+}
+
+// RPC_ShareAward 分享奖励
+type RPC_ShareAward struct {
+	AccountID int
+	Item      int
+	AwardNum  int
 
 	WG    *sync.WaitGroup
 	Write http.ResponseWriter

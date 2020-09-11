@@ -49,9 +49,10 @@ func init() {
 	skeleton.RegisterChanRPC("AddCouponFrag", rpcAddCouponFrag)
 	skeleton.RegisterChanRPC("SendPayAccount", rpcSendPayAccount)
 	skeleton.RegisterChanRPC("UpdateBankCardNo", rpcUpdateBankCardNo)
-	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch) // 获取在线人数
 	skeleton.RegisterChanRPC("StartHorseLamp", StartHorseLamp)
 	skeleton.RegisterChanRPC("StopHorseLamp", StopHorseLamp)
+	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch)
+	skeleton.RegisterChanRPC("shareAward", shareAward)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -574,6 +575,31 @@ func rpcUpdateBankCardNo(args []interface{}) {
 	}
 }
 
+func shareAward(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	data, ok := args[0].(*msg.RPC_ShareAward)
+	if !ok {
+		log.Error("error req:%+v", args)
+		return
+	}
+	log.Debug("share award data:%+v", data)
+	code := 0
+	desc := "OK"
+	defer func() {
+		resp, _ := json.Marshal(map[string]interface{}{"code": code, "desc": desc})
+		data.Write.Write(resp)
+		data.WG.Done()
+	}()
+	err := hall.ShareAwardPushMail(data.AccountID, data.Item, data.AwardNum)
+	if err != nil {
+		code = 1
+		desc = err.Error()
+	}
+}
+
 func dealIllegalMatch(args []interface{}) {
 	if len(args) != 1 {
 		log.Error("error req:%+v", args)
@@ -611,6 +637,18 @@ func dealIllegalMatch(args []interface{}) {
 	var awardAmount float64
 	for _, v := range results.Result_list {
 		if v.Player_id == strconv.Itoa(data.AccountID) {
+			if v.Status == "3" {
+				log.Error("err award :%+v", v)
+				code = 2
+				desc = "体总已驳回!"
+				return
+			}
+			if v.Status == "4" {
+				log.Error("err award :%+v", v)
+				code = 3
+				desc = "体总返回异常赛事!"
+				return
+			}
 			if v.Status != "2" {
 				log.Error("err award :%+v", v)
 				code = 1
@@ -673,7 +711,7 @@ func dealIllegalMatch(args []interface{}) {
 	hall.AddFeeWithTime(data.UID, data.AccountID, utils.Decimal(awardAmount),
 		db.MatchOpt, db.MatchAward+fmt.Sprintf("-%v", data.MatchName), data.SonMatchID, data.CreateTime)
 	//hall.WriteMatchAwardRecordWithTime(data.UID, data.MatchType, data.MatchID, data.MatchName, data.Award, data.CreateTime)
-	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 2}})
+	db.UpdateIllegalMatchRecord(bson.M{"accountid": data.AccountID, "sonmatchid": data.SonMatchID}, bson.M{"$set": bson.M{"callbackstatus": 3}})
 }
 
 func StartHorseLamp(args []interface{}) {

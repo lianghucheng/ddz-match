@@ -6,7 +6,9 @@ import (
 	"ddz/game"
 	"ddz/game/db"
 	"ddz/game/player"
+	"ddz/game/values"
 	"ddz/msg"
+	"errors"
 	"fmt"
 	"time"
 
@@ -229,6 +231,33 @@ func RefundPushMail(userid int, fee float64) {
 	mailBox.Content = fmt.Sprintf("您的提奖金额【%v】已被官方退回，请联系客服进行处理；客服QQ：wkxjingjipingtai", fee)
 
 	mailBox.pushMailBox()
+}
+
+// ShareAwardPushMail 分享有奖邮件
+func ShareAwardPushMail(accountID int, itemID int, itemNum int) error {
+	mailBox := new(MailBox)
+	user := player.ReadUserDataByAid(accountID)
+	if user.AccountID <= 0 {
+		return errors.New("未知用户")
+	}
+	mailBox.TargetID = int64(user.UserID)
+	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
+	mailBox.MailType = MailTypeMix
+
+	itemType := values.PropID2Type[itemID]
+	mailBox.Annexes = []Annex{
+		Annex{
+			PropType: itemType,
+			Num:      float64(itemNum),
+		},
+	}
+
+	mailBox.MailServiceType = MailServiceTypeOfficial
+	mailBox.Title = "分享奖励"
+	mailBox.Content = fmt.Sprintf("恭喜成功分享一名好友,奖励%v点券。", itemNum)
+
+	mailBox.pushMailBox()
+	return nil
 }
 
 func (ctx *MailBox) pushMailBox() {

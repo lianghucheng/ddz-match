@@ -51,6 +51,7 @@ func init() {
 	handler(&msg.C2S_BindBankCard{}, handleAddBankCard)
 	handler(&msg.C2S_WithDraw{}, handleWithDraw)
 	handler(&msg.C2S_GetMatchList{}, handleGetMatchList)
+	handler(&msg.C2S_GetMatchSignList{}, handleGetMatchSignList)
 	handler(&msg.C2S_ChangePassword{}, handleChangePassword)
 	handler(&msg.C2S_TakenFirstCoupon{}, handleTakenFirstCoupon)
 	handler(&msg.C2S_CreateEdyOrder{}, handleCreateEdyOrder)
@@ -489,13 +490,9 @@ func handleRaceInfoHall(args []interface{}) {
 		return
 	}
 	RaceInfo := GetMatchManagerInfo(2).([]msg.OneMatch)
-	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		myMatchID := ma.NormalCofig.MatchID
-		for i, v := range RaceInfo {
-			if v.MatchID == myMatchID {
-				RaceInfo[i].IsSign = true
-				break
-			}
+	for i, v := range RaceInfo {
+		if IsSign(user.BaseData.UserData.UserID, v.MatchID) {
+			RaceInfo[i].IsSign = true
 		}
 	}
 	user.WriteMsg(&msg.S2C_RaceInfo{
@@ -513,13 +510,14 @@ func handleGetMatchList(args []interface{}) {
 	if user == nil {
 		return
 	}
-	myMatchID := ""
-	if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
-		// myMatchID = ma.MatchID
-		myMatchID = ma.NormalCofig.MatchID
-	}
+	// myMatchID := ""
+	// if ma, ok := UserIDMatch[user.BaseData.UserData.UserID]; ok {
+	// 	// myMatchID = ma.MatchID
+	// 	myMatchID = ma.NormalCofig.MatchID
+	// }
 	list := GetMatchManagerInfo(2).([]msg.OneMatch)
 	sendConfig := []msg.OneMatchType{}
+	sendList := []msg.OneMatch{}
 	for i, v := range list {
 		if c, ok := values.MatchTypeConfig[v.MatchType]; ok {
 			tag := false
@@ -533,15 +531,49 @@ func handleGetMatchList(args []interface{}) {
 				sendConfig = append(sendConfig, c)
 			}
 		}
-		// 已报名的比赛排序在最前面
-		if v.MatchID == myMatchID {
+		// // 已报名的比赛排序在最前面
+		// if v.MatchID == myMatchID {
+		// 	list[i].IsSign = true
+		// 	list[i], list[0] = list[0], list[i]
+		// }
+		if IsSign(user.BaseData.UserData.UserID, v.MatchID) {
 			list[i].IsSign = true
-			list[i], list[0] = list[0], list[i]
+			sendList = append(sendList, list[i])
 		}
 	}
+	for _, v := range list {
+		if v.IsSign {
+			continue
+		}
+		sendList = append(sendList, v)
+	}
+
 	user.WriteMsg(&msg.S2C_GetMatchList{
 		All:  sendConfig,
-		List: list,
+		List: sendList,
+	})
+}
+
+func handleGetMatchSignList(args []interface{}) {
+	data := args[0].(*msg.C2S_GetMatchSignList)
+	a := args[1].(gate.Agent)
+	if a.UserData() == nil {
+		return
+	}
+	user := a.UserData().(*AgentInfo).User
+	if user == nil {
+		return
+	}
+
+	list := []SignList{}
+
+	if v, ok := UserIDSign[user.BaseData.UserData.UserID]; ok {
+		list = v
+	}
+
+	user.WriteMsg(&msg.S2C_GetMatchSignList{
+		MatchID: data.MatchID,
+		List:    list,
 	})
 }
 

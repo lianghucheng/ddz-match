@@ -513,14 +513,15 @@ func (game *LandlordMatchRoom) doDiscard(userID int, cards []int) {
 		discarderPlayerData := game.UserIDPlayerDatas[game.discarderUserID]
 		prevDiscards = discarderPlayerData.discards[len(discarderPlayerData.discards)-1]
 	}
+	compare := poker.CompareLandlordDiscard(cards, prevDiscards)
 	if cardsLen == 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardMust ||
 		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardNothing ||
 		cardsLen > 0 && !contain || cardsLen > 0 && cardsType == poker.Error ||
-		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardAlternative && !poker.CompareLandlordDiscard(cards, prevDiscards) {
+		cardsLen > 0 && playerData.actionDiscardType == poker.ActionLandlordDiscardAlternative && !compare {
 		if playerData, ok := game.UserIDPlayerDatas[userID]; ok {
 			after := int(time.Now().Unix() - playerData.actionTimestamp)
 			isErr := 0
-			if !contain || cardsLen > 0 && cardsType == poker.Error {
+			if !contain || !compare || cardsLen > 0 && cardsType == poker.Error {
 				isErr = 1
 			}
 			countdown := conf.GetCfgTimeout().LandlordDiscard - after

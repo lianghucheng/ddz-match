@@ -151,6 +151,9 @@ func (sc *ScoreConfig) onSign(uid int) {
 		AllPlayerNum: sc.GetAllPlayersCount(),
 	})
 
+	// 刷新玩家赛事列表
+	SendMatchInfo(uid)
+
 	// 赛事结束
 	if sc.UseMatch >= sc.TotalMatch && sc.LastMatch.State != Signing {
 		sc.EndMatchManager()
@@ -288,12 +291,17 @@ func (sc *ScoreConfig) SendMatchDetail(uid int) {
 	}
 	signNumDetail := sc.StartType == 1
 	isSign := false
-	if m, ok := UserIDMatch[uid]; ok {
-		// c := m.Manager.GetNormalConfig()
-		// log.Debug("check,%v", m.NormalCofig.MatchID)
-		// log.Debug("check,%v", sc.MatchID)
-		if m.NormalCofig.MatchID == sc.MatchID {
-			isSign = true
+	// if m, ok := UserIDMatch[uid]; ok {
+	// 	if m.NormalCofig.MatchID == sc.MatchID {
+	// 		isSign = true
+	// 	}
+	// }
+	if matchs, ok := UserIDSign[uid]; ok {
+		for _, v := range matchs {
+			if v.MatchID == sc.MatchID {
+				isSign = true
+				break
+			}
 		}
 	}
 	sTime := sc.StartTime
@@ -435,7 +443,7 @@ func (sc *ScoreConfig) EndMatchManager() {
 	BroadcastMatchInfo()
 	// 修改赛事配置数据
 	game.GetSkeleton().Go(func() {
-		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": Delete}})
+		db.UpdateMatchManager(sc.MatchID, bson.M{"$set": bson.M{"state": End}})
 	}, nil)
 }
 

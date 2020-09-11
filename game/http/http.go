@@ -34,6 +34,7 @@ func init() {
 func startHTTPServer() {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/loginverify", handleH5Login)
 	mux.HandleFunc("/code", handleCode)
 	mux.HandleFunc("/pushmail", handlePushMail)
 	mux.HandleFunc("/temppay", HandleTempPay)
@@ -54,6 +55,7 @@ func startHTTPServer() {
 	mux.HandleFunc("/getOnline", getOnline)
 	mux.HandleFunc("/restart", restartServer)
 	mux.HandleFunc("/dealIllegalMatch", dealIllegalMatch)
+	mux.HandleFunc("/shareAward", shareAward)
 
 	mux.HandleFunc("/addaward", addAward)
 	mux.HandleFunc("/update-headimg", updateHeadImg)
@@ -83,8 +85,35 @@ func startHTTPServer() {
 	}
 }
 
+func handleH5Login(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	data := req.FormValue("data")
+	log.Debug("data   %v", data)
+	m := new(msg.C2S_Register)
+	err := json.Unmarshal([]byte(data), m)
+	if err != nil {
+		log.Debug("数据格式错误, %v,err:%v", string(data), err)
+		errMsg := NewError(FORMAT_FAIL, "数据格式错误")
+		w.Write(strbyte(errMsg))
+		return
+	}
+	db := MongoDB.Ref()
+	defer MongoDB.UnRef(db)
+	// load userData
+	count, _ := db.DB(DB).C("users").Find(bson.M{"username": m.Account, "password": m.Password}).Count()
+	if count <= 0 {
+		errMsg := NewError(PHONENUMBER_INVALID, "登录失败")
+		w.Write(strbyte(errMsg))
+		return
+	}
+	w.Write(strbyte(success))
+	return
+}
+
 func handleCode(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	data := req.FormValue("data")
 	log.Debug("data   %v", data)
 	temp := map[string]interface{}{}
@@ -180,6 +209,7 @@ func HandleTempPay(w http.ResponseWriter, r *http.Request) {
 
 func handleRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	data := r.FormValue("data")
 	m := new(msg.C2S_Register)
 	err := json.Unmarshal([]byte(data), m)
