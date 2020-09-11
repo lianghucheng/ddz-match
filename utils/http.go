@@ -17,12 +17,13 @@ const (
 
 // PostToAgentServer 向代理后台发送数据
 func PostToAgentServer(send interface{}, path string) error {
+	log.Debug("post to agent:%v", send)
 	params, err := json.Marshal(send)
 	if err != nil {
 		log.Error("http post call err:%v", err)
 		return err
 	}
-	sign := CalculateHash(string(params))
+	sign := CalculateMD5(string(params))
 	data := map[string]interface{}{"Data": string(params), "Sign": sign}
 	reqStr, _ := json.Marshal(data)
 	req, err := http.NewRequest("POST", conf.GetCfgLeafSrv().AgentServer+path, bytes.NewBuffer(reqStr))

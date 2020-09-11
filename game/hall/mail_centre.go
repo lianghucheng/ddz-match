@@ -240,7 +240,7 @@ func ShareAwardPushMail(accountID int, itemID int, itemNum int) error {
 	if user.AccountID <= 0 {
 		return errors.New("未知用户")
 	}
-	mailBox.TargetID = int64(user.AccountID)
+	mailBox.TargetID = int64(user.UserID)
 	mailBox.ExpireValue = float64(conf.GetCfgHall().MailDefaultExpire)
 	mailBox.MailType = MailTypeMix
 

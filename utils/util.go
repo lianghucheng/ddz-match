@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"crypto/md5"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -194,6 +196,13 @@ func CalculateHash(data string) string {
 	h.Write([]byte(key + data))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
+}
+
+// CalculateMD5 calculate md5
+func CalculateMD5(data string) string {
+	h := md5.New()
+	h.Write([]byte(key + data))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // FormatFloat 取小数点后n位非零小数
