@@ -674,7 +674,7 @@ func dealIllegalMatch(args []interface{}) {
 
 	fid := 0
 
-	overFlowdata := db.ReadFlowdataLateOver(data.CreateTime)
+	overFlowdata := db.ReadFlowdataLateOver(data.CreateTime, data.AccountID)
 	end := int64(0)
 	if overFlowdata == nil {
 		fid = hall.WriteFlowDataWithTime(data.UID, utils.Decimal(awardAmount), hall.FlowTypeAward,
@@ -700,7 +700,7 @@ func dealIllegalMatch(args []interface{}) {
 		end = overFlowdata.CreatedAt
 	}
 
-	backFlowdatas := db.ReadFlowdataBack(data.CreateTime, end)
+	backFlowdatas := db.ReadFlowdataBack(data.CreateTime, end, data.AccountID)
 	if backFlowdatas != nil {
 		for _, v := range *backFlowdatas {
 			v.FlowIDs = append(v.FlowIDs, fid)

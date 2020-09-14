@@ -226,22 +226,22 @@ func readOneByQuery(rt interface{}, query bson.M, coll string) {
 	}
 }
 
-func ReadFlowdataLateOver(latedAt int64) *values.FlowData {
+func ReadFlowdataLateOver(latedAt int64, accountid int) *values.FlowData {
 	data := new(values.FlowData)
 	se := MongoDB.Ref()
 	defer MongoDB.UnRef(se)
-	if err := se.DB(DB).C("flowdata").Find(bson.M{"createdat": bson.M{"$gt": latedAt}, "flowtype": 2, "status": 2}).One(data); err != nil {
+	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid":accountid,"createdat": bson.M{"$gt": latedAt}, "flowtype": 2, "status": 2}).One(data); err != nil {
 		log.Debug(err.Error())
 		return nil
 	}
 	return data
 }
 
-func ReadFlowdataBack(start, end int64) *[]values.FlowData {
+func ReadFlowdataBack(start, end int64, accountid int) *[]values.FlowData {
 	datas := new([]values.FlowData)
 	se := MongoDB.Ref()
 	defer MongoDB.UnRef(se)
-	if err := se.DB(DB).C("flowdata").Find(bson.M{"createdat": bson.M{"$gt": start, "$lt": end}, "flowtype": 2, "status": 3}).All(datas); err != nil {
+	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid":accountid, "createdat": bson.M{"$gt": start, "$lt": end}, "flowtype": 2, "status": 3}).All(datas); err != nil {
 		log.Debug(err.Error())
 		return nil
 	}
