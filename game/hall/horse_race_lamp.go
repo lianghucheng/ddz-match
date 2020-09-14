@@ -332,7 +332,7 @@ func SendHorsePrev() {
 	log.Debug("跑马灯缓存队列index: %v", horseQueueIndex)
 }
 
-func PrintHorseLampMapNextTmp(){
+func PrintHorseLampMapNextTmp() {
 	for i := 1; ; {
 		log.Debug("循环获取优先级跑马灯  index %v   LevelHorseLampMap长度：%v", i, len(LevelHorseLampMap))
 		horseLampMap, ok := LevelHorseLampMap[i]
@@ -346,7 +346,7 @@ func PrintHorseLampMapNextTmp(){
 		for _, v := range ids {
 			data := horseLampMap[v]
 			if data.TakeEffectAt < now && now < data.ExpiredAt {
-				log.Debug("优先级为%v， 内容为%v，   NextTmp：%v", i, data.Template , time.Unix(int64(data.NextTmp),0).Format("2006/01/02 15:04:05"))
+				log.Debug("优先级为%v， 内容为%v，   NextTmp：%v", i, data.Template, time.Unix(int64(data.NextTmp), 0).Format("2006/01/02 15:04:05"))
 			} else if data.ExpiredAt <= now {
 				log.Debug("优先级跑马灯已过期")
 			}
