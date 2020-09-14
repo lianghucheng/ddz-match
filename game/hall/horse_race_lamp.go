@@ -19,6 +19,10 @@ import (
 func init() {
 	rand.Seed(time.Now().Unix())
 	HorseQueue = new(HorseRaceLampQueue)
+	LevelHorseLampMap[1] = make(IDHorseLampMap)
+	LevelHorseLampMap[2] = make(IDHorseLampMap)
+	LevelHorseLampMap[3] = make(IDHorseLampMap)
+	LevelHorseLampMap[4] = make(IDHorseLampMap)
 	InitHorseTimer()
 }
 
@@ -158,6 +162,8 @@ func StartHorseLamp(lamp *msg.RPC_HorseLamp) {
 	horseLamp, ok := LevelHorseLampMap[lamp.Level]
 	if !ok {
 		log.Debug("no LevelHorseLampMap")
+		LevelHorseLampMap[lamp.Level] = make(IDHorseLampMap)
+		horseLamp = LevelHorseLampMap[lamp.Level]
 	}
 	horseLamp[lamp.ID] = lamp
 	//now := time.Now().Unix()
@@ -170,6 +176,7 @@ func StartHorseLamp(lamp *msg.RPC_HorseLamp) {
 	//		IDHorseTimer[lamp.ID] = new_horseTimer
 	//	})
 	//}
+
 	db.SaveBkHorseLamp(lamp.ID, 0)
 	log.Debug("StartHorseLamp开始成功")
 }
@@ -181,10 +188,10 @@ func CircleHorseTimer(lamp *msg.RPC_HorseLamp) *timer.Timer {
 			return
 		}
 
-		log.Debug("HorseControl BroadCast S--->C: %v", msg.S2C_HorseRaceLamp{
-			Template:    lamp.Template,
-			LinkMatchID: lamp.LinkMatchID,
-		})
+		//log.Debug("HorseControl BroadCast S--->C: %v", msg.S2C_HorseRaceLamp{
+		//	Template:    lamp.Template,
+		//	LinkMatchID: lamp.LinkMatchID,
+		//})
 		player.Broadcast(&msg.S2C_HorseRaceLamp{
 			Template:    lamp.Template,
 			LinkMatchID: lamp.LinkMatchID,
@@ -210,12 +217,18 @@ func CleanHorseCommand(lampID int) {
 		log.Debug("no IDLevelMap")
 		return
 	}
-	levelHorseLamp, ok := LevelHorseLampMap[level]
+
+	delete(IDLevelMap, lampID)
+
+	idHorseLamp, ok := LevelHorseLampMap[level]
 	if !ok {
 		log.Debug("no LevelHorseLampMap")
+		return
 	}
-	delete(levelHorseLamp, lampID)
+	delete(idHorseLamp, lampID)
+
 	db.SaveBkHorseLamp(lampID, 1)
+	log.Debug("清理成功")
 }
 
 func StopHorseLamp(timerid int) {
@@ -225,40 +238,57 @@ func StopHorseLamp(timerid int) {
 }
 
 func StartHorseTimer() {
-	game.GetSkeleton().AfterFunc(time.Duration(config.GetCfgNormal().CircleTTL) * time.Second, func() {
-		template, linkMatchID:= GetHorseLampDataByLevel()
+	log.Debug("跑马灯优先级定时器")
+
+	game.GetSkeleton().AfterFunc(time.Duration(config.GetCfgNormal().CircleTTL)*time.Second, func() {
+		template, linkMatchID := GetHorseLampDataByLevel()
 		if template == "" {
 			SendHorsePrev()
 		} else {
-			log.Debug("HorseControl BroadCast S--->C: %v", msg.S2C_HorseRaceLamp{
-				Template:    template,
-				LinkMatchID: linkMatchID,
-			})
+			//log.Debug("HorseControl BroadCast S--->C: %v", msg.S2C_HorseRaceLamp{
+			//	Template:    template,
+			//	LinkMatchID: linkMatchID,
+			//})
 			player.Broadcast(&msg.S2C_HorseRaceLamp{
 				Template:    template,
 				LinkMatchID: linkMatchID,
 			})
 		}
+
+		//PrintHorseLampMapNextTmp()
 		StartHorseTimer()
 	})
 }
 
-func GetHorseLampDataByLevel() (string,string) {
+func GetHorseLampDataByLevel() (string, string) {
+	log.Debug("开始获取优先级跑马灯")
 	var horseLampData *msg.RPC_HorseLamp
 	flag := 0
-	for i:=1;; {
+	for i := 1; ; {
+		log.Debug("循环获取优先级跑马灯  index %v   LevelHorseLampMap长度：%v", i, len(LevelHorseLampMap))
 		horseLampMap, ok := LevelHorseLampMap[i]
 		if !ok {
+			log.Debug("没有优先级跑马灯   index:%v", i)
 			break
 		}
 		ids := GetMapSortKey(horseLampMap)
+		log.Debug("得到排序   sort：%v", ids)
 		now := int(time.Now().Unix())
-		for _,v := range ids {
+		for _, v := range ids {
 			data := horseLampMap[v]
-			if data.TakeEffectAt < now && now <data.ExpiredAt {
+			if data.TakeEffectAt < now && now < data.ExpiredAt {
+				if data.NextTmp > now {
+					continue
+				}
+
 				horseLampData = data
 				flag = 1
+				data.NextTmp = now + data.Duration
+				log.Debug("优先级跑马灯开始生效！！！")
 				break
+			} else if data.ExpiredAt <= now {
+				log.Debug("优先级跑马灯已过期")
+				CleanHorseCommand(data.ID)
 			}
 		}
 		i++
@@ -268,14 +298,16 @@ func GetHorseLampDataByLevel() (string,string) {
 	}
 
 	if horseLampData == nil {
-		return "",""
+		return "", ""
 	}
-	return horseLampData.Template,horseLampData.LinkMatchID
+	log.Debug("最终获取的跑马灯数据:  %+v", *horseLampData)
+	return horseLampData.Template, horseLampData.LinkMatchID
 }
 
 func GetMapSortKey(m IDHorseLampMap) []int {
 	ids := []int{}
 	for k := range m {
+		log.Debug("Map里的key %v", k)
 		ids = append(ids, k)
 	}
 	sort.Ints(ids)
@@ -298,4 +330,27 @@ func SendHorsePrev() {
 	SendHorseRaceLamp(username, matchName, award)
 	horseQueueIndex++
 	log.Debug("跑马灯缓存队列index: %v", horseQueueIndex)
+}
+
+func PrintHorseLampMapNextTmp(){
+	for i := 1; ; {
+		log.Debug("循环获取优先级跑马灯  index %v   LevelHorseLampMap长度：%v", i, len(LevelHorseLampMap))
+		horseLampMap, ok := LevelHorseLampMap[i]
+		if !ok {
+			log.Debug("没有优先级跑马灯   index:%v", i)
+			break
+		}
+		ids := GetMapSortKey(horseLampMap)
+		log.Debug("得到排序   sort：%v", ids)
+		now := int(time.Now().Unix())
+		for _, v := range ids {
+			data := horseLampMap[v]
+			if data.TakeEffectAt < now && now < data.ExpiredAt {
+				log.Debug("优先级为%v， 内容为%v，   NextTmp：%v", i, data.Template , time.Unix(int64(data.NextTmp),0).Format("2006/01/02 15:04:05"))
+			} else if data.ExpiredAt <= now {
+				log.Debug("优先级跑马灯已过期")
+			}
+		}
+		i++
+	}
 }

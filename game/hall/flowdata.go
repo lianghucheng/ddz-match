@@ -97,6 +97,18 @@ func (ctx *FlowData) readAllNormal() *[]FlowData {
 	return rt
 }
 
+func (ctx *FlowData) readAllOver() *[]FlowData {
+	se := db.MongoDB.Ref()
+	defer db.MongoDB.UnRef(se)
+	rt := new([]FlowData)
+	err := se.DB(db.DB).C("flowdata").Find(bson.M{"userid": ctx.Userid, "status": FlowDataStatusOver, "flowtype": FlowTypeWithDraw}).All(rt)
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	return rt
+}
+
 func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID string, flows []int, data map[string]interface{}) {
 	log.Debug("奖金流水数据变动：uid: %v, amount: %v, flowType: %v, matchType: %v, matchID: %v, flows: %v. ", uid, amount, flowType, matchType, matchID, flows)
 	ud := player.ReadUserDataByID(uid)
@@ -110,7 +122,7 @@ func WriteFlowData(uid int, amount float64, flowType int, matchType, matchID str
 	flowData.CreatedAt = time.Now().Unix()
 	flowData.FlowIDs = flows
 	flowData.Realname = ud.RealName
-	flowData.TakenFee = ud.TakenFee
+	flowData.TakenFee = utils.Decimal(TakenFeeAmount(uid))
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
@@ -136,7 +148,7 @@ func WriteFlowDataWithTime(uid int, amount float64, flowType int, matchType, mat
 	flowData.CreatedAt = timestamp
 	flowData.FlowIDs = flows
 	flowData.Realname = ud.RealName
-	flowData.TakenFee = ud.TakenFee
+	flowData.TakenFee = utils.Decimal(TakenFeeAmount(uid))
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.ID, _ = db.MongoDBNextSeq("flowdata")
@@ -165,7 +177,7 @@ func WriteWithdrawFinalFlowData(uid int, amount float64, flowType int, matchType
 	flowData.CreatedAt = time.Now().Unix()
 	flowData.FlowIDs = flows
 	flowData.Realname = ud.RealName
-	flowData.TakenFee = ud.TakenFee
+	flowData.TakenFee = utils.Decimal(TakenFeeAmount(uid))
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.PassStatus = 1
@@ -193,7 +205,7 @@ func WriteWithdrawFinalFlowData2(uid int, amount float64, flowType int, matchTyp
 	flowData.CreatedAt = time.Now().Unix()
 	flowData.FlowIDs = flows
 	flowData.Realname = ud.RealName
-	flowData.TakenFee = ud.TakenFee
+	flowData.TakenFee = utils.Decimal(TakenFeeAmount(uid))
 	flowData.AtferTaxFee = ud.Fee
 	flowData.Accountid = ud.AccountID
 	flowData.PassStatus = 1

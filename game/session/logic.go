@@ -258,6 +258,8 @@ func onLogin(user *User, firstLogin bool, anotherLogin bool) {
 	hall.SendAwardInfo(user)
 	hall.SendPriceMenu(user, hall.SendSingle)
 	hall.SendPayAccount(user, hall.SendSingle)
+	hall.SendActivity(user, hall.SendSingle)
+	hall.SendNotice(user, hall.SendSingle)
 	Broadcast(&msg.S2C_OnlineUserNum{
 		Num: CalcOnlineCnt(UserIDUsers) + match.GetFakePlayersCount(),
 	})

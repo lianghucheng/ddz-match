@@ -725,7 +725,8 @@ func StartHorseLamp(args []interface{}) {
 		log.Error("m, ok := args[0].(*msg.RPC_HorseLamp). error")
 		return
 	}
-	//hall.StartHorseLamp(m)
+	log.Debug("RPC开始优先级跑马灯")
+	hall.StartHorseLamp(m)
 }
 
 func StopHorseLamp(args []interface{}) {
@@ -739,5 +740,6 @@ func StopHorseLamp(args []interface{}) {
 		log.Error("m, ok := args[0].(*msg.RPC_HorseLamp). error")
 		return
 	}
-	//hall.StopHorseLamp(m.ID)
+	log.Debug("RPC停止优先级跑马灯")
+	hall.StopHorseLamp(m.ID)
 }

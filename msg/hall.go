@@ -12,6 +12,12 @@ func init() {
 	Processor.Register(&C2S_DrawDailyWelfareInfo{})
 	Processor.Register(&S2C_DrawDailyWelfareInfo{})
 	Processor.Register(&S2C_HorseRaceLamp{})
+	Processor.Register(&S2C_Notice{})
+	Processor.Register(&S2C_Activity{})
+	Processor.Register(&C2S_Activity{})
+	Processor.Register(&C2S_Notice{})
+	Processor.Register(&C2S_ActivityClick{})
+	Processor.Register(&S2C_NewPoint{})
 }
 
 type C2S_Knapsack struct {
@@ -104,4 +110,44 @@ type S2C_HorseRaceLamp struct {
 	Template string
 	//Info []map[string]string
 	LinkMatchID string
+}
+
+type C2S_Activity struct {
+}
+
+type ActivityMsg struct {
+	ID      int
+	Order   int    //排序
+	Title   string //活动标题
+	Img     string //图片
+	Matchid string //关联赛事id
+	Link    string //活动连接
+}
+
+type S2C_Activity struct {
+	Datas []ActivityMsg
+}
+
+type C2S_Notice struct {
+}
+
+type NoticeMsg struct {
+	ID           int    `bson:"_id"` //唯一标识
+	Order       int    //排序
+	ColTitle    string //栏目标题
+	NoticeTitle string //公告标题
+	Content     string //公告内容
+	Signature   string //公告落款
+}
+
+type S2C_Notice struct {
+	Datas []NoticeMsg
+}
+
+type C2S_ActivityClick struct {
+	ID int
+}
+
+type S2C_NewPoint struct {
+	Datas []map[int]bool
 }

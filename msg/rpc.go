@@ -112,4 +112,5 @@ type RPC_HorseLamp struct {
 	Duration     int    //间隔时长，单位s
 	LinkMatchID  string //关联赛事id
 	Level        int
+	NextTmp      int
 }

@@ -5,6 +5,7 @@ import (
 	"ddz/game/values"
 	"github.com/szxby/tools/log"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 func save(coll string, data interface{}, selector bson.M) {
@@ -136,4 +137,34 @@ func SaveBkHorseLamp(id, status int) {
 	se := BackstageDB.Ref()
 	defer BackstageDB.UnRef(se)
 	se.DB(BkDBName).C("horselampcontrol").Upsert(bson.M{"_id": id}, data)
+}
+
+func ReadActivityControl() *[]values.ActivityControl {
+	datas := new([]values.ActivityControl)
+	now := int(time.Now().Unix())
+	read2("activitycontrol", datas, bson.M{"deletedat": 0, "status": bson.M{"$lt":2}, "prevdownedat":bson.M{"$gt": now}, "prevupedat": bson.M{"$lt": now}}, readAll)
+	log.Debug("道具配置基本信息： %v", *datas)
+	return datas
+}
+
+func ReadNoticeControl() *[]values.NoticeControl {
+	datas := new([]values.NoticeControl)
+	now := int(time.Now().Unix())
+	read2("noticecontrol", datas, bson.M{"deletedat": 0, "status": bson.M{"$lt":2}, "prevdownedat":bson.M{"$gt": now}, "prevupedat": bson.M{"$lt": now}}, readAll)
+	log.Debug("道具配置基本信息： %v", *datas)
+	return datas
+}
+
+func AddCntActivity(id int) {
+	data := new(values.ActivityControl)
+	read2("activitycontrol", data, bson.M{"_id": id, "deletedat": 0, "status": bson.M{"$lt":2}}, readOne)
+	log.Debug("商家数据： %v", *data)
+	if data.Link == "" && data.Matchid == "" {
+		return
+	}
+	data.ClickCnt++
+
+	se := BackstageDB.Ref()
+	defer BackstageDB.UnRef(se)
+	se.DB(BkDBName).C("activitycontrol").Upsert(bson.M{"_id": id}, data)
 }

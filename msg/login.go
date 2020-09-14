@@ -4,7 +4,6 @@ import "ddz/conf"
 
 func init() {
 	Processor.Register(&S2C_FirstRechage{})
-	Processor.Register(&S2C_Notice{})
 	Processor.Register(&S2C_UpdateUserCoupon{})
 	Processor.Register(&S2C_UpdateUserAfterTaxAward{})
 	Processor.Register(&C2S_GetCoupon{})
@@ -142,10 +141,6 @@ type S2C_Login struct {
 type S2C_FirstRechage struct {
 	Gifts []conf.CfgFirstRecharge
 	Money int64
-}
-
-type S2C_Notice struct {
-	Notices []conf.CfgNotice
 }
 
 type S2C_UpdateUserCoupon struct {

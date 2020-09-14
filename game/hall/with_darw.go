@@ -138,6 +138,16 @@ func FeeAmount(id int) (changeAmount float64) {
 	return changeAmount
 }
 
+func TakenFeeAmount(id int) (changeAmount float64) {
+	fd := new(FlowData)
+	fd.Userid = id
+	flowdatas := fd.readAllOver()
+	for _, v := range *flowdatas {
+		changeAmount += v.ChangeAmount
+	}
+	return changeAmount
+}
+
 func checkWithdraw(user *player.User) {
 	dead := user.GetUserData().WithdrawDeadLine
 	if dead < time.Now().Unix() {
