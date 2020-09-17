@@ -98,7 +98,8 @@ func init() {
 	msg.Processor.SetRouter(&msg.RPC_IllegalMatch{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_HorseLamp{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_ShareAward{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.C2S_Activity{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.C2S_Notice{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_ActivityClick{}, game.ChanRPC)
+
+	msg.Processor.SetRouter(&msg.RPC_ActivityNotify{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_NoticeNotify{}, game.ChanRPC)
 }

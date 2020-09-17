@@ -14,8 +14,6 @@ func init() {
 	Processor.Register(&S2C_HorseRaceLamp{})
 	Processor.Register(&S2C_Notice{})
 	Processor.Register(&S2C_Activity{})
-	Processor.Register(&C2S_Activity{})
-	Processor.Register(&C2S_Notice{})
 	Processor.Register(&C2S_ActivityClick{})
 	Processor.Register(&S2C_NewPoint{})
 }
@@ -116,9 +114,6 @@ type S2C_HorseRaceLamp struct {
 	LinkMatchID string
 }
 
-type C2S_Activity struct {
-}
-
 type ActivityMsg struct {
 	ID      int
 	Order   int    //排序
@@ -130,9 +125,6 @@ type ActivityMsg struct {
 
 type S2C_Activity struct {
 	Datas []ActivityMsg
-}
-
-type C2S_Notice struct {
 }
 
 type NoticeMsg struct {

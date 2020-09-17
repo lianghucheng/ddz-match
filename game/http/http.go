@@ -78,6 +78,9 @@ func startHTTPServer() {
 	mux.HandleFunc("/horse/start", handleHorseStart)
 	mux.HandleFunc("/horse/stop", handleHorseStop)
 
+	mux.HandleFunc("/activity/notify", handleActivityNotify)
+	mux.HandleFunc("/notice/notify", handleNoticeNotify)
+
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
 	if err != nil {
@@ -1020,4 +1023,49 @@ func handleHorseStop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	game.GetSkeleton().ChanRPCServer.Go("StopHorseLamp", req)
+}
+
+func handleActivityNotify(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+	game.GetSkeleton().ChanRPCServer.Go("activityNotify", &msg.RPC_ActivityNotify{})
+}
+func handleNoticeNotify(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+	game.GetSkeleton().ChanRPCServer.Go("noticeNotify", &msg.RPC_NoticeNotify{})
 }
