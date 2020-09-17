@@ -94,6 +94,14 @@ func initCollection() {
 	if err != nil {
 		log.Fatal("ensure index error: %v", err)
 	}
+	err = db.EnsureIndex(DB, "loginlog", []string{"accountid"})
+	if err != nil {
+		log.Fatal("ensure index error: %v", err)
+	}
+	err = db.EnsureIndex(DB, "loginlog", []string{"recordtime"})
+	if err != nil {
+		log.Fatal("ensure index error: %v", err)
+	}
 }
 
 func MongoDBDestroy() {

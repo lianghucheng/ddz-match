@@ -230,7 +230,7 @@ func ReadFlowdataLateOver(latedAt int64, accountid int) *values.FlowData {
 	data := new(values.FlowData)
 	se := MongoDB.Ref()
 	defer MongoDB.UnRef(se)
-	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid":accountid,"createdat": bson.M{"$gt": latedAt}, "flowtype": 2, "status": 2}).One(data); err != nil {
+	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid": accountid, "createdat": bson.M{"$gt": latedAt}, "flowtype": 2, "status": 2}).One(data); err != nil {
 		log.Debug(err.Error())
 		return nil
 	}
@@ -241,7 +241,7 @@ func ReadFlowdataBack(start, end int64, accountid int) *[]values.FlowData {
 	datas := new([]values.FlowData)
 	se := MongoDB.Ref()
 	defer MongoDB.UnRef(se)
-	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid":accountid, "createdat": bson.M{"$gt": start, "$lt": end}, "flowtype": 2, "status": 3}).All(datas); err != nil {
+	if err := se.DB(DB).C("flowdata").Find(bson.M{"accountid": accountid, "createdat": bson.M{"$gt": start, "$lt": end}, "flowtype": 2, "status": 3}).All(datas); err != nil {
 		log.Debug(err.Error())
 		return nil
 	}
@@ -253,5 +253,14 @@ func SaveFlowdata(data *values.FlowData) {
 	defer MongoDB.UnRef(se)
 	if _, err := se.DB(DB).C("flowdata").Upsert(bson.M{"_id": data.ID}, data); err != nil {
 		log.Debug(err.Error())
+	}
+}
+
+// InsertLoginLog 插入登录日志
+func InsertLoginLog(loginLog values.LoginLog) {
+	s := MongoDB.Ref()
+	defer MongoDB.UnRef(s)
+	if err := s.DB(DB).C("loginlog").Insert(loginLog); err != nil {
+		log.Error("err:%v", err)
 	}
 }

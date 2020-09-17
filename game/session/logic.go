@@ -3,6 +3,7 @@ package session
 import (
 	"ddz/conf"
 	"ddz/game"
+	"ddz/game/db"
 	. "ddz/game/db"
 	"ddz/game/hall"
 	"ddz/game/http"
@@ -181,6 +182,18 @@ func logout(user *User) {
 			delete(UserIDUsers, user.BaseData.UserData.UserID)
 			user.BaseData.UserData.Online = false
 			SaveUserData(user.BaseData.UserData)
+
+			// 插入登出日志
+			loginLog := values.LoginLog{
+				DateTime:   utils.GetZeroTime(time.Now()).Unix(),
+				UID:        user.BaseData.UserData.UserID,
+				AccountID:  user.BaseData.UserData.AccountID,
+				RecordTime: time.Now().Unix(),
+				LoginOrOut: 2,
+			}
+			game.GetSkeleton().Go(func() {
+				db.InsertLoginLog(loginLog)
+			}, nil)
 		}
 	}
 	Broadcast(&msg.S2C_OnlineUserNum{

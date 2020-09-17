@@ -4,6 +4,7 @@ import (
 	"ddz/config"
 	"ddz/edy_api"
 	"ddz/game"
+	"ddz/game/db"
 	. "ddz/game/db"
 	"ddz/game/rpc"
 	"ddz/game/values"
@@ -231,6 +232,18 @@ func (user *User) RefreshData() {
 	//		})
 	//	}, nil)
 	//}
+
+	// 插入登录日志
+	loginLog := values.LoginLog{
+		DateTime:   utils.GetZeroTime(time.Now()).Unix(),
+		UID:        user.BaseData.UserData.UserID,
+		AccountID:  user.BaseData.UserData.AccountID,
+		RecordTime: time.Now().Unix(),
+		LoginOrOut: 1,
+	}
+	game.GetSkeleton().Go(func() {
+		db.InsertLoginLog(loginLog)
+	}, nil)
 
 	// 检查体总数据是否同步,每三小时同步一次
 	// if utils.GetZeroTime(time.Unix(one.SportCenter.SyncTime, 0)) != utils.GetZeroTime(time.Now()) && len(one.IDCardNo) > 0 {
