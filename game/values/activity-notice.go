@@ -39,6 +39,7 @@ type NoticeControl struct {
 	Operator     string //操作人
 	Content      string //公告内容
 	Signature    string //公告落款
+	Img          string //公告内容
 
 	CreatedAt int
 	UpdatedAt int

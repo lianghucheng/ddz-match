@@ -14,8 +14,6 @@ func init() {
 	Processor.Register(&S2C_HorseRaceLamp{})
 	Processor.Register(&S2C_Notice{})
 	Processor.Register(&S2C_Activity{})
-	Processor.Register(&C2S_Activity{})
-	Processor.Register(&C2S_Notice{})
 	Processor.Register(&C2S_ActivityClick{})
 	Processor.Register(&S2C_NewPoint{})
 }
@@ -81,6 +79,10 @@ type C2S_DrawDailyWelfareInfo struct {
 type S2C_DrawDailyWelfareInfo struct {
 	Code int
 	Desc string
+	Name   string
+	PropID int
+	Amount float64
+	ImgUrl string
 }
 
 // DailyData 玩家每日数据
@@ -112,9 +114,6 @@ type S2C_HorseRaceLamp struct {
 	LinkMatchID string
 }
 
-type C2S_Activity struct {
-}
-
 type ActivityMsg struct {
 	ID      int
 	Order   int    //排序
@@ -128,16 +127,14 @@ type S2C_Activity struct {
 	Datas []ActivityMsg
 }
 
-type C2S_Notice struct {
-}
-
 type NoticeMsg struct {
-	ID           int    `bson:"_id"` //唯一标识
+	ID          int    `bson:"_id"` //唯一标识
 	Order       int    //排序
 	ColTitle    string //栏目标题
 	NoticeTitle string //公告标题
 	Content     string //公告内容
 	Signature   string //公告落款
+	Img         string //公告图片
 }
 
 type S2C_Notice struct {

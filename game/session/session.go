@@ -53,6 +53,8 @@ func init() {
 	skeleton.RegisterChanRPC("StopHorseLamp", StopHorseLamp)
 	skeleton.RegisterChanRPC("dealIllegalMatch", dealIllegalMatch)
 	skeleton.RegisterChanRPC("shareAward", shareAward)
+	skeleton.RegisterChanRPC("activityNotify", rpcActivityNotify)
+	skeleton.RegisterChanRPC("noticeNotify", rpcNoticeNotify)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -743,4 +745,21 @@ func StopHorseLamp(args []interface{}) {
 	}
 	log.Debug("RPC停止优先级跑马灯")
 	hall.StopHorseLamp(m.ID)
+}
+
+func rpcActivityNotify(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+
+	hall.SendActivity(nil, hall.SendBroacast)
+}
+
+func rpcNoticeNotify(args []interface{}) {
+	if len(args) != 1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	hall.SendNotice(nil, hall.SendBroacast)
 }

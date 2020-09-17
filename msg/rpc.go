@@ -18,6 +18,8 @@ func init() {
 	Processor.Register(&RPC_SendPayAccount{})
 	Processor.Register(&RPC_UpdateBankCardNo{})
 	Processor.Register(&RPC_HorseLamp{})
+	Processor.Register(&RPC_ActivityNotify{})
+	Processor.Register(&RPC_NoticeNotify{})
 }
 
 type C2S_EndMatch struct {
@@ -113,4 +115,12 @@ type RPC_HorseLamp struct {
 	LinkMatchID  string //关联赛事id
 	Level        int
 	NextTmp      int
+}
+
+type RPC_ActivityNotify struct {
+
+}
+
+type RPC_NoticeNotify struct {
+
 }

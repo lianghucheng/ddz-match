@@ -468,10 +468,18 @@ func DrawDailyWelfare(u *player.User, dailyType, awardIndex int) {
 		log.Debug("player %v draw daily welfare", u.BaseData.UserData.AccountID)
 		code := reply.Code
 		desc := reply.Desc
+		name := ""
+		propID := 0
+		amount := float64(0)
+		imgUrl := ""
 		defer func() {
 			u.WriteMsg(&msg.S2C_DrawDailyWelfareInfo{
 				Code: code,
 				Desc: desc,
+				Name: name,
+				PropID :propID,
+				Amount:amount,
+				ImgUrl:imgUrl,
 			})
 		}()
 		if err != nil {
@@ -505,6 +513,10 @@ func DrawDailyWelfare(u *player.User, dailyType, awardIndex int) {
 		log.Debug("player %v draw daily welfare:%v", u.BaseData.UserData.AccountID, data)
 		// ok
 		id := values.PropID2Type[data.ItemID]
+		name = config.GetPropBaseConfig(id).Name
+		propID = id
+		amount = float64(data.Amount)
+		imgUrl = config.GetPropBaseConfig(id).ImgUrl
 		AddSundries(id, u.BaseData.UserData, float64(data.Amount), db.ActivityOpt, db.DailyWelfare, "")
 	})
 }

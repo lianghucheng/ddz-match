@@ -64,8 +64,6 @@ func init() {
 	handler(&msg.C2S_TakenAllMail{}, handleTakenAllMail)
 	handler(&msg.C2S_GetAllMail{}, handleGetSetMail)
 	handler(&msg.C2S_DeleteAllMail{}, handleDeleteAllMail)
-	handler(&msg.C2S_Activity{}, handleActivity)
-	handler(&msg.C2S_Notice{}, handleNotice)
 	handler(&msg.C2S_ActivityClick{}, handleActivityClick)
 }
 
@@ -764,28 +762,6 @@ func handleDeleteAllMail(args []interface{}) {
 		return
 	} else {
 		hall.DeleteAllMail(user)
-	}
-}
-
-func handleActivity(args []interface{}) {
-	m := args[0].(*msg.C2S_Activity)
-	_ = m
-	a := args[1].(gate.Agent)
-	if user, ok := checkAgent(a); !ok {
-		return
-	} else {
-		hall.SendActivity(user, hall.SendSingle)
-	}
-}
-
-func handleNotice(args []interface{}) {
-	m := args[0].(*msg.C2S_Notice)
-	_ = m
-	a := args[1].(gate.Agent)
-	if user, ok := checkAgent(a); !ok {
-		return
-	} else {
-		hall.SendNotice(user, hall.SendSingle)
 	}
 }
 
