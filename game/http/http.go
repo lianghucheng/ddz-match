@@ -641,7 +641,6 @@ func notidyPriceMenu(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTest(w http.ResponseWriter, r *http.Request) {
-	log.Debug("the http test")
 }
 
 func handlePushMail(w http.ResponseWriter, r *http.Request) {
