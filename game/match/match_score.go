@@ -1420,6 +1420,7 @@ func (sc *scoreMatch) SendRoundResult(uid int) {
 
 // SendFinalResult 给玩家发送总结算
 func (sc *scoreMatch) SendFinalResult(uid int) {
+	log.Debug("player %v send final award", uid)
 	//base := sc.base.(*BaseMatch)
 	//user := base.AllPlayers[uid]
 	//player := user.BaseData.MatchPlayer
@@ -1438,6 +1439,7 @@ func (sc *scoreMatch) SendFinalResult(uid int) {
 	user, ok := UserIDUsers[uid]
 	// 玩家不在线
 	if !ok {
+		log.Debug("player %v not online", uid)
 		return
 	}
 	cf := config.GetPropBaseConfig

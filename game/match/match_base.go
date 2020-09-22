@@ -91,6 +91,7 @@ type BaseMatch struct {
 }
 
 func (base *BaseMatch) SignIn(uid int) error {
+	log.Debug("uid:%v sign in match %v", uid, base.SonMatchID)
 	if base.State != Signing {
 		return errors.New("match not valid to sign")
 	}
@@ -100,7 +101,7 @@ func (base *BaseMatch) SignIn(uid int) error {
 		return errors.New("unknown user")
 	}
 	if signMatchs, ok := UserIDSign[uid]; ok {
-		log.Debug("signs:%v", signMatchs)
+		log.Debug("uid:%v,signs:%v", uid, signMatchs)
 		for _, v := range signMatchs {
 			if v.MatchID == base.NormalCofig.MatchID {
 				log.Debug("player %v already sign %v,%v", uid, v.MatchID, v.MatchName)
@@ -111,12 +112,16 @@ func (base *BaseMatch) SignIn(uid int) error {
 			}
 		}
 	}
+	if m, ok := UserIDMatch[uid]; ok {
+		log.Debug("uid:%v already in match %+v", uid, *m)
+		return errors.New("match already start")
+	}
 	if user.RealName() == "" && !user.IsTest() && !user.IsRobot() {
-		log.Debug("no real name. ")
+		log.Debug("uid:%v,no real name.", uid)
 		user.WriteMsg(&msg.S2C_Apply{
 			Error: msg.S2C_Error_Realname,
 		})
-		return errors.New("no real name. ")
+		return errors.New("no real name")
 	}
 	if base.myMatch != nil {
 		if err := base.myMatch.SignIn(uid); err != nil {
@@ -256,7 +261,7 @@ func (base *BaseMatch) cleanUpPlayerSigns() {
 	for _, p := range base.AllPlayers {
 		uid := p.BaseData.UserData.UserID
 		if UserIDSign[uid] != nil {
-			log.Debug("signs:%v", UserIDSign[uid])
+			log.Debug("uid:%v,signs:%v", uid, UserIDSign[uid])
 			cleanMatchs := []string{}
 			for _, v := range UserIDSign[uid] {
 				if v.MatchID == base.NormalCofig.MatchID {
