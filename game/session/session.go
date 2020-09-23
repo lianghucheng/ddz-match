@@ -55,6 +55,7 @@ func init() {
 	skeleton.RegisterChanRPC("shareAward", shareAward)
 	skeleton.RegisterChanRPC("activityNotify", rpcActivityNotify)
 	skeleton.RegisterChanRPC("noticeNotify", rpcNoticeNotify)
+	skeleton.RegisterChanRPC("realnameUpdate", rpcRealnameUpdate)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -762,4 +763,26 @@ func rpcNoticeNotify(args []interface{}) {
 		return
 	}
 	hall.SendNotice(nil, hall.SendBroacast)
+}
+
+func rpcRealnameUpdate(args []interface{}) {
+	if len(args) !=1 {
+		log.Error("error req:%+v", args)
+		return
+	}
+	m, ok := args[0].(msg.RPC_RealnameUpdate)
+	if !ok {
+		return
+	}
+	ud := ReadUserDataByAid(m.Accountid)
+	user ,ok := UserIDUsers[ud.UserID]
+	if ok {
+		user.GetUserData().RealName = m.RealName
+		user.GetUserData().IDCardNo = m.IDCardNo
+		SaveUserData(user.GetUserData())
+	} else {
+		ud.RealName = m.RealName
+		ud.IDCardNo = m.IDCardNo
+		SaveUserData(ud)
+	}
 }

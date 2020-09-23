@@ -102,4 +102,5 @@ func init() {
 
 	msg.Processor.SetRouter(&msg.RPC_ActivityNotify{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.RPC_NoticeNotify{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.RPC_RealnameUpdate{}, game.ChanRPC)
 }

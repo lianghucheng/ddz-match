@@ -63,3 +63,5 @@ type IllegalGameRecord struct {
 }
 
 // var Mutex = &sync.Mutex{}
+
+var SwitchAmountLimit bool

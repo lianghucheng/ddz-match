@@ -20,6 +20,7 @@ func init() {
 	Processor.Register(&RPC_HorseLamp{})
 	Processor.Register(&RPC_ActivityNotify{})
 	Processor.Register(&RPC_NoticeNotify{})
+	Processor.Register(&RPC_RealnameUpdate{})
 }
 
 type C2S_EndMatch struct {
@@ -123,4 +124,10 @@ type RPC_ActivityNotify struct {
 
 type RPC_NoticeNotify struct {
 
+}
+
+type RPC_RealnameUpdate struct {
+	Accountid int //用户id
+	RealName string //姓名
+	IDCardNo string //身份证号
 }

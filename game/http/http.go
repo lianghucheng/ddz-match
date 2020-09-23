@@ -80,6 +80,9 @@ func startHTTPServer() {
 
 	mux.HandleFunc("/activity/notify", handleActivityNotify)
 	mux.HandleFunc("/notice/notify", handleNoticeNotify)
+	mux.HandleFunc("/switch/withdraw-limit", handleSwitchWithdrawLimit)
+	mux.HandleFunc("/status/withdraw-limit", handleStatusWithdrawLimit)
+	mux.HandleFunc("/realname/update", handleRealnameUpdate)
 
 	mux.HandleFunc("/test", handleTest)
 	err := http.ListenAndServe(conf.GetCfgLeafSrv().HTTPAddr, mux)
@@ -1067,4 +1070,80 @@ func handleNoticeNotify(w http.ResponseWriter, r *http.Request) {
 		log.Debug("success size:%v. ", i)
 	}()
 	game.GetSkeleton().ChanRPCServer.Go("noticeNotify", &msg.RPC_NoticeNotify{})
+}
+
+func handleSwitchWithdrawLimit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+	values.SwitchAmountLimit = !values.SwitchAmountLimit
+}
+
+func handleRealnameUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+
+	req := new(msg.RPC_RealnameUpdate)
+	code, errmsg = utils.ParseJsonParam(r, req)
+
+	game.GetSkeleton().ChanRPCServer.Go("realnameUpdate", req)
+}
+
+func handleStatusWithdrawLimit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	code := 0
+	errmsg := "success"
+	result := make(map[string]interface{})
+	defer func() {
+		result["code"] = code
+		result["errmsg"] = errmsg
+		b, err := json.Marshal(result)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		i, err := w.Write(b)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		log.Debug("success size:%v. ", i)
+	}()
+	if !values.SwitchAmountLimit {
+		code = 1
+		errmsg = "off"
+	}
 }

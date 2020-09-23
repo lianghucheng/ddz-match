@@ -6,6 +6,7 @@ import (
 	"ddz/edy_api"
 	"ddz/game"
 	"ddz/game/player"
+	"ddz/game/values"
 	"ddz/msg"
 	"ddz/utils"
 	"fmt"
@@ -64,7 +65,7 @@ func withDraw(user *player.User, callWithDraw func(userid int, amount float64) (
 		return
 	}
 
-	if changeAmount > config.GetCfgNormal().AmountLimit {
+	if changeAmount > config.GetCfgNormal().AmountLimit && values.SwitchAmountLimit {
 		changeGameWithDraw(user, changeAmount, fee, flowIDs, nil, WriteFlowData)
 	} else {
 		data, err := callWithDraw(user.BaseData.UserData.UserID, changeAmount)
